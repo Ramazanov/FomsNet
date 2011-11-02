@@ -1,0 +1,251 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.FundingLines;
+using Octopus.Enums;
+using Octopus.Shared;
+
+namespace Octopus.Manager.Events
+{
+    internal class FundingLineEventManager : Manager
+    {
+        private User _user;
+
+        public FundingLineEventManager(User pUser) : base(pUser)
+        {
+            _user = pUser;
+        }
+
+        public FundingLineEventManager(string pTestDb) : base(pTestDb)
+        {
+        }
+
+
+        /// <summary>
+        /// Select all events for selected Funding Line
+        /// </summary>
+        /// <param name="pFundingLine">funding line </param>
+        /// <returns>list of Funding Line events</returns>
+        public List<FundingLineEvent> SelectFundingLineEvents(FundingLine pFundingLine)
+        {
+            List<FundingLineEvent> list = new List<FundingLineEvent>();
+
+            const string sqlText =
+                @"SELECT [id],[code],[amount],[direction],[fundingline_id],[deleted],[creation_date],[type] 
+                    FROM [FundingLineEvents] WHERE fundingline_id = @fundingline_id ORDER BY creation_date DESC, id DESC";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@fundingline_id", select, pFundingLine.Id);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader == null || !reader.HasRows) return list;
+                {
+                    while (reader.Read())
+                    {
+                        FundingLineEvent fundingLineEvent = new FundingLineEvent
+                                                                {
+                                                                    Id = DatabaseHelper.GetInt32("id", reader),
+                                                                    Code = DatabaseHelper.GetString("code", reader),
+                                                                    Amount = DatabaseHelper.GetMoney("amount", reader),
+                                                                    Movement =
+                                                                        ((OBookingDirections)
+                                                                         DatabaseHelper.GetSmallInt("direction", reader)),
+                                                                    IsDelete =
+                                                                        DatabaseHelper.GetBoolean("deleted", reader),
+                                                                    CreationDate =
+                                                                        DatabaseHelper.GetDateTime("creation_date",
+                                                                                                   reader),
+                                                                    Type =
+                                                                        ((OFundingLineEventTypes)
+                                                                         DatabaseHelper.GetSmallInt("type", reader)),
+                                                                    FundingLine = pFundingLine
+                                                                };
+                        list.Add(fundingLineEvent);
+                    }
+                }
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Select all events for selected Funding Line
+        /// </summary>
+        /// <param name="pFundingLineId">funding line id</param>
+        /// <param name="pSqlTransac">Sql transaction</param>
+        /// <returns>list of Funding Line events</returns>
+        public List<FundingLineEvent> SelectFundingLineEvents(int pFundingLineId, SqlTransaction pSqlTransac)
+        {
+            List<FundingLineEvent> list = new List<FundingLineEvent>();
+
+            const string sqlText =
+                @"SELECT [id],[code],[amount],[direction],[fundingline_id],[deleted],[creation_date],[type] 
+                    FROM [FundingLineEvents] WHERE fundingline_id = @fundingline_id ORDER BY creation_date, id DESC";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+            DatabaseHelper.InsertInt32Param("@fundingline_id", select, pFundingLineId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader == null || !reader.HasRows) return list;
+                {
+                    while (reader.Read())
+                    {
+                        FundingLineEvent fundingLineEvent = new FundingLineEvent
+                                                                {
+                                                                    Id = DatabaseHelper.GetInt32("id", reader),
+                                                                    Code = DatabaseHelper.GetString("code", reader),
+                                                                    Amount = DatabaseHelper.GetMoney("amount", reader),
+                                                                    Movement =
+                                                                        ((OBookingDirections)
+                                                                         DatabaseHelper.GetSmallInt("direction", reader)),
+                                                                    IsDelete =
+                                                                        DatabaseHelper.GetBoolean("deleted", reader),
+                                                                    CreationDate =
+                                                                        DatabaseHelper.GetDateTime("creation_date",
+                                                                                                   reader),
+                                                                    Type =
+                                                                        ((OFundingLineEventTypes)
+                                                                         DatabaseHelper.GetSmallInt("type", reader))
+                                                                };
+                        list.Add(fundingLineEvent);
+                    }
+                }
+            }
+            return list;
+        }
+
+        public FundingLineEvent SelectFundingLineEventById(int id)
+        {
+            FundingLineEvent fundingLineEvent = null;
+
+            const string sqlText =
+                "SELECT [id],[code], [deleted],[amount],[direction],[type] FROM [FundingLineEvents] WHERE [id]=@id and deleted=0";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, id);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        fundingLineEvent = new FundingLineEvent
+                                               {
+                                                   Id = DatabaseHelper.GetInt32("id", reader),
+                                                   Code = DatabaseHelper.GetString("code", reader),
+                                                   Movement =
+                                                       ((OBookingDirections)
+                                                        DatabaseHelper.GetSmallInt("direction", reader)),
+                                                   IsDelete = DatabaseHelper.GetBoolean("deleted", reader),
+                                                   Amount = DatabaseHelper.GetMoney("amount", reader),
+                                                   Type =
+                                                       ((OFundingLineEventTypes)
+                                                        DatabaseHelper.GetSmallInt("type", reader))
+                                               };
+                    }
+                }
+            }
+            return fundingLineEvent;
+        }
+
+        public int SelectFundingLineEventId(FundingLineEvent pFundingLineEvent, SqlTransaction sqlTransac,
+                                            bool includeDeleted)
+        {
+            int Id = -1;
+
+            string sqlText =
+                @"SELECT [id] FROM [FundingLineEvents] WHERE 
+                                      [code] = @code and
+                                      [amount] = @amount and
+                                      [direction] = @direction and
+                                      [type] = @type and
+                                       [fundingline_id] = @fundinglineid";
+            if (!includeDeleted) sqlText += " and deleted = @deleted";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertStringNVarCharParam("@code", select, pFundingLineEvent.Code);
+            DatabaseHelper.InsertMoneyParam("@amount", select, pFundingLineEvent.Amount);
+            DatabaseHelper.InsertSmalIntParam("@direction", select, (int) pFundingLineEvent.Movement);
+            DatabaseHelper.InsertSmalIntParam("@type", select, (int) pFundingLineEvent.Type);
+            DatabaseHelper.InsertInt32Param("@fundinglineid", select, pFundingLineEvent.FundingLine.Id);
+            if (!includeDeleted) DatabaseHelper.InsertBooleanParam("@deleted", select, pFundingLineEvent.IsDelete);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        Id = DatabaseHelper.GetInt32("id", reader);
+                    }
+                }
+            }
+            return Id;
+        }
+
+
+        public void DeleteFundingLineEvent(FundingLineEvent pFundingLineEvent, SqlTransaction sqlTransac)
+        {
+            const string sqlText = "UPDATE [FundingLineEvents] SET [deleted]=1 WHERE [id] = @id";
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertInt32Param("@id", insert, pFundingLineEvent.Id);
+            DatabaseHelper.InsertBooleanParam("@deleted", insert, true);
+            insert.ExecuteScalar();
+        }
+
+        public int AddFundingLineEvent(FundingLineEvent pFundingLineEvent, SqlTransaction pTransac)
+        {
+            const string sqlText =
+                @"INSERT INTO [FundingLineEvents] ([code],[amount],[direction],[fundingline_id],[deleted],[creation_date],[type],user_id,contract_event_id) 
+                    VALUES(@code,@amount,@direction,@fundingLineId, @deleted, @creationDate,@type,@user_id, @contract_event_id) SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pTransac);
+
+            DatabaseHelper.InsertStringNVarCharParam("@code", insert, pFundingLineEvent.Code);
+            DatabaseHelper.InsertMoneyParam("@amount", insert, pFundingLineEvent.Amount);
+            DatabaseHelper.InsertSmalIntParam("@direction", insert, (int) pFundingLineEvent.Movement);
+            DatabaseHelper.InsertInt32Param("@fundingLineId", insert, pFundingLineEvent.FundingLine.Id);
+                // pFundingLineId);
+            DatabaseHelper.InsertBooleanParam("@deleted", insert, false);
+            DatabaseHelper.InsertDateTimeParam("@creationDate", insert, pFundingLineEvent.CreationDate);
+            DatabaseHelper.InsertInt32Param("@type", insert, (int) pFundingLineEvent.Type);
+            if (null == _user)
+            {
+                DatabaseHelper.InsertNullValue("@user_id", insert);
+            }
+            else
+            {
+                DatabaseHelper.InsertInt32Param("@user_id", insert, _user.Id);
+            }
+
+            if (null == pFundingLineEvent.AttachTo)
+            {
+                DatabaseHelper.InsertNullValue("contract_event_id", insert);
+            }
+            else
+            {
+                DatabaseHelper.InsertInt32Param("contract_event_id", insert, pFundingLineEvent.AttachTo.Id);
+            }
+
+            pFundingLineEvent.Id = Convert.ToInt32(insert.ExecuteScalar());
+
+            return pFundingLineEvent.Id;
+        }
+
+        /* update funding line event method updates only IsDelete property of the Funding Line event*/
+
+        public void UpdateFundingLineEvent(FundingLineEvent pFundingLineEvent, SqlTransaction sqlTransac)
+        {
+            const string sqlText = "UPDATE [FundingLineEvents] SET [deleted] = @deleted WHERE [id] = @id";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertInt32Param("@id", insert, pFundingLineEvent.Id);
+            DatabaseHelper.InsertBooleanParam("@deleted", insert, pFundingLineEvent.IsDelete);
+            insert.ExecuteScalar();
+        }
+    }
+}

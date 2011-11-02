@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Database
+END
+CompareDatabase.cs
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Database/CompareDatabase.cs
+END
+ApplicationSettingsManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Database/ApplicationSettingsManager.cs
+END
+DatabaseManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Database/DatabaseManager.cs
+END
+BackupManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Database/BackupManager.cs
+END

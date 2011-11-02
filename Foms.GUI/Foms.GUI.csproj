@@ -1,0 +1,1053 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{098C8842-6538-4B87-8851-BB1B1FA379FE}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>App.ico</ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>Foms.GUI</AssemblyName>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Foms.GUI</RootNamespace>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartupObject>Foms.GUI.AppMain</StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <SignAssembly>false</SignAssembly>
+    <SignManifests>true</SignManifests>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <ManifestCertificateThumbprint>81F28D69687BA61ADBF98CDDEABC3A596A1E5246</ManifestCertificateThumbprint>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
+    <GenerateManifests>true</GenerateManifests>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetZone>Custom</TargetZone>
+    <ExcludedPermissions>
+    </ExcludedPermissions>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <PublishUrl>http://localhost/Octopus/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <InstallUrl>http://www.naxosit.be/OctopusDeployment/Client/</InstallUrl>
+    <UpdateUrl>http://www.naxosit.be/OctopusDeployment/Client/</UpdateUrl>
+    <ProductName>Octopus Online</ProductName>
+    <PublisherName>Octopus MicroFinance</PublisherName>
+    <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>2.8.8.0</ApplicationVersion>
+    <UseApplicationTrust>true</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <BootstrapperComponentsUrl>http://downloads.sourceforge.net/omfs/Crystal_Reports_V11R2_for_OMFS_v1.0.9_and_over.msi</BootstrapperComponentsUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>full</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>false</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>true</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>none</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugWithTest|AnyCPU' ">
+    <OutputPath>C:\dev_factory\Octopus\Build\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>full</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'FitNesse|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\OutputForFitNesse\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <BaseAddress>285212672</BaseAddress>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Test|AnyCPU' ">
+    <OutputPath>bin\Test\</OutputPath>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ObjectListView">
+      <HintPath>.\ObjectListView.dll</HintPath>
+    </Reference>
+    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Design">
+      <Name>System.Design</Name>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.ServiceModel">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Web.Services, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\WINDOWS\assembly\GAC_MSIL\System.Web.Services\2.0.0.0__b03f5f7f11d50a3a\System.Web.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.XML</Name>
+    </Reference>
+    <ProjectReference Include="..\Foms.CoreDomain\Foms.CoreDomain.csproj">
+      <Project>{D539C388-3848-4A3E-AB87-42B8E329755A}</Project>
+      <Name>Foms.CoreDomain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Foms.Enums\Foms.Enums.csproj">
+      <Project>{8AFC1E87-3856-4F05-8280-5360D33C200B}</Project>
+      <Name>Foms.Enums</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Foms.ExceptionsHandler\Foms.ExceptionsHandler.csproj">
+      <Project>{98B26AD8-D160-462B-B70F-982D8701154A}</Project>
+      <Name>Foms.ExceptionsHandler</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Foms.Extensions\Foms.Extensions.csproj">
+      <Project>{D63E15B6-24DF-4C27-8593-EFACE31FA52A}</Project>
+      <Name>Foms.Extensions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Foms.Services\Foms.Services.csproj">
+      <Project>{A859D97A-51FB-4961-AF07-5856640511AF}</Project>
+      <Name>Foms.Services</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Foms.Shared\Foms.Shared.csproj">
+      <Project>{B3288E21-E5A9-4620-BEF3-AFB0B207655C}</Project>
+      <Name>Foms.Shared</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AboutOctopus.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Configuration\FrmGeneralSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Configuration\FrmRoles.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Configuration\FrmRoles.designer.cs">
+      <DependentUpon>FrmRoles.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Configuration\UserForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Configuration\UserForm.designer.cs">
+      <DependentUpon>UserForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Database\FrmDatabaseName.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Database\FrmDatabaseName.Designer.cs">
+      <DependentUpon>FrmDatabaseName.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Database\FrmDatabaseSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Database\FrmDatabaseSettings.Designer.cs">
+      <DependentUpon>FrmDatabaseSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Database\FrmDatabaseSettingsEnum.cs" />
+    <Compile Include="Database\SQLInfoEnumerator.cs" />
+    <Compile Include="Export\ExportBookingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Login\FrmLogin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Login\FrmLogin.Designer.cs">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LotrasmicMainWindowForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LotrasmicMainWindowForm.designer.cs">
+      <DependentUpon>LotrasmicMainWindowForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MultiLanguageForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\Restore.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserControl\SweetBaseForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserControl\SweetBaseForm.Designer.cs">
+      <DependentUpon>SweetBaseForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserControl\SweetButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="OctopusProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="OctopusProgressBar.Designer.cs">
+      <DependentUpon>OctopusProgressBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="AppMain.cs" />
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="frmShowError.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InputBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InputBox.Designer.cs">
+      <DependentUpon>InputBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ListViewItemComparer.cs" />
+    <Compile Include="FrmSplash.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmSplash.Designer.cs">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Service References\AvailableReport\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Compile>
+    <Compile Include="Service References\SoftwareUpdate\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\DatabaseMaintenance.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\DatabaseMaintenance.Designer.cs">
+      <DependentUpon>DatabaseMaintenance.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\frmProgress.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\frmProgress.Designer.cs">
+      <DependentUpon>frmProgress.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\frmSaveFile.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\frmSaveFile.Designer.cs">
+      <DependentUpon>frmSaveFile.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\frmSQLTool.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Tools\frmSQLTool.Designer.cs">
+      <DependentUpon>frmSQLTool.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\OMonthCalendar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tools\OMonthCalendar.Designer.cs">
+      <DependentUpon>OMonthCalendar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Tools\Restart.cs" />
+    <Compile Include="Tools\SyntaxRichTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tools\TransparentPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UserControl\CollapsibleSplitter.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UserControl\DateTimeUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserControl\ListViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UserControl\ListViewSorter.cs" />
+    <Compile Include="UserControl\SplitButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UserControl\SplitButton.designer.cs">
+      <DependentUpon>SplitButton.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserControl\SweetForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserControl\SweetForm.Designer.cs">
+      <DependentUpon>SweetForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserControl\SweetOkCancelForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserControl\SweetOkCancelForm.Designer.cs">
+      <DependentUpon>SweetOkCancelForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserControl\TextCurrencyUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserControl\TextNumericUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserControl\TextNumericUserControl.Designer.cs">
+      <DependentUpon>TextNumericUserControl.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="AboutOctopus.es-ES.resx">
+      <DependentUpon>AboutOctopus.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AboutOctopus.fr.resx">
+      <DependentUpon>AboutOctopus.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AboutOctopus.ky-KG.resx">
+      <DependentUpon>AboutOctopus.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AboutOctopus.pt.resx">
+      <DependentUpon>AboutOctopus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AboutOctopus.resx">
+      <DependentUpon>AboutOctopus.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AboutOctopus.ru-RU.resx">
+      <DependentUpon>AboutOctopus.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Configuration\FrmGeneralSettings.resx">
+      <DependentUpon>FrmGeneralSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Configuration\FrmGeneralSettings.ru-RU.resx">
+      <DependentUpon>FrmGeneralSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Configuration\FrmRoles.resx">
+      <DependentUpon>FrmRoles.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Configuration\FrmRoles.ru-RU.resx">
+      <DependentUpon>FrmRoles.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Configuration\UserForm.resx">
+      <DependentUpon>UserForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Configuration\UserForm.ru-RU.resx">
+      <DependentUpon>UserForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseName.es-ES.resx">
+      <DependentUpon>FrmDatabaseName.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseName.fr.resx">
+      <DependentUpon>FrmDatabaseName.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseName.pt.resx">
+      <DependentUpon>FrmDatabaseName.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseName.resx">
+      <DependentUpon>FrmDatabaseName.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseName.ru-RU.resx">
+      <DependentUpon>FrmDatabaseName.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseSettings.es-ES.resx">
+      <DependentUpon>FrmDatabaseSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseSettings.fr.resx">
+      <DependentUpon>FrmDatabaseSettings.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseSettings.pt.resx">
+      <DependentUpon>FrmDatabaseSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseSettings.resx">
+      <DependentUpon>FrmDatabaseSettings.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Database\FrmDatabaseSettings.ru-RU.resx">
+      <DependentUpon>FrmDatabaseSettings.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Export\ExportBookingsForm.resx">
+      <DependentUpon>ExportBookingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmShowError.es-ES.resx">
+      <DependentUpon>frmShowError.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmShowError.pt.resx">
+      <DependentUpon>frmShowError.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSplash.fr.resx">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmSplash.pt.resx">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSplash.ru-RU.resx">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputBox.es-ES.resx">
+      <DependentUpon>InputBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputBox.pt.resx">
+      <DependentUpon>InputBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Login\FrmLogin.pt.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LotrasmicMainWindowForm.resx">
+      <DependentUpon>LotrasmicMainWindowForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LotrasmicMainWindowForm.ru-RU.resx">
+      <DependentUpon>LotrasmicMainWindowForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MultiLanguageForm.resx">
+      <DependentUpon>MultiLanguageForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Login\FrmLogin.es-ES.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Login\FrmLogin.fr.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Login\FrmLogin.ky-KG.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Login\FrmLogin.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Login\FrmLogin.ru-RU.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="OctopusProgressBar.resx">
+      <DependentUpon>OctopusProgressBar.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmProgress.es-ES.resx">
+      <DependentUpon>frmProgress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmProgress.ky-KG.resx">
+      <DependentUpon>frmProgress.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmProgress.pt.resx">
+      <DependentUpon>frmProgress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmSaveFile.es-ES.resx">
+      <DependentUpon>frmSaveFile.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmSaveFile.pt.resx">
+      <DependentUpon>frmSaveFile.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Restore.es-ES.resx">
+      <DependentUpon>Restore.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Restore.fr.resx">
+      <DependentUpon>Restore.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Restore.ky-KG.resx">
+      <DependentUpon>Restore.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Restore.pt.resx">
+      <DependentUpon>Restore.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Restore.resx">
+      <DependentUpon>Restore.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\Restore.ru-RU.resx">
+      <DependentUpon>Restore.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmShowError.fr.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmShowError.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmShowError.ky-KG.resx">
+      <DependentUpon>frmShowError.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmShowError.resx">
+      <DependentUpon>frmShowError.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmShowError.ru-RU.resx">
+      <DependentUpon>frmShowError.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputBox.fr.resx">
+      <DependentUpon>InputBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputBox.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>InputBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputBox.ru-RU.resx">
+      <DependentUpon>InputBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmSplash.resx">
+      <DependentUpon>FrmSplash.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\DatabaseMaintenance.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>DatabaseMaintenance.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\DatabaseMaintenance.ru-RU.resx">
+      <DependentUpon>DatabaseMaintenance.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmProgress.fr.resx">
+      <DependentUpon>frmProgress.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmProgress.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmProgress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmProgress.ru-RU.resx">
+      <DependentUpon>frmProgress.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmSaveFile.fr.resx">
+      <DependentUpon>frmSaveFile.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmSaveFile.ky-KG.resx">
+      <DependentUpon>frmSaveFile.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmSaveFile.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmSaveFile.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmSaveFile.ru-RU.resx">
+      <DependentUpon>frmSaveFile.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmSQLTool.resx">
+      <DependentUpon>frmSQLTool.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\frmSQLTool.ru-RU.resx">
+      <DependentUpon>frmSQLTool.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Tools\OMonthCalendar.resx">
+      <DependentUpon>OMonthCalendar.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="App.config" />
+    <Content Include="App.ico" />
+    <None Include="Properties\app.manifest" />
+    <None Include="Properties\DataSources\Octopus.CoreDomain.EntryFee.datasource" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Resources\dowarrow.png" />
+    <None Include="Resources\Admin_Background.png" />
+    <None Include="Resources\Admin_Background_180.png" />
+    <None Include="Resources\confirm_contract 1_16x16.png" />
+    <None Include="Resources\croix.png" />
+    <None Include="Resources\bouton_report_standart_32.png" />
+    <None Include="Resources\bouton_report_standart_64.png" />
+    <None Include="Resources\bouton_report_standart_128.png" />
+    <None Include="Resources\arrow_down_small.png" />
+    <Content Include="Resources\crystalreport.jpg" />
+    <None Include="Resources\financial_information_bouton files_16x16.png" />
+    <Content Include="Resources\group_members_32x32.png" />
+    <Content Include="Resources\ky_small.png" />
+    <None Include="Resources\languages.png" />
+    <Content Include="Resources\pastille_groupe.png" />
+    <None Include="Resources\run.png" />
+    <None Include="Resources\pastille_report.png" />
+    <None Include="Resources\progress.png" />
+    <None Include="Resources\refresh.png" />
+    <Content Include="Resources\Spanish Flag.png" />
+    <None Include="Resources\SuperAdmin_Background.png" />
+    <None Include="Resources\SuperAdmin_Background_180.png" />
+    <None Include="Resources\theme1.1_bouton_stop.png" />
+    <Content Include="Resources\theme1.1_bouton_down_small.png" />
+    <Content Include="Resources\theme1.1_bouton_up_small.png" />
+    <Content Include="Resources\tj_small.png" />
+    <None Include="Resources\uparrow.png" />
+    <None Include="Service References\AvailableReport\GuidService.wsdl" />
+    <None Include="Service References\SoftwareUpdate\configuration91.svcinfo" />
+    <None Include="Service References\SoftwareUpdate\configuration.svcinfo" />
+    <None Include="Service References\SoftwareUpdate\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
+    <None Include="Service References\AvailableReport\configuration91.svcinfo" />
+    <None Include="Service References\AvailableReport\configuration.svcinfo" />
+    <None Include="Service References\AvailableReport\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
+    <Content Include="Template\cover.css" />
+    <Content Include="Template\cover.js" />
+    <Content Include="Template\package.png" />
+    <Content Include="Template\package_delete.png" />
+    <Content Include="Template\Reports\loading.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Template\Reports\page.tpl.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Template\Reports\pageForDownload.tpl.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Template\Reports\report.tpl.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Template\Reports\star_off.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Template\Reports\star_on.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Template\Reports\style.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UserControl\CollapsibleSplitter.bmp" />
+    <EmbeddedResource Include="UserControl\DateTimeUserControl.fr.resx">
+      <DependentUpon>DateTimeUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\DateTimeUserControl.ky-KG.resx">
+      <DependentUpon>DateTimeUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\DateTimeUserControl.resx">
+      <DependentUpon>DateTimeUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\DateTimeUserControl.ru-RU.resx">
+      <DependentUpon>DateTimeUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\ListViewEx.pt.resx">
+      <DependentUpon>ListViewEx.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\ListViewEx.resx">
+      <DependentUpon>ListViewEx.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\ListViewEx.ru-RU.resx">
+      <DependentUpon>ListViewEx.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetBaseForm.resx">
+      <DependentUpon>SweetBaseForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetForm.fr.resx">
+      <DependentUpon>SweetForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetForm.pt.resx">
+      <DependentUpon>SweetForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetForm.resx">
+      <DependentUpon>SweetForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetForm.ru-RU.resx">
+      <DependentUpon>SweetForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetOkCancelForm.fr.resx">
+      <DependentUpon>SweetOkCancelForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetOkCancelForm.pt.resx">
+      <DependentUpon>SweetOkCancelForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetOkCancelForm.resx">
+      <DependentUpon>SweetOkCancelForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\SweetOkCancelForm.ru-RU.resx">
+      <DependentUpon>SweetOkCancelForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\TextCurrencyUserControl.fr.resx">
+      <DependentUpon>TextCurrencyUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\TextCurrencyUserControl.ky-KG.resx">
+      <DependentUpon>TextCurrencyUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\TextCurrencyUserControl.pt.resx">
+      <DependentUpon>TextCurrencyUserControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\TextCurrencyUserControl.resx">
+      <DependentUpon>TextCurrencyUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\TextCurrencyUserControl.ru-RU.resx">
+      <DependentUpon>TextCurrencyUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl\TextNumericUserControl.resx">
+      <DependentUpon>TextNumericUserControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="Resources\theme1.1_restore_data.png" />
+    <None Include="Resources\theme1.1_import.png" />
+    <None Include="Resources\thame1.1_database.png" />
+    <None Include="Resources\theme1.1_doc.png" />
+    <None Include="Resources\theme1.1_pastille_personne.png" />
+    <None Include="Resources\theme1.1_pastille_produit.png" />
+    <None Include="Resources\theme1.1_bouton_down.png" />
+    <None Include="Resources\theme1.1_bouton_up.png" />
+    <None Include="Resources\theme1.1_bouton_delete.png" />
+    <None Include="Resources\theme1.1_bouton_print.png" />
+    <None Include="Resources\theme1.1_search.png" />
+    <None Include="Resources\theme1.1_fond_gris.png" />
+    <None Include="Resources\theme1.1_bouton_previous.png" />
+    <None Include="Resources\theme1.1_bouton_next.png" />
+    <None Include="Resources\theme1.1_bouton_new.png" />
+    <None Include="Resources\theme1.1_export.png" />
+    <None Include="Resources\theme1.1_pastille_option.png" />
+    <None Include="Resources\theme1.1_bouton_save.png" />
+    <None Include="Resources\theme1.1_fond_bouton.png" />
+    <None Include="Resources\theme1.1_pastille_contrat.png" />
+    <None Include="Resources\theme1.1_view.png" />
+    <None Include="Resources\theme1.1_bouton_validity.png" />
+    <None Include="Resources\theme1.1_bouton_close.png" />
+    <None Include="Resources\theme1.1_fond_gris_180.png" />
+    <None Include="Resources\theme1.1_fond_vert.png" />
+    <None Include="Resources\flecheBH.bmp" />
+    <None Include="Resources\flecheHB.bmp" />
+    <None Include="Resources\ru_small.png" />
+    <None Include="Resources\en_small.png" />
+    <None Include="Resources\fr_small.png" />
+    <None Include="Service References\SoftwareUpdate\SoftwareUpdate.wsdl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{3924545A-F8E2-475A-B1A4-05175BC41E50}" />
+    <Service Include="{5AD368F8-9AD3-4E4C-97D8-1F4F1C124158}" />
+    <Service Include="{967B4E0D-AD0C-4609-AB67-0FA40C0206D8}" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>Клиентский профиль .NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Установщик Windows 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <PublishFile Include="CrystalDecisions.Enterprise.PluginManager">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.Enterprise.Viewing.ReportSource">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.ClientDoc">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.CommLayer">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.CommonControls">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.CommonObjectModel">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.Controllers">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.CubeDefModel">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.DataDefModel">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.DataSetConversion">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.ObjectFactory">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.Prompting">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.ReportDefModel">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="CrystalDecisions.ReportAppServer.XmlSerialize">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="Octopus.Remoting.Server">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadataStorage Include="Service References\AvailableReport\" />
+    <WCFMetadataStorage Include="Service References\SoftwareUpdate\" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties GreenPepperConfigSutName="" GreenPepperConfigProjectName="" GreenPepperConfigRepositories="" GreenPepperConfigRunnerArgs="" GreenPepperCustomSud="" GreenPepperCustomSudArgs="" GreenPepperConfigRunnerProgram="" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

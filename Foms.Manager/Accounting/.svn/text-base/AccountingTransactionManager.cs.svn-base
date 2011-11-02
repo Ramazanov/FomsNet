@@ -1,0 +1,530 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.Enums;
+using Octopus.Manager.Currencies;
+using Octopus.Shared;
+
+namespace Octopus.Manager.Accounting
+{
+	/// <summary>
+	/// MovementSetManagement contains all methods relative to selecting, inserting, updating
+	/// and deleting movementSet objects to and from our database.
+	/// </summary>
+	public class AccountingTransactionManager : Manager
+	{
+		private readonly UserManager _userManager;
+        private readonly AccountManager _accountManagement;
+        private CurrencyManager _currencyManager;
+
+        public AccountingTransactionManager(User pUser) : base(pUser)
+        {
+            _userManager = new UserManager(pUser);
+            _accountManagement = new AccountManager(pUser);
+            _currencyManager = new CurrencyManager(pUser);
+        }
+
+		public AccountingTransactionManager(string testDb) : base(testDb)
+		{
+			_userManager = new UserManager(testDb);
+			_accountManagement = new AccountManager(testDb);
+            _currencyManager = new CurrencyManager(testDb);
+		}
+
+        private static Booking _GetBooking(SqlDataReader pReader)
+        {
+            return new Booking
+                       {
+                           Id = DatabaseHelper.GetInt32("id", pReader),
+                           Amount = DatabaseHelper.GetMoney("amount", pReader),
+                           IsExported = DatabaseHelper.GetBoolean("is_exported", pReader),
+                           DebitAccount = new Account { Id = DatabaseHelper.GetInt32("debit_account_number_id", pReader) },
+                           CreditAccount = new Account { Id = DatabaseHelper.GetInt32("credit_account_number_id", pReader) },
+                           EventId = DatabaseHelper.GetInt32("event_id", pReader),
+                           Date = DatabaseHelper.GetDateTime("transaction_date", pReader),
+                           Currency = new Currency {Id = DatabaseHelper.GetInt32("currency_id", pReader)},
+                           ExchangeRate = (decimal) DatabaseHelper.GetDouble("exchange_rate", pReader),
+                           User = new User
+                                      {
+                                          Id = DatabaseHelper.GetInt32("user_id", pReader),
+                                          UserName = DatabaseHelper.GetString("user_username", pReader),
+                                          Password = DatabaseHelper.GetString("user_password", pReader),
+                                          LastName = DatabaseHelper.GetString("user_lastname", pReader),
+                                          FirstName = DatabaseHelper.GetString("user_firstname", pReader)
+                                      }
+                       };
+        }
+
+	    public List<Booking> SelectMovements(SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"SELECT 
+                                      ManualAccountingMovements.id,
+                                      debit_account_number_id,
+                                      credit_account_number_id,
+                                      amount,
+                                      transaction_date,
+                                      export_date,
+                                      is_exported,
+                                      currency_id,
+                                      exchange_rate,
+                                      [description],
+                                      event_id,
+                                      Users.id AS user_id, 
+                                      Users.deleted AS user_deleted, 
+                                      Users.user_name AS user_username, 
+                                      Users.user_pass AS user_password, 
+                                      Users.role_code AS user_role, 
+                                      Users.first_name AS user_firstname, 
+                                      Users.last_name AS user_lastname
+                                    FROM dbo.ManualAccountingMovements
+                                    INNER JOIN Users ON [Users].id = ManualAccountingMovements.[user_id]";
+
+            List<Booking> bookings =  new List<Booking>();
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    while (reader.Read())
+                    {
+                        Booking booking = _GetBooking(reader);
+                        booking.User.SetRole(DatabaseHelper.GetString("user_role", reader));
+                        bookings.Add(booking);
+                    }
+                }
+
+                foreach (Booking booking in bookings)
+                {
+                    booking.CreditAccount = _accountManagement.Select(booking.CreditAccount.Id);
+                    booking.DebitAccount = _accountManagement.Select(booking.DebitAccount.Id);
+                    booking.Currency = _currencyManager.SelectCurrencyById(booking.Currency.Id);
+                }
+
+                return bookings;
+            }
+        }
+
+        public Booking SelectBookingByEventId(int eventId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"SELECT 
+                                      ManualAccountingMovements.id,
+                                      debit_account_number_id,
+                                      credit_account_number_id,
+                                      amount,
+                                      transaction_date,
+                                      export_date,
+                                      is_exported,
+                                      currency_id,
+                                      exchange_rate,
+                                      [description],
+                                      event_id,
+                                      Users.id AS user_id, 
+                                      Users.deleted AS user_deleted, 
+                                      Users.user_name AS user_username, 
+                                      Users.user_pass AS user_password, 
+                                      Users.role_code AS user_role, 
+                                      Users.first_name AS user_firstname, 
+                                      Users.last_name AS user_lastname
+                                    FROM dbo.ManualAccountingMovements
+                                    INNER JOIN Users ON [Users].id = ManualAccountingMovements.[user_id]
+                                    WHERE event_id = @event_id";
+            Booking booking =  new Booking();
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@event_id", select, eventId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    while (reader.Read())
+                    {
+                        booking = _GetBooking(reader);
+                        booking.User.SetRole(DatabaseHelper.GetString("user_role", reader));
+                    }
+                }
+
+                booking.CreditAccount = _accountManagement.Select(booking.CreditAccount.Id);
+                booking.DebitAccount = _accountManagement.Select(booking.DebitAccount.Id);
+                booking.Currency = _currencyManager.SelectCurrencyById(booking.Currency.Id);
+                return booking;
+            }
+        }
+
+        public DataTable SelectBookingsToExport()
+        {
+            const string sqlText = "ExportAcountingTransactions";
+
+            DataSet dataSet = new DataSet();
+
+            using (SqlCommand cmdSelect = new SqlCommand(sqlText, DefaultConnection))
+            {
+                cmdSelect.CommandType = CommandType.StoredProcedure;
+                SqlDataAdapter da = new SqlDataAdapter(cmdSelect);
+                da.Fill(dataSet);
+            }
+            
+            if (dataSet.Tables.Count > 0) return dataSet.Tables[0];
+            return null;
+        }
+
+	    public void UpdateSelectedBooking(string pBuffer, bool pIsExported)
+        {
+            string sqlText = @"UPDATE 
+                                 [LoanAccountingMovements] 
+                               SET [is_exported] = @isExported, 
+                                 export_date = @exportDate
+                               WHERE id IN (" + pBuffer + ")";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection))
+            {
+                update.CommandTimeout = 0;
+                DatabaseHelper.InsertBooleanParam("@isExported", update, pIsExported);
+                DatabaseHelper.InsertDateTimeParam("@exportDate", update, DateTime.Now);
+                DatabaseHelper.InsertStringNVarCharParam("@idset", update, pBuffer);
+
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public BookingToViewStock SelectBookings(Account pAccount, DateTime pBeginDate, DateTime pEndDate, int currencyId, OBookingTypes pBookingType)
+        {
+            const string sqlQuery = "GetAccountBookings";
+
+            bool? isExported = null;
+            switch (pBookingType)
+            {
+                case OBookingTypes.Exported :
+                    isExported = true;
+                    break;
+                case OBookingTypes.NotExported :
+                    isExported = false;
+                    break;
+            }
+            
+            using (SqlCommand select = new SqlCommand(sqlQuery, DefaultConnection))
+            {
+                select.CommandType = CommandType.StoredProcedure;
+
+                DatabaseHelper.InsertDateTimeParam("@beginDate", select, pBeginDate);
+                DatabaseHelper.InsertDateTimeParam("@endDate", select, pEndDate);
+                DatabaseHelper.InsertInt32Param("@account_id", select, pAccount.Id);
+                DatabaseHelper.InsertInt32Param("@currency_id", select, currencyId);
+                DatabaseHelper.InsertBooleanParam("@is_exported", select, isExported);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new BookingToViewStock(pAccount);
+
+                    BookingToViewStock stock = new BookingToViewStock(pAccount);
+                    while (reader.Read())
+                    {
+                        stock.Add(_GetBooking(pAccount, reader));
+                    }
+                    return stock;
+                }
+            }
+        }
+
+        private static BookingToView _GetBooking(Account pAccount, SqlDataReader reader)
+        {
+            return new BookingToView
+                       {
+                           Date = DatabaseHelper.GetDateTime("date", reader),
+                           EventCode = DatabaseHelper.GetString("event_code", reader),
+                           ExchangeRate = DatabaseHelper.GetNullAuthorizedDouble("exchange_rate", reader),
+                           AmountInternal = DatabaseHelper.GetMoney("amount", reader),
+                           ContractCode = DatabaseHelper.GetString("contract_code", reader),
+                           //AccountingLabel = ((OAccountingLabels)DatabaseHelper.GetSmallInt("label", reader)),
+                           Direction = (DatabaseHelper.GetString("debit_local_account_number", reader) == pAccount.Number
+                                    ? OBookingDirections.Debit
+                                    : OBookingDirections.Credit),
+                           IsExported = DatabaseHelper.GetBoolean("is_exported", reader)
+                       };
+
+        }
+
+        public OCurrency GetAccountBalance(int accountId, int currencyId, int contractId, int? mode, int toSumParent)
+        {
+            using (SqlCommand command = new SqlCommand("GetAccountBalance", DefaultConnection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                DatabaseHelper.InsertInt32Param("@account_number_id", command, accountId);
+                DatabaseHelper.InsertInt32Param("@currency_id", command, currencyId);
+                DatabaseHelper.InsertInt32Param("@contract_id", command, contractId);
+                DatabaseHelper.InsertInt32Param("@mode", command, mode);
+                DatabaseHelper.InsertInt32Param("@to_sum_parent", command, toSumParent);
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return 0;
+                    OCurrency balance = 0;
+                    while (reader.Read())
+                    {
+                        balance = DatabaseHelper.GetMoney("balance", reader);
+                    }
+                    return balance;
+                }
+            }
+        }
+
+        public OCurrency GetAccountCategoryBalance(int accountId, int currencyId, int contractId, int? mode)
+        {
+            using (SqlCommand command = new SqlCommand("GetBalanceByAccountCategory", DefaultConnection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                DatabaseHelper.InsertInt32Param("@account_category_id", command, accountId);
+                DatabaseHelper.InsertInt32Param("@currency_id", command, currencyId);
+                DatabaseHelper.InsertInt32Param("@contract_id", command, contractId);
+                DatabaseHelper.InsertInt32Param("@mode", command, mode);
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return 0;
+                    OCurrency balance = 0;
+                    while (reader.Read())
+                    {
+                        balance = DatabaseHelper.GetMoney("balance", reader);
+                    }
+                    return balance;
+                }
+            }
+        }
+
+        public void DoManualMovment(Booking booking, SqlTransaction sqlTransaction)
+        {
+            const string sqlText = @"INSERT INTO dbo.ManualAccountingMovements
+                               ( debit_account_number_id,
+                                  credit_account_number_id,
+                                  amount,
+                                  transaction_date,
+                                  currency_id,
+                                  exchange_rate,
+                                  description,
+                                  user_id,
+                                  is_exported,
+                                  event_id)
+                               VALUES  
+                               ( @debit_account_number_id, 
+                                 @credit_account_number_id, 
+                                 @amount, 
+                                 @transaction_date, 
+                                 @currency_id, 
+                                 @exchange_rate, 
+                                 @description,
+                                 @user_id,
+                                 0,
+                                 @event_id)";
+            using (SqlCommand command = new SqlCommand(sqlText, DefaultConnection, sqlTransaction))
+            {
+                DatabaseHelper.InsertInt32Param("@debit_account_number_id", command, booking.DebitAccount.Id);
+                DatabaseHelper.InsertInt32Param("@credit_account_number_id", command, booking.CreditAccount.Id);
+                DatabaseHelper.InsertMoneyParam("@amount", command, booking.Amount);
+                DatabaseHelper.InsertDateTimeParam("@transaction_date", command, booking.Date);
+                DatabaseHelper.InsertInt32Param("@currency_id", command, booking.Currency.Id);
+                DatabaseHelper.InsertMoneyParam("@exchange_rate", command, booking.ExchangeRate);
+                DatabaseHelper.InsertStringNVarCharParam("@description", command, booking.Description);
+                DatabaseHelper.InsertInt32Param("@user_id", command, booking.User.Id);
+                DatabaseHelper.InsertInt32Param("@event_id", command, booking.EventId);
+
+                command.ExecuteNonQuery();
+            }
+        }
+
+	    public bool DoLoanMovment(ContractAccountingRule accountingRule, int eventId, SqlTransaction pSqlTransaction)
+        {
+            using (SqlCommand command = new SqlCommand("RunLoanAccountingClosure", DefaultConnection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                DatabaseHelper.InsertInt32Param("@accounting_rule_id", command, accountingRule.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@event_type", command, accountingRule.EventType.EventCode);
+                DatabaseHelper.InsertInt32Param("@event_id", command, eventId);
+                DatabaseHelper.InsertStringNVarCharParam("@event_attribute", command, accountingRule.EventAttribute.Name);
+                DatabaseHelper.InsertInt32Param("@debit_account_number_id", command, accountingRule.DebitAccount.Id);
+                DatabaseHelper.InsertInt32Param("@credit_account_number_id", command, accountingRule.CreditAccount.Id);
+
+                if(accountingRule.LoanProduct != null)
+                  DatabaseHelper.InsertInt32Param("@loan_product_id", command, accountingRule.LoanProduct.Id);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@loan_product_id", command, null);
+                }
+
+                String clientType = null;
+
+                switch (accountingRule.ClientType)
+                {
+                    case OClientTypes.Corporate :
+                        clientType = "C";
+                        break;
+                    case OClientTypes.Person :
+                        clientType = "I";
+                        break;
+                    case OClientTypes.Group :
+                        clientType = "G";
+                        break;
+                    case OClientTypes.Village :
+                        clientType = "V";
+                        break;
+                }
+
+                DatabaseHelper.InsertStringNVarCharParam("@client_type", command, clientType);
+
+                if (accountingRule.EconomicActivity != null)
+                    DatabaseHelper.InsertInt32Param("@activity_id", command, accountingRule.EconomicActivity.Id);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@activity_id", command, null);
+                }
+                
+                if (accountingRule.Currency.Id != 0)
+                    DatabaseHelper.InsertInt32Param("@currency_id", command, accountingRule.Currency.Id);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@currency_id", command, null);
+                }
+
+                if (accountingRule.SavingProduct != null)
+                    DatabaseHelper.InsertInt32Param("@savings_product_id", command, accountingRule.SavingProduct.Id);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@savings_product_id", command, null);
+                }
+
+                if ((int)accountingRule.PaymentMethod != 0)
+                    DatabaseHelper.InsertInt32Param("@payment_method_id", command, (int) accountingRule.PaymentMethod);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@payment_method_id", command, null);
+                }
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    bool result = false;
+                    if (reader == null || !reader.HasRows) return false;
+                    while (reader.Read())
+                    {
+                        if(DatabaseHelper.GetInt32("result", reader) > 0)
+                            result = true;
+                    }
+
+                    return result;
+                }
+            }
+        }
+
+        public bool DoSavingMovment(ContractAccountingRule accountingRule, int eventId, SqlTransaction pSqlTransaction)
+        {
+            using (SqlCommand command = new SqlCommand("RunSavingAccountingClosure", DefaultConnection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                DatabaseHelper.InsertInt32Param("@accounting_rule_id", command, accountingRule.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@event_type", command, accountingRule.EventType.EventCode);
+                DatabaseHelper.InsertInt32Param("@event_id", command, eventId);
+                DatabaseHelper.InsertStringNVarCharParam("@event_attribute", command, accountingRule.EventAttribute.Name);
+                DatabaseHelper.InsertInt32Param("@debit_account_number_id", command, accountingRule.DebitAccount.Id);
+                DatabaseHelper.InsertInt32Param("@credit_account_number_id", command, accountingRule.CreditAccount.Id);
+
+                if (accountingRule.LoanProduct != null)
+                    DatabaseHelper.InsertInt32Param("@loan_product_id", command, accountingRule.LoanProduct.Id);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@loan_product_id", command, null);
+                }
+
+                String clientType = null;
+
+                switch (accountingRule.ClientType)
+                {
+                    case OClientTypes.Corporate:
+                        clientType = "C";
+                        break;
+                    case OClientTypes.Person:
+                        clientType = "I";
+                        break;
+                    case OClientTypes.Group:
+                        clientType = "G";
+                        break;
+                    case OClientTypes.Village:
+                        clientType = "V";
+                        break;
+                }
+
+                DatabaseHelper.InsertStringNVarCharParam("@client_type", command, clientType);
+
+                if (accountingRule.EconomicActivity != null)
+                    DatabaseHelper.InsertInt32Param("@activity_id", command, accountingRule.EconomicActivity.Id);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@activity_id", command, null);
+                }
+
+                if (accountingRule.Currency.Id != 0)
+                    DatabaseHelper.InsertInt32Param("@currency_id", command, accountingRule.Currency.Id);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@currency_id", command, null);
+                }
+
+                if (accountingRule.SavingProduct != null)
+                    DatabaseHelper.InsertInt32Param("@savings_product_id", command, accountingRule.SavingProduct.Id);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@savings_product_id", command, null);
+                }
+
+                if ((int)accountingRule.PaymentMethod != 0)
+                    DatabaseHelper.InsertInt32Param("@payment_method_id", command, (int)accountingRule.PaymentMethod);
+                else
+                {
+                    DatabaseHelper.InsertInt32Param("@payment_method_id", command, null);
+                }
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    bool result = false;
+                    if (reader == null || !reader.HasRows) return false;
+                    while (reader.Read())
+                    {
+                        if (DatabaseHelper.GetInt32("result", reader) > 0)
+                            result = true;
+                    }
+
+                    return result;
+                }
+            }
+        }
+	}
+}
+

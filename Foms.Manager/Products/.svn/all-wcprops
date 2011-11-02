@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Products
+END
+SavingProductManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Products/SavingProductManager.cs
+END
+LoanProductManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Products/LoanProductManager.cs
+END
+GuaranteeProductManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Products/GuaranteeProductManager.cs
+END

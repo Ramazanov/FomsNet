@@ -1,0 +1,1246 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Events;
+using System;
+using Octopus.Enums;
+using Octopus.CoreDomain.Events.Saving;
+using Octopus.Shared;
+
+namespace Octopus.Manager.Events
+{
+	public class EventManager : Manager
+	{
+        public EventManager(User pUser) : base(pUser) {}
+
+        public EventManager(string testDb) : base(testDb) {}
+
+        public void WriteLog(string eventCode, string eventDescription, int userId)
+        {
+            string insertCommandText=string.Format(@"INSERT INTO dbo.TraceUserLogs 
+                                            VALUES('{0}', GETDATE(),'{1}','{2}')", eventCode, userId, eventDescription);
+            SqlCommand insertCmd = new SqlCommand(insertCommandText, DefaultConnection);
+            insertCmd.ExecuteNonQuery();
+        }
+    
+        public List<AuditTrailEvent> SelectAuditTrailEvents(AuditTrailFilter filter)
+        {
+            const string q = @"SELECT * FROM dbo.AuditTrailEvents(@from, @to, @user_id, @types, @del)";
+
+            List<AuditTrailEvent> retval = new List<AuditTrailEvent>();
+
+            OctopusCommand cmd = new OctopusCommand(q, DefaultConnection);
+            cmd.AddParam("@from", filter.From);
+            cmd.AddParam("@to", filter.To);
+            cmd.AddParam("@user_id", filter.UserId);
+            cmd.AddParam("@types", filter.Types);
+            cmd.AddParam("@del", filter.IncludeDeleted);
+            
+            using (OctopusReader reader = cmd.ExecuteReader())
+            {
+                if (reader.Empty) return retval;
+
+                while (reader.Read())
+                {
+                    AuditTrailEvent e = new AuditTrailEvent
+                    {
+                        Code = reader.GetString("event_type")
+                        , Description = reader.GetString("description")
+                        , UserName = reader.GetString("user_name")
+                        , UserRole = reader.GetString("user_role")
+                        , Date =  reader.GetDateTime("event_date")
+                        , EntryDate = reader.GetDateTime("entry_date")
+                    };
+                    retval.Add(e);
+                }
+            }
+
+            return retval;
+        }
+
+	    public EventStock SelectEvents(string pEventType, int pUserId, DateTime pBeginDate, DateTime pEndDate)
+        {
+            EventStock list = new EventStock();
+            string sqlText =
+                string.Format(
+                    @"SELECT ISNULL(Contracts.contract_code, SavingContracts.code) as contract_code,
+                    ContractEvents.contract_id,
+                    union_events.id AS event_id, 
+                    union_events.event_type AS code, 
+                    union_events.entry_date,
+                    union_events.event_date AS event_date, 
+                    union_events.event_type AS event_type, 
+                    union_events.is_deleted AS event_deleted,
+ 
+                    LoanDisbursmentEvents.id AS lde_id,
+                    LoanDisbursmentEvents.amount AS lde_amount, 
+                    LoanDisbursmentEvents.fees AS lde_fees,
+
+                    LoanEntryFeeEvents.id AS ef_id,
+                    LoanEntryFeeEvents.fee AS ef_fee,
+                    LoanEntryFeeEvents.disbursement_event_id,
+
+                    WriteOffEvents.id AS woe_id, 
+                    WriteOffEvents.olb AS woe_olb, 
+                    WriteOffEvents.accrued_interests AS woe_accrued_interests, 
+                    WriteOffEvents.accrued_penalties AS woe_accrued_penalties, 
+                    WriteOffEvents.past_due_days AS woe_past_due_days, 
+
+                    ReschedulingOfALoanEvents.id AS rle_id, 
+                    ReschedulingOfALoanEvents.amount AS rle_amount, 
+                    ReschedulingOfALoanEvents.nb_of_maturity AS rle_maturity, 
+                    ReschedulingOfALoanEvents.date_offset AS rle_date_offset,
+ 
+                    RepaymentEvents.id AS rpe_id, 
+                    RepaymentEvents.principal AS rpe_principal, 
+                    RepaymentEvents.interests AS rpe_interests, 
+                    RepaymentEvents.penalties AS rpe_penalties,
+                    RepaymentEvents.commissions AS rpe_commissions,
+                    RepaymentEvents.past_due_days AS rpe_past_due_days, 
+                    RepaymentEvents.installment_number As rpe_installment_number, 
+ 
+                    LoanInterestAccruingEvents.id AS liae_id, 
+                    LoanInterestAccruingEvents.interest_prepayment AS liae_interestPrepayment, 
+                    LoanInterestAccruingEvents.accrued_interest AS liae_accruedInterest, 
+                    LoanInterestAccruingEvents.rescheduled AS liae_rescheduled, 
+                    LoanInterestAccruingEvents.installment_number AS liae_installmentNumber,
+
+                    TrancheEvents.amount AS tranche_amount,
+                    TrancheEvents.interest_rate AS tranche_interest_rate,
+                    TrancheEvents.maturity AS tranche_maturity,
+                    TrancheEvents.start_date AS tranche_start_date,
+                    TrancheEvents.id AS tranche_id,
+
+                    OverdueEvents.id AS ov_id,
+                    OverdueEvents.olb AS ov_olb,
+                    OverdueEvents.overdue_days AS ov_overdue_days,
+ 
+                    ProvisionEvents.id AS pe_id,
+                    ProvisionEvents.amount AS pe_amount,
+                    ProvisionEvents.overdue_days AS pe_overdue_days,
+
+                    SavingEvents.amount AS se_amount,
+                    SavingEvents.fees AS se_fees,
+                    SavingEvents.related_contract_code AS se_transfer_code,
+                    Users.id AS user_id, 
+                    Users.deleted AS user_deleted, 
+                    Users.user_name AS user_username, 
+                    Users.user_pass AS user_password, 
+                    Users.role_code AS user_role, 
+                    Users.first_name AS user_firstname, 
+                    Users.last_name AS user_lastname
+                    FROM (SELECT id, event_type, entry_date, event_date, is_deleted, user_id 
+						  FROM ContractEvents 
+                          UNION ALL 
+						  SELECT id, code AS event_type, creation_date AS entry_date, creation_date AS event_date, deleted AS is_deleted, user_id 
+						  FROM SavingEvents WHERE code NOT IN('SIAE', 'SIPE')                         
+                          )
+					AS union_events 
+                    LEFT JOIN ContractEvents ON union_events.ID = ContractEvents.id
+                    LEFT JOIN SavingEvents ON union_events.ID = SavingEvents.id
+                    LEFT JOIN Contracts ON Contracts.id = ContractEvents.contract_id 
+                    LEFT JOIN SavingContracts ON SavingContracts.id = SavingEvents.contract_id
+                    LEFT OUTER JOIN Users ON union_events.user_id = Users.id 
+                    LEFT OUTER JOIN LoanDisbursmentEvents ON ContractEvents.id = LoanDisbursmentEvents.id 
+                    LEFT OUTER JOIN LoanEntryFeeEvents ON ContractEvents.id = LoanEntryFeeEvents.id                    
+                    LEFT OUTER JOIN LoanInterestAccruingEvents ON ContractEvents.id = LoanInterestAccruingEvents.id 
+                    LEFT OUTER JOIN RepaymentEvents ON ContractEvents.id = RepaymentEvents.id 
+                    LEFT OUTER JOIN ReschedulingOfALoanEvents ON ContractEvents.id = ReschedulingOfALoanEvents.id 
+                    LEFT OUTER JOIN WriteOffEvents ON ContractEvents.id = WriteOffEvents.id 
+                    LEFT OUTER JOIN TrancheEvents ON ContractEvents.id = TrancheEvents.id
+                    LEFT OUTER JOIN OverdueEvents ON ContractEvents.id = OverdueEvents.id
+                    LEFT OUTER JOIN ProvisionEvents ON ContractEvents.id = ProvisionEvents.id
+                    WHERE union_events.event_date BETWEEN @beginDate AND @endDate 
+                    AND union_events.event_type LIKE @eventType {0}",
+                    pUserId > 0 ? "AND ContractEvents.user_id = @userId ORDER BY union_events.event_date" : "ORDER BY union_events.event_date");
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@beginDate", select, pBeginDate);
+                DatabaseHelper.InsertDateTimeParam("@endDate", select, pEndDate);
+                DatabaseHelper.InsertInt32Param("@userId", select, pUserId);
+                DatabaseHelper.InsertStringNVarCharParam("@eventType", select, string.Format("%{0}%", pEventType) );
+                
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (!(reader == null || !reader.HasRows)) 
+                    
+                    while (reader.Read())
+                    {
+                        list.Add(ReadEvent(reader));
+                    }
+                }
+            }
+            return list;
+        }
+
+	    public EventStock SelectEvents(int pContractId)
+		{
+            const string sqlText = @"SELECT 
+                    ContractEvents.id AS event_id,
+                    ContractEvents.contract_id, 
+                    ContractEvents.event_date, 
+                    ContractEvents.event_type, 
+                    ContractEvents.event_type AS code, 
+                    ContractEvents.is_deleted AS event_deleted, 
+                    ContractEvents.entry_date AS entry_date,
+                    ContractEvents.comment,
+
+                    LoanDisbursmentEvents.id AS lde_id,
+                    LoanDisbursmentEvents.amount AS lde_amount, 
+                    LoanDisbursmentEvents.fees AS lde_fees,
+                    
+                    LoanEntryFeeEvents.id AS ef_id,
+                    LoanEntryFeeEvents.fee AS ef_fee,
+                    LoanEntryFeeEvents.disbursement_event_id,
+
+                    WriteOffEvents.id AS woe_id, 
+                    WriteOffEvents.olb AS woe_olb, 
+                    WriteOffEvents.accrued_interests AS woe_accrued_interests, 
+                    WriteOffEvents.accrued_penalties AS woe_accrued_penalties, 
+                    WriteOffEvents.past_due_days AS woe_past_due_days, 
+
+                    ReschedulingOfALoanEvents.id AS rle_id, 
+                    ReschedulingOfALoanEvents.amount AS rle_amount, 
+                    ReschedulingOfALoanEvents.nb_of_maturity AS rle_maturity, 
+                    ReschedulingOfALoanEvents.date_offset AS rle_date_offset, 
+
+                    RepaymentEvents.id AS rpe_id, 
+                    RepaymentEvents.principal AS rpe_principal, 
+                    RepaymentEvents.interests AS rpe_interests, 
+                    RepaymentEvents.penalties AS rpe_penalties,
+                    RepaymentEvents.commissions AS rpe_commissions,
+                    RepaymentEvents.past_due_days AS rpe_past_due_days, 
+                    RepaymentEvents.installment_number As rpe_installment_number, 
+
+                    LoanInterestAccruingEvents.id AS liae_id, 
+                    LoanInterestAccruingEvents.interest_prepayment AS liae_interestPrepayment, 
+                    LoanInterestAccruingEvents.accrued_interest AS liae_accruedInterest, 
+                    LoanInterestAccruingEvents.rescheduled AS liae_rescheduled, 
+                    LoanInterestAccruingEvents.installment_number AS liae_installmentNumber,
+
+                    TrancheEvents.amount AS tranche_amount,
+                    TrancheEvents.interest_rate AS tranche_interest_rate,
+                    TrancheEvents.maturity AS tranche_maturity,
+                    TrancheEvents.start_date AS tranche_start_date,
+                    TrancheEvents.id AS tranche_id,
+
+                    OverdueEvents.id AS ov_id,
+                    OverdueEvents.olb AS ov_olb,
+                    OverdueEvents.overdue_days AS ov_overdue_days,
+ 
+                    ProvisionEvents.id AS pe_id,
+                    ProvisionEvents.amount AS pe_amount,
+                    ProvisionEvents.overdue_days AS pe_overdue_days,
+
+                    Users.id AS user_id, 
+                    Users.deleted AS user_deleted, 
+                    Users.user_name AS user_username, 
+                    Users.user_pass AS user_password, 
+                    Users.role_code AS user_role, 
+                    Users.first_name AS user_firstname, 
+                    Users.last_name AS user_lastname
+                    FROM ContractEvents 
+                    INNER JOIN Users ON ContractEvents.user_id = Users.id 
+                    LEFT OUTER JOIN LoanDisbursmentEvents ON ContractEvents.id = LoanDisbursmentEvents.id 
+                    LEFT OUTER JOIN LoanEntryFeeEvents ON ContractEvents.id = LoanEntryFeeEvents.id
+                    LEFT OUTER JOIN LoanInterestAccruingEvents ON ContractEvents.id = LoanInterestAccruingEvents.id 
+                    LEFT OUTER JOIN RepaymentEvents ON ContractEvents.id = RepaymentEvents.id 
+                    LEFT OUTER JOIN ReschedulingOfALoanEvents ON ContractEvents.id = ReschedulingOfALoanEvents.id 
+                    LEFT OUTER JOIN WriteOffEvents ON ContractEvents.id = WriteOffEvents.id 
+                    LEFT OUTER JOIN TrancheEvents ON ContractEvents.id = TrancheEvents.id
+                    LEFT OUTER JOIN OverdueEvents ON ContractEvents.id = OverdueEvents.id
+                    LEFT OUTER JOIN ProvisionEvents ON ContractEvents.id = ProvisionEvents.id
+                    WHERE (ContractEvents.contract_id = @id)
+                    ORDER BY ContractEvents.id";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pContractId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new EventStock();
+                    EventStock list = new EventStock();
+                    while (reader.Read())
+                    {
+                        list.Add(ReadEvent(reader));
+                    }
+                    return list;
+                }
+            }
+		}
+
+        public EventStock SelectEventsForClosure()
+        {
+            const string sqlText = @"SELECT 
+                    ContractEvents.id AS event_id, 
+                    ContractEvents.contract_id,
+                    ContractEvents.event_date, 
+                    ContractEvents.event_type, 
+                    ContractEvents.event_type AS code, 
+                    ContractEvents.is_deleted AS event_deleted, 
+                    ContractEvents.entry_date AS entry_date,
+                    ContractEvents.comment,
+
+                    LoanDisbursmentEvents.id AS lde_id,
+                    LoanDisbursmentEvents.amount AS lde_amount, 
+                    LoanDisbursmentEvents.fees AS lde_fees,
+
+                    LoanEntryFeeEvents.id AS ef_id,
+                    LoanEntryFeeEvents.fee AS ef_fee,
+                    LoanEntryFeeEvents.disbursement_event_id,
+
+                    WriteOffEvents.id AS woe_id, 
+                    WriteOffEvents.olb AS woe_olb, 
+                    WriteOffEvents.accrued_interests AS woe_accrued_interests, 
+                    WriteOffEvents.accrued_penalties AS woe_accrued_penalties, 
+                    WriteOffEvents.past_due_days AS woe_past_due_days, 
+
+                    ReschedulingOfALoanEvents.id AS rle_id, 
+                    ReschedulingOfALoanEvents.amount AS rle_amount, 
+                    ReschedulingOfALoanEvents.nb_of_maturity AS rle_maturity, 
+                    ReschedulingOfALoanEvents.date_offset AS rle_date_offset, 
+
+                    RepaymentEvents.id AS rpe_id, 
+                    RepaymentEvents.principal AS rpe_principal, 
+                    RepaymentEvents.interests AS rpe_interests, 
+                    RepaymentEvents.penalties AS rpe_penalties,
+                    RepaymentEvents.commissions AS rpe_commissions,
+                    RepaymentEvents.past_due_days AS rpe_past_due_days, 
+                    RepaymentEvents.installment_number As rpe_installment_number, 
+
+                    LoanInterestAccruingEvents.id AS liae_id, 
+                    LoanInterestAccruingEvents.interest_prepayment AS liae_interestPrepayment, 
+                    LoanInterestAccruingEvents.accrued_interest AS liae_accruedInterest, 
+                    LoanInterestAccruingEvents.rescheduled AS liae_rescheduled, 
+                    LoanInterestAccruingEvents.installment_number AS liae_installmentNumber,
+
+                    TrancheEvents.amount AS tranche_amount,
+                    TrancheEvents.interest_rate AS tranche_interest_rate,
+                    TrancheEvents.maturity AS tranche_maturity,
+                    TrancheEvents.start_date AS tranche_start_date,
+                    TrancheEvents.id AS tranche_id,
+
+                    OverdueEvents.id AS ov_id,
+                    OverdueEvents.olb AS ov_olb,
+                    OverdueEvents.overdue_days AS ov_overdue_days,
+
+                    ProvisionEvents.id AS pe_id,
+                    ProvisionEvents.amount AS pe_amount,
+                    ProvisionEvents.overdue_days AS pe_overdue_days,
+
+                    Users.id AS user_id, 
+                    Users.deleted AS user_deleted, 
+                    Users.user_name AS user_username, 
+                    Users.user_pass AS user_password, 
+                    Users.role_code AS user_role, 
+                    Users.first_name AS user_firstname, 
+                    Users.last_name AS user_lastname
+
+                    FROM ContractEvents 
+                    INNER JOIN Users ON ContractEvents.user_id = Users.id 
+                    LEFT OUTER JOIN LoanDisbursmentEvents ON ContractEvents.id = LoanDisbursmentEvents.id 
+                    LEFT OUTER JOIN LoanEntryFeeEvents ON ContractEvents.id = LoanEntryFeeEvents.id 
+                    LEFT OUTER JOIN LoanInterestAccruingEvents ON ContractEvents.id = LoanInterestAccruingEvents.id 
+                    LEFT OUTER JOIN RepaymentEvents ON ContractEvents.id = RepaymentEvents.id 
+                    LEFT OUTER JOIN ReschedulingOfALoanEvents ON ContractEvents.id = ReschedulingOfALoanEvents.id 
+                    LEFT OUTER JOIN WriteOffEvents ON ContractEvents.id = WriteOffEvents.id 
+                    LEFT OUTER JOIN TrancheEvents ON ContractEvents.id = TrancheEvents.id
+                    LEFT OUTER JOIN OverdueEvents ON ContractEvents.id = OverdueEvents.id
+                    LEFT OUTER JOIN ProvisionEvents ON ContractEvents.id = ProvisionEvents.id
+                    WHERE ContractEvents.is_exported = 0 AND ContractEvents.is_deleted = 0
+                      AND (LoanDisbursmentEvents.id IS NOT NULL 
+                           OR RepaymentEvents.id IS NOT NULL
+                           OR ReschedulingOfALoanEvents.id IS NOT NULL
+                           OR WriteOffEvents.id IS NOT NULL
+                           OR OverdueEvents.id IS NOT NULL
+                           OR ProvisionEvents.id IS NOT NULL
+                           OR TrancheEvents.id IS NOT NULL
+                           OR LoanInterestAccruingEvents.id IS NOT NULL
+                           OR LoanEntryFeeEvents.id IS NOT NULL)
+                    ORDER BY ContractEvents.id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new EventStock();
+                    EventStock list = new EventStock();
+                    
+                    while (reader.Read())
+                    {
+                        list.Add(ReadEvent(reader));
+                    }
+
+                    return list;
+                }
+            }
+        }
+
+        public List<EventType> SelectEventTypesForAccounting()
+        {
+            const string q = @"SELECT id, event_type, description
+                               FROM dbo.EventTypes
+                               WHERE accounting = 1
+                               ORDER BY sort_order";
+
+            List<EventType> list = new List<EventType>();
+
+            OctopusCommand c = new OctopusCommand(q, DefaultConnection);
+            using (OctopusReader r = c.ExecuteReader())
+            {
+                if (r.Empty) return list;
+
+                while (r.Read())
+                {
+                    EventType et = new EventType
+                    {
+                        Id = r.GetInt("id"), 
+                        Description = r.GetString("description"),
+                        EventCode = r.GetString("event_type")
+                    };
+                    list.Add(et);
+                }
+
+                return list;
+            }
+        }
+
+        public List<EventType> SelectEventTypes()
+        {
+            const string q = @"SELECT id, event_type, description
+                               FROM dbo.EventTypes
+                               ORDER BY event_type";
+
+            List<EventType> list = new List<EventType>();
+
+            OctopusCommand c = new OctopusCommand(q, DefaultConnection);
+            using (OctopusReader r = c.ExecuteReader())
+            {
+                if (r.Empty) return list;
+
+                while (r.Read())
+                {
+                    EventType et = new EventType
+                    {
+                        Id = r.GetInt("id"),
+                        Description = r.GetString("description"),
+                        EventCode = r.GetString("event_type")
+                    };
+                    list.Add(et);
+                }
+
+                return list;
+            }
+        }
+
+        public List<EventAttribute> SelectEventAttributes(string eventType)
+        {
+            const string sqlText = @"SELECT [id], [event_type], [name]
+                                     FROM EventAttributes
+                                     WHERE [event_type] = @event_type";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@event_type", select, eventType);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<EventAttribute>();
+                    List<EventAttribute> list = new List<EventAttribute>();
+                    while (reader.Read())
+                    {
+                        list.Add(new EventAttribute
+                        {
+                            Id = DatabaseHelper.GetInt32("id", reader),
+                            Name = DatabaseHelper.GetString("name", reader),
+                            EventCode = DatabaseHelper.GetString("event_type", reader)
+                        });
+                    }
+
+                    return list;
+                }
+            }
+        }
+
+        public EventType SelectEventTypeByEventType(string eventType)
+        {
+            const string sqlText = @"SELECT id, event_type, description
+                                     FROM EventTypes
+                                     WHERE event_type = @event_type";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@event_type", select, eventType);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new EventType();
+                    EventType evntType = new EventType();
+                    while (reader.Read())
+                    {
+                        evntType = new EventType
+                                     {
+                                         Id = DatabaseHelper.GetInt32("id", reader),
+                                         Description = DatabaseHelper.GetString("description", reader),
+                                         EventCode = DatabaseHelper.GetString("event_type", reader)
+                                     };
+                    }
+
+                    return evntType;
+                }
+            }
+        }
+
+        public EventAttribute SelectEventAttributeByCode(string name)
+        {
+            const string sqlText = @"SELECT id, event_type, name
+                                     FROM EventAttributes
+                                     WHERE name = @name";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", select, name);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new EventAttribute();
+                    EventAttribute eventType = new EventAttribute();
+                    while (reader.Read())
+                    {
+                        eventType = new EventAttribute
+                        {
+                            Id = DatabaseHelper.GetInt32("id", reader),
+                            Name = DatabaseHelper.GetString("name", reader),
+                            EventCode = DatabaseHelper.GetString("event_type", reader)
+                        };
+                    }
+
+                    return eventType;
+                }
+            }
+        }
+
+        public int AddLoanEventHead(Event pEvent, int pContractId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [ContractEvents]
+                                     ([event_type], [contract_id], [event_date], [user_id], [is_deleted])
+			                         VALUES(@eventType, @contractId, @eventDate, @userId,@deleted)
+                                     SELECT SCOPE_IDENTITY()";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                SetLoanEvent(insert, pEvent, pContractId);
+                return int.Parse(insert.ExecuteScalar().ToString());
+            }
+        }
+
+        public int AddLoanEvent(LoanDisbursmentEvent pEvent, int contractId, SqlTransaction pSqlTransac)
+		{
+            pEvent.Id = AddLoanEventHead(pEvent, contractId, pSqlTransac);
+
+			const string sqlText = @"INSERT INTO [LoanDisbursmentEvents]([id], [amount], [fees], [interest]) 
+                                    VALUES(@id, @amount, @fees, @interest)";
+
+            using(SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                SetLoanDisbursmentEvent(pEvent, insert);
+                insert.ExecuteNonQuery();
+            }
+            return pEvent.Id;
+		}
+
+        public void AddLoanEntryFeesEvent(LoanEntryFeeEvent pEvent, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [LoanEntryFeeEvents]
+                                    (
+                                        [id]
+                                        ,[fee]
+                                        ,[disbursement_event_id]
+                                    ) 
+                                    VALUES
+                                    ( 
+                                        @id
+                                        ,@fee
+                                        ,@disbursement_event_id
+                                    )";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                SetEntryFeesEvent(pEvent, cmd);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private static void SetEntryFeesEvent(LoanEntryFeeEvent pEvent, SqlCommand cmd)
+        {
+            DatabaseHelper.InsertInt32Param("@id", cmd, pEvent.Id);
+            DatabaseHelper.InsertMoneyParam("@fee", cmd, pEvent.Fee);
+            DatabaseHelper.InsertInt32Param("@disbursement_event_id", cmd, pEvent.DisbursementEventId);
+        }
+
+        public void AddLoanEvent(LoanValidationEvent pEvent, int pContractId, SqlTransaction pSqlTransac)
+        {
+            AddLoanEventHead(pEvent, pContractId, pSqlTransac);
+        }
+
+        public void AddLoanEvent(RepaymentEvent pEvent, int contractId, SqlTransaction pSqlTransac)
+		{
+            const string sqlText = @"INSERT INTO [RepaymentEvents]
+                                       ([id],
+                                        [past_due_days], 
+                                        [principal], 
+                                        [interests], 
+                                        [installment_number], 
+                                        [commissions], 
+                                        [penalties],
+                                        [payment_method_id]) 
+                                     VALUES
+                                       (@id, 
+                                        @pastDueDays, 
+                                        @principal, 
+                                        @interests, 
+                                        @installmentNumber, 
+                                        @commissions, 
+                                        @penalties,
+                                        @payment_method_id)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                SetLoanRepaymentEvent(pEvent, insert);
+                insert.ExecuteNonQuery();
+            }
+		}
+
+        public void AddLoanEvent(TrancheEvent pEvent, int contractId, SqlTransaction sqlTransac)
+        {
+            pEvent.Id = AddLoanEventHead(pEvent, contractId, sqlTransac);
+
+            const string sqlText = @"INSERT INTO [TrancheEvents]
+                                     ([id],[interest_rate],[amount],[maturity],[start_date], [applied_new_interest], [started_from_installment]) 
+                                     VALUES(@id, @interest_rate, @amount, @maturity, @start_date, @applied_new_interest, @started_from_installment)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                SetLoanTrancheEvent(pEvent, insert);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void AddLoanEvent(RescheduleLoanEvent pEvent, int contractId, SqlTransaction sqlTransac)
+		{
+            pEvent.Id = AddLoanEventHead(pEvent, contractId, sqlTransac);
+
+            const string sqlText = @"INSERT INTO [ReschedulingOfALoanEvents]
+                                    ([id], [amount], [nb_of_maturity], [date_offset], [interest], [grace_period], [charge_interest_during_shift], [charge_interest_during_grace_period]) 
+                                    VALUES(@id, @amount, @maturity,@dateOffset, @interest, @gracePeriod, @chargeInterestDuringShift, @chargeInterestDuringGracePeriod)";
+
+            using(SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                SetLoanReschedulingEvent(pEvent, insert);
+                insert.ExecuteNonQuery();
+            }
+		}
+
+        public void AddLoanEvent(ProvisionEvent pEvent, int contractId, SqlTransaction sqlTransac)
+        {
+            pEvent.Id = AddLoanEventHead(pEvent, contractId, sqlTransac);
+
+            const string sqlText = @"INSERT INTO [ProvisionEvents](
+                                       id,
+                                       amount,
+                                       rate,
+                                       overdue_days) 
+                                     VALUES(@id, @amount, @rate, @overdue_days)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", insert, pEvent.Id);
+                DatabaseHelper.InsertMoneyParam("@amount", insert, pEvent.Amount);
+                DatabaseHelper.InsertMoneyParam("@rate", insert, pEvent.Rate);
+                DatabaseHelper.InsertInt32Param("@overdue_days", insert, pEvent.OverdueDays);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void AddLoanEvent(OverdueEvent pEvent, int contractId, SqlTransaction sqlTransac)
+        {
+            pEvent.Id = AddLoanEventHead(pEvent, contractId, sqlTransac);
+
+            const string sqlText = @"INSERT INTO [OverdueEvents](
+                                       [id], 
+                                       [olb], 
+                                       [overdue_days],
+                                       [overdue_principal]) 
+                                     VALUES(@id, @olb, @overdue_days, @overdue_principal)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", insert, pEvent.Id);
+                DatabaseHelper.InsertMoneyParam("@olb", insert, pEvent.OLB);
+                DatabaseHelper.InsertMoneyParam("@overdue_days", insert, pEvent.OverdueDays);
+                DatabaseHelper.InsertMoneyParam("@overdue_principal", insert, pEvent.OverduePrincipal);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void AddLoanEvent(WriteOffEvent pEvent, int contractId, SqlTransaction sqlTransac)
+		{
+            pEvent.Id = AddLoanEventHead(pEvent, contractId, sqlTransac);
+
+            const string sqlText = @"INSERT INTO [WriteOffEvents]
+                                       ([id], 
+                                        [olb], 
+                                        [accrued_interests], 
+                                        [accrued_penalties], 
+                                        [past_due_days])
+                                     VALUES(@id, @olb, @accruedInterests, @accruedPenalties, @pastDueDays)";
+
+            using(SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                SetLoanWriteOffEvent(pEvent, insert);
+                insert.ExecuteNonQuery();
+            }
+		}
+
+        public void AddLoanEvent(AccruedInterestEvent pEvent, int contractId, SqlTransaction pTransac)
+        {
+            pEvent.Id = AddLoanEventHead(pEvent, contractId, pTransac);
+
+            const string sqlText = @"INSERT INTO [LoanInterestAccruingEvents](
+                                        [id], 
+                                        [interest_prepayment],
+                                        [accrued_interest],
+                                        [rescheduled], 
+                                        [installment_number]) 
+                                     VALUES(@id, 
+                                        @interestPrepayment, 
+                                        @accruedInterest, 
+                                        @rescheduled, 
+                                        @installmentNumber)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pTransac))
+            {
+                SetLoanInterestAccruingEvent(pEvent, insert);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void AddLoanEvent(RegEvent pEvent, int contractId, SqlTransaction sqlTransac)
+		{
+            AddLoanEventHead(pEvent, contractId, sqlTransac);
+		}
+
+        public void AddEvent(RegEvent pEvent, SqlTransaction pSqlTransac)
+        {
+            AddEvent((Event) pEvent, pSqlTransac);
+        }
+
+        public void UpdateCommentForLoanEvent(Event pEvent, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"UPDATE [ContractEvents] 
+                                     SET [comment] = @comment 
+                                     WHERE id = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pEvent.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@comment", update, pEvent.Comment);
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void DeleteLoanEvent(Event pEvent, SqlTransaction pSqlTransac)
+        {
+            const string sqlTextEventsType = @"UPDATE [ContractEvents] 
+                                               SET [is_deleted] = 1 
+                                               WHERE id = @id";
+
+            using (SqlCommand delete = new SqlCommand(sqlTextEventsType, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", delete, pEvent.Id);
+                delete.ExecuteNonQuery();
+            }
+        }
+
+        public void ExportEvent(int eventId, SqlTransaction pSqlTransac)
+        {
+            const string sqlTextEventsType = @"UPDATE [ContractEvents] 
+                                               SET [is_exported] = 1 
+                                               WHERE id = @id";
+
+            using (SqlCommand delete = new SqlCommand(sqlTextEventsType, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", delete, eventId);
+                delete.ExecuteNonQuery();
+            }
+        }
+
+        private static void SetLoanWriteOffEvent(WriteOffEvent pEvent, SqlCommand pSqlCommand)
+        {
+            DatabaseHelper.InsertInt32Param("@id", pSqlCommand, pEvent.Id);
+            DatabaseHelper.InsertMoneyParam("@olb", pSqlCommand, pEvent.OLB);
+            DatabaseHelper.InsertMoneyParam("@accruedInterests", pSqlCommand, pEvent.AccruedInterests);
+            DatabaseHelper.InsertMoneyParam("@accruedPenalties", pSqlCommand, pEvent.AccruedPenalties);
+            DatabaseHelper.InsertInt32Param("@pastDueDays", pSqlCommand, pEvent.PastDueDays);
+        }
+
+        private void AddEvent(Event pEvent, SqlTransaction pSqlTransac)
+	    {
+            const string sqlText = @"INSERT INTO [Events]([id],[event_type], [event_date], [user_id], [description]) 
+                                    VALUES(@id, @eventType, @eventDate, @userId, @description)";
+
+            using(SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                SetEvent(insert, pEvent);
+                insert.ExecuteScalar();
+            }
+	    }
+
+        private static void SetLoanTrancheEvent(TrancheEvent pEvent, SqlCommand pSqlCommand)
+        {
+            DatabaseHelper.InsertInt32Param("@id", pSqlCommand, pEvent.Id);
+            DatabaseHelper.InsertMoneyParam("@interest_rate", pSqlCommand, pEvent.InterestRate);
+            DatabaseHelper.InsertMoneyParam("@amount", pSqlCommand, pEvent.Amount);
+            DatabaseHelper.InsertInt32Param("@maturity", pSqlCommand, pEvent.Maturity);
+            DatabaseHelper.InsertDateTimeParam("@start_date", pSqlCommand, pEvent.StartDate);
+            DatabaseHelper.InsertBooleanParam("@applied_new_interest", pSqlCommand, pEvent.ApplyNewInterest);
+            DatabaseHelper.InsertInt32Param("@started_from_installment", pSqlCommand, pEvent.StartedFrom);
+        }
+
+        private static void SetLoanReschedulingEvent(RescheduleLoanEvent pEvent, SqlCommand pSqlCommand)
+        {
+            DatabaseHelper.InsertInt32Param("@id", pSqlCommand, pEvent.Id);
+            DatabaseHelper.InsertMoneyParam("@amount", pSqlCommand, pEvent.Amount);
+            DatabaseHelper.InsertInt32Param("@maturity", pSqlCommand, pEvent.NbOfMaturity);
+            DatabaseHelper.InsertInt32Param("@dateOffset", pSqlCommand, pEvent.DateOffset);
+            DatabaseHelper.InsertMoneyParam("@interest", pSqlCommand, pEvent.Interest);
+            DatabaseHelper.InsertInt32Param("@gracePeriod", pSqlCommand, pEvent.GracePeriod);
+            DatabaseHelper.InsertBooleanParam("@chargeInterestDuringShift", pSqlCommand, pEvent.ChargeInterestDuringShift);
+            DatabaseHelper.InsertBooleanParam("@chargeInterestDuringGracePeriod", pSqlCommand, pEvent.ChargeInterestDuringGracePeriod);
+        }
+
+        private static void SetLoanRepaymentEvent(RepaymentEvent pEvent, SqlCommand pSqlCommand)
+        {
+            DatabaseHelper.InsertInt32Param("@id", pSqlCommand, pEvent.Id);
+            DatabaseHelper.InsertInt32Param("@pastDueDays", pSqlCommand, 0);
+            DatabaseHelper.InsertMoneyParam("@principal", pSqlCommand, pEvent.Principal);
+            DatabaseHelper.InsertMoneyParam("@interests", pSqlCommand, pEvent.Interests);
+            DatabaseHelper.InsertMoneyParam("@commissions", pSqlCommand, pEvent.Commissions);
+            DatabaseHelper.InsertMoneyParam("@penalties", pSqlCommand, pEvent.Penalties);
+            DatabaseHelper.InsertInt32Param("@installmentNumber", pSqlCommand, pEvent.InstallmentNumber);
+            DatabaseHelper.InsertInt32Param("@payment_method_id", pSqlCommand, (int)pEvent.PaymentMethod);
+        }
+
+        private static void SetLoanDisbursmentEvent(LoanDisbursmentEvent pEvent, SqlCommand pSqlCommand)
+        {
+            DatabaseHelper.InsertInt32Param("@id", pSqlCommand, pEvent.Id);
+            DatabaseHelper.InsertMoneyParam("@amount", pSqlCommand, pEvent.Amount.Value);
+            DatabaseHelper.InsertMoneyParam("@fees", pSqlCommand, 0);
+            DatabaseHelper.InsertMoneyParam("@interest", pSqlCommand, pEvent.Interest.HasValue ? pEvent.Interest.Value : 0);
+        }
+
+        private static void SetEvent(SqlCommand pSqlCommand, Event pEvent)
+	    {
+	        DatabaseHelper.InsertInt32Param("@id", pSqlCommand, pEvent.Id);
+	        DatabaseHelper.InsertStringVarCharParam("@eventType", pSqlCommand, pEvent.Code);
+	        DatabaseHelper.InsertDateTimeParam("@eventDate", pSqlCommand, pEvent.Date);
+	        DatabaseHelper.InsertInt32Param("@userId", pSqlCommand, pEvent.User.Id);
+            DatabaseHelper.InsertStringVarCharParam("@description", pSqlCommand, pEvent.Description);
+	    }
+
+        private static void SetLoanInterestAccruingEvent(AccruedInterestEvent pEvent, SqlCommand pSqlTransac)
+	    {
+            DatabaseHelper.InsertInt32Param("@id", pSqlTransac, pEvent.Id);
+            DatabaseHelper.InsertMoneyParam("@interestPrepayment", pSqlTransac, pEvent.InterestPrepayment.Value);
+            DatabaseHelper.InsertMoneyParam("@accruedInterest", pSqlTransac, pEvent.AccruedInterest.Value);
+            DatabaseHelper.InsertBooleanParam("@rescheduled", pSqlTransac, pEvent.Rescheduled);
+            DatabaseHelper.InsertInt32Param("@installmentNumber", pSqlTransac, pEvent.InstallmentNumber);
+	    }
+
+        private static void SetLoanEvent(SqlCommand pSqlCommand, Event pEvent, int pContractId)
+        {
+            DatabaseHelper.InsertStringVarCharParam("@eventType", pSqlCommand, pEvent.Code);
+            DatabaseHelper.InsertInt32Param("@contractId", pSqlCommand, pContractId);
+            DatabaseHelper.InsertDateTimeParam("@eventDate", pSqlCommand, pEvent.Date);
+            DatabaseHelper.InsertInt32Param("@userId", pSqlCommand, pEvent.User.Id);
+            DatabaseHelper.InsertBooleanParam("@deleted", pSqlCommand, pEvent.Deleted);
+        }
+
+        private static Event ReadEvent(SqlDataReader pReader)
+        {
+            Event e;
+
+            if (DatabaseHelper.GetNullAuthorizedInt32("lde_id", pReader).HasValue)
+            {
+                e = SetLoanDisbursmentEvent(pReader);
+            }
+            else if (DatabaseHelper.GetNullAuthorizedInt32("woe_id", pReader).HasValue)
+            {
+                e = GetWriteOffEvent(pReader);
+            }
+            else if (DatabaseHelper.GetNullAuthorizedInt32("rle_id", pReader).HasValue)
+            {
+                e = GetReschedulingLoanEvent(pReader);
+            }
+            else if (DatabaseHelper.GetNullAuthorizedInt32("rpe_id", pReader).HasValue)
+            {
+                e = GetRepaymentEvent(pReader);
+            }
+            else if (DatabaseHelper.GetNullAuthorizedInt32("tranche_id", pReader).HasValue)
+            {
+                e = GetTrancheLoanEvent(pReader);
+            }
+            else if (DatabaseHelper.GetNullAuthorizedInt32("liae_id", pReader).HasValue)
+            {
+                e = GetLoanInterestAccruingEvent(pReader);
+            }
+            else if (DatabaseHelper.GetNullAuthorizedInt32("ov_id", pReader).HasValue)
+            {
+                e = GetOverdueEvent(pReader);
+            }
+            else if (DatabaseHelper.GetNullAuthorizedInt32("pe_id", pReader).HasValue)
+            {
+                e = GetProvisionEvent(pReader);
+            }
+            else if (DatabaseHelper.GetNullAuthorizedInt32("ef_id", pReader).HasValue)
+            {
+                e = GetEntryFeeEvent(pReader);
+            }
+            else if (DatabaseHelper.GetString("code", pReader).StartsWith("S"))
+            {
+                e = GetSavingEvent(pReader);
+            }
+            else
+            {
+                if(DatabaseHelper.GetString("code", pReader).Equals("LOVE"))                
+                    e = new LoanValidationEvent{Id = DatabaseHelper.GetInt32("event_id", pReader)};                                   
+                else
+                    e = new RegEvent {Id = DatabaseHelper.GetInt32("event_id", pReader)};
+            }
+
+            GetEvent(pReader, e);
+
+            return e;
+        }
+
+	    public  List<LoanEntryFeeEvent> GetEntryFeeEvents(int disbursementEventId)
+	    {
+	       List<LoanEntryFeeEvent> entryFeeEvents = new List<LoanEntryFeeEvent>();
+            const string cmdText = @"SELECT DISTINCT  entry_date
+                                            ,event_type
+                                            ,LoanEntryFeeEvents.fee
+                                            ,[user_id]
+                                            ,ContractEvents.id
+                                            ,ContractEvents.is_deleted
+                                            ,LoanEntryFeeEvents.disbursement_event_id
+                                FROM ContractEvents 
+                                INNER JOIN LoanEntryFeeEvents ON ContractEvents.id = LoanEntryFeeEvents.id
+                                WHERE ContractEvents.event_type LIKE 'LEE%' AND
+                                LoanEntryFeeEvents.[disbursement_event_id]=@disbursement_event_id";
+
+	        using (SqlCommand cmd = new SqlCommand(cmdText, DefaultConnection))
+	        {
+                DatabaseHelper.InsertInt32Param("@disbursement_event_id", cmd, disbursementEventId);
+	            SqlDataReader dataReader = cmd.ExecuteReader();
+	            while (dataReader.Read())
+	            {
+	                var loanEntryFeeEvent = new LoanEntryFeeEvent();
+                    loanEntryFeeEvent.Code = (string)dataReader["event_type"];
+	                loanEntryFeeEvent.Fee = (decimal) dataReader["fee"];
+	                loanEntryFeeEvent.Cancelable = true;
+	                loanEntryFeeEvent.Deleted = (bool) dataReader["is_deleted"];
+                    loanEntryFeeEvent.User = new User();
+	                loanEntryFeeEvent.User.Id = (int) dataReader["user_id"];
+	                loanEntryFeeEvent.EntryDate = (DateTime) dataReader["entry_date"];
+	                loanEntryFeeEvent.Id = (int) dataReader["id"];
+	                loanEntryFeeEvent.DisbursementEventId = (int) dataReader["disbursement_event_id"];
+                    entryFeeEvents.Add(loanEntryFeeEvent);
+	            }
+                dataReader.Close();
+	        }
+	        return entryFeeEvents;
+	    }
+
+	    private static Event GetSavingEvent(SqlDataReader pReader)
+        {
+            SavingEvent e;
+
+            if (DatabaseHelper.GetString("code", pReader) == OSavingEvents.Deposit)
+            {
+                e = new SavingDepositEvent();
+            }
+            else if (DatabaseHelper.GetString("code", pReader) == OSavingEvents.Withdraw)
+            {
+                e = new SavingWithdrawEvent();
+            }
+            else if (DatabaseHelper.GetString("code", pReader) == OSavingEvents.InitialDeposit)
+            {
+                e = new SavingInitialDepositEvent();
+            }
+            else if (DatabaseHelper.GetString("code", pReader) == OSavingEvents.CreditTransfer)
+            {
+                e = new SavingCreditTransferEvent();
+            }
+            else if (DatabaseHelper.GetString("code", pReader) == OSavingEvents.DebitTransfer)
+            {
+                e = new SavingDebitTransferEvent();
+            }
+            else if (DatabaseHelper.GetString("code", pReader) == OSavingEvents.SpecialOperationCredit)
+            {
+                e = new SavingCreditOperationEvent();
+            }
+            else if (DatabaseHelper.GetString("code", pReader) == OSavingEvents.SpecialOperationDebit)
+            {
+                e = new SavingDebitOperationEvent();
+            }
+            else
+            {
+                throw new Exception();
+            }
+
+            e.Amount = DatabaseHelper.GetMoney("se_amount", pReader);
+            if (e is ISavingsFees)
+                ((ISavingsFees)e).Fee = DatabaseHelper.GetNullAuthorizedMoney("se_fees", pReader);
+            if (e is SavingTransferEvent)
+                ((SavingTransferEvent)e).RelatedContractCode = DatabaseHelper.GetString("se_transfer_code", pReader);
+
+            return e;
+        }
+
+	    private static void GetEvent(SqlDataReader pReader, Event pEvent)
+	    {
+            //abstract class Event attributes
+	        pEvent.Code = DatabaseHelper.GetString("event_type", pReader);
+            pEvent.ContracId = DatabaseHelper.GetInt32("contract_id", pReader);
+	        pEvent.Date = DatabaseHelper.GetDateTime("event_date", pReader);
+            pEvent.EntryDate = DatabaseHelper.GetDateTime("entry_date", pReader);
+            pEvent.Deleted = DatabaseHelper.GetBoolean("event_deleted", pReader);
+	        pEvent.IsFired = true;
+	        pEvent.Cancelable = true;
+	        pEvent.ExportedDate = DateTime.MinValue;
+            pEvent.Comment = DatabaseHelper.GetString("comment", pReader);
+
+	        //User associated to the event
+	        pEvent.User = new User
+	                     {
+                             Id = DatabaseHelper.GetInt32("user_id", pReader),
+	                         UserName = DatabaseHelper.GetString("user_username", pReader),
+	                         Password = DatabaseHelper.GetString("user_password", pReader),
+                             LastName = DatabaseHelper.GetString("user_lastname", pReader),
+                             FirstName = DatabaseHelper.GetString("user_firstname", pReader)
+	                     };
+            pEvent.User.SetRole(DatabaseHelper.GetString("user_role", pReader));
+	        try
+	        {
+                if (DatabaseHelper.GetString("event_type", pReader).Equals("ULIE") 
+                    || DatabaseHelper.GetString("event_type", pReader).Equals("ULOE"))
+                return;
+                pEvent.Description = DatabaseHelper.GetString("contract_code", pReader);
+	        }
+	        catch (Exception)
+	        {}
+	    }
+
+	    private static AccruedInterestEvent GetLoanInterestAccruingEvent(SqlDataReader pReader)
+        {
+            return new AccruedInterestEvent{
+                           Id = DatabaseHelper.GetInt32("liae_id", pReader),
+                           AccruedInterest = DatabaseHelper.GetMoney("liae_accruedInterest", pReader),
+                           InterestPrepayment = DatabaseHelper.GetMoney("liae_interestPrepayment", pReader),
+                           Rescheduled = DatabaseHelper.GetBoolean("liae_rescheduled", pReader),
+                           InstallmentNumber = DatabaseHelper.GetInt32("liae_installmentNumber", pReader)
+                       };
+        }
+
+	    private static OverdueEvent GetOverdueEvent(SqlDataReader pReader)
+        {
+            return new OverdueEvent{
+                Id = DatabaseHelper.GetInt32("ov_id", pReader),
+                OLB = DatabaseHelper.GetMoney("ov_olb", pReader),
+                OverdueDays = DatabaseHelper.GetInt32("ov_overdue_days", pReader)
+            };
+        }
+
+        private static ProvisionEvent GetProvisionEvent(SqlDataReader pReader)
+        {
+            return new ProvisionEvent{
+                Id = DatabaseHelper.GetInt32("pe_id", pReader),
+                Amount = DatabaseHelper.GetMoney("pe_amount", pReader),
+                OverdueDays = DatabaseHelper.GetInt32("pe_overdue_days", pReader)
+            };
+        }
+
+        private static LoanEntryFeeEvent GetEntryFeeEvent(SqlDataReader pReader)
+        {
+            return new LoanEntryFeeEvent
+            {
+                Id = DatabaseHelper.GetInt32("ef_id", pReader),
+                Fee = DatabaseHelper.GetMoney("ef_fee", pReader),
+                Cancelable = true,
+                DisbursementEventId = DatabaseHelper.GetInt32("disbursement_event_id", pReader)
+            };
+        }
+
+        private static TrancheEvent GetTrancheLoanEvent(SqlDataReader pReader)
+        {
+            return new TrancheEvent{
+                Id = DatabaseHelper.GetInt32("tranche_id", pReader),
+                Amount = DatabaseHelper.GetMoney("tranche_amount", pReader),
+                InterestRate = DatabaseHelper.GetMoney("tranche_interest_rate", pReader).Value,
+                Maturity = DatabaseHelper.GetInt32("tranche_maturity", pReader),
+                StartDate = DatabaseHelper.GetDateTime("tranche_start_date", pReader)
+            };
+        }
+
+        private static RepaymentEvent GetRepaymentEvent(SqlDataReader pReader)
+	    {
+            RepaymentEvent e = new RepaymentEvent {Id = DatabaseHelper.GetInt32("rpe_id", pReader)};
+            switch (DatabaseHelper.GetString("event_type", pReader))
+            {
+                case "RBLE":
+                    {
+                        e = new BadLoanRepaymentEvent {Id = DatabaseHelper.GetInt32("rpe_id", pReader)};
+                        break;
+                    }
+                case "RRLE":
+                    {
+                        e = new RescheduledLoanRepaymentEvent {Id = DatabaseHelper.GetInt32("rpe_id", pReader)};
+                        break;
+                    }
+                case "ROWO":
+                    {
+                        e = new RepaymentOverWriteOffEvent { Id = DatabaseHelper.GetInt32("rpe_id", pReader) };
+                        break;
+                    }
+                case "PRLR":
+                    {
+                        e = new PendingRepaymentEvent(DatabaseHelper.GetString("event_type", pReader))
+                                {Id = DatabaseHelper.GetInt32("rpe_id", pReader)};
+                        break;
+                    }
+                case "PBLR":
+                    {
+                        e = new PendingRepaymentEvent(DatabaseHelper.GetString("event_type", pReader))
+                                {Id = DatabaseHelper.GetInt32("rpe_id", pReader)};
+                        break;
+                    }
+                case "PRWO":
+                    {
+                        e = new PendingRepaymentEvent(DatabaseHelper.GetString("event_type", pReader))
+                                {Id = DatabaseHelper.GetInt32("rpe_id", pReader)};
+                        break;
+                    }
+                case "PERE":
+                    {
+                        e = new PendingRepaymentEvent(DatabaseHelper.GetString("event_type", pReader))
+                                {Id = DatabaseHelper.GetInt32("rpe_id", pReader)};
+                        break;
+                    }
+            }
+
+	        e.Principal = DatabaseHelper.GetMoney("rpe_principal", pReader);
+	        e.Interests = DatabaseHelper.GetMoney("rpe_interests", pReader);
+	        e.Penalties = DatabaseHelper.GetMoney("rpe_penalties", pReader);
+            e.Commissions = DatabaseHelper.GetMoney("rpe_commissions", pReader);
+	        e.PastDueDays = DatabaseHelper.GetInt32("rpe_past_due_days", pReader);
+	        e.InstallmentNumber = DatabaseHelper.GetInt32("rpe_installment_number", pReader);
+
+            e.Code = DatabaseHelper.GetString("event_type", pReader);
+
+            if (e.Code != "RBLE")
+                e.RepaymentType = OPaymentType.StandardPayment;
+            
+            // set type of payment
+            switch (DatabaseHelper.GetString("event_type", pReader).Trim())
+            {
+                case "ATR":
+                    {
+                        e.RepaymentType = OPaymentType.TotalPayment;
+                        break;
+                    }
+                case "APR":
+                    {
+                        e.RepaymentType = OPaymentType.PartialPayment;
+                        break;
+                    }
+                case "APTR":
+                    {
+                        e.RepaymentType = OPaymentType.PersonTotalPayment;
+                        break;
+                    }
+            }
+
+	        return e;
+	    }
+
+        private static RescheduleLoanEvent GetReschedulingLoanEvent(SqlDataReader pReader)
+	    {
+            return new RescheduleLoanEvent{
+                Id = DatabaseHelper.GetInt32("rle_id", pReader),
+                Amount = DatabaseHelper.GetMoney("rle_amount", pReader),
+                NbOfMaturity = DatabaseHelper.GetInt32("rle_maturity", pReader),
+                DateOffset = DatabaseHelper.GetInt32("rle_date_offset", pReader)
+            };
+	    }
+
+	    private static Event GetWriteOffEvent(SqlDataReader pReader)
+	    {
+	        return new WriteOffEvent
+                                  {
+                                      Id = DatabaseHelper.GetInt32("woe_id", pReader),
+                                      OLB = DatabaseHelper.GetMoney("woe_olb", pReader),
+                                      AccruedInterests = DatabaseHelper.GetMoney("woe_accrued_interests", pReader),
+                                      AccruedPenalties = DatabaseHelper.GetMoney("woe_accrued_penalties", pReader),
+                                      PastDueDays = DatabaseHelper.GetInt32("woe_past_due_days", pReader)
+                                  };
+	    }
+
+	    private static LoanDisbursmentEvent SetLoanDisbursmentEvent(SqlDataReader pReader)
+        {
+            return new LoanDisbursmentEvent
+                       {
+                           Id = DatabaseHelper.GetInt32("lde_id", pReader),
+                           Amount = DatabaseHelper.GetMoney("lde_amount", pReader),
+                           Fee = DatabaseHelper.GetMoney("lde_fees", pReader)
+                       };
+        }
+
+        public void LogClientSaveUpdateEvent(string client, bool save, int userId)
+        {
+            const string q = @"INSERT INTO dbo.TraceUserLogs
+                               (event_code, event_date, user_id, event_description)
+                               VALUES ('CSUE', GETDATE(), @user_id, @event_description)";
+
+            string desc = save ? "{0} saved." : "{0} updated.";
+            desc = string.Format(desc, client);
+            OctopusCommand cmd = new OctopusCommand(q, DefaultConnection);
+            cmd.AddParam("@user_id", userId);
+            cmd.AddParam("@event_description", desc);
+            cmd.ExecuteNonQuery();
+        }
+	}
+}

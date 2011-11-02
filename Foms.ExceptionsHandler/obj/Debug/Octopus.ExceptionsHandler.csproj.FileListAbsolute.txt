@@ -1,0 +1,7 @@
+C:\dev_factory\Octopus\Build\Log4net.xml
+C:\dev_factory\Octopus\Build\RemoteServerSettings.xml
+C:\dev_factory\Octopus\Build\Octopus.ExceptionsHandler.dll
+C:\dev_factory\Octopus\Build\Octopus.ExceptionsHandler.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.ExceptionsHandler\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.ExceptionsHandler\obj\Debug\Octopus.ExceptionsHandler.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.ExceptionsHandler\obj\Debug\Octopus.ExceptionsHandler.pdb

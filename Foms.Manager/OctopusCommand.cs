@@ -1,0 +1,176 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Diagnostics;
+using Foms.Shared;
+
+namespace Foms.Manager
+{
+    public class OctopusReader : IDisposable
+    {
+        private readonly SqlDataReader _reader;
+        private bool _disposed;
+
+        public OctopusReader(SqlDataReader reader)
+        {
+            _reader = reader;
+        }
+
+        public bool Empty
+        {
+            get
+            {
+                return null == _reader || !_reader.HasRows;
+            }
+        }
+
+        public bool Read()
+        {
+            Debug.Assert(_reader != null, "Reader is null");
+            return _reader.Read();
+        }
+
+        private bool IsNull(string name)
+        {
+            return DBNull.Value == _reader.GetValue(_reader.GetOrdinal(name));
+        }
+
+        public string GetString(string name)
+        {
+            return IsNull(name) 
+                ? null 
+                : _reader.GetString(_reader.GetOrdinal(name));
+        }
+
+        public int GetInt(string name)
+        {
+            return _reader.GetInt32(_reader.GetOrdinal(name));
+        }
+
+        public bool GetBool(string name)
+        {
+            return _reader.GetBoolean(_reader.GetOrdinal(name));
+        }
+
+        public DateTime GetDateTime(string name)
+        {
+            return _reader.GetDateTime(_reader.GetOrdinal(name));
+        }
+
+        public OCurrency GetMoney(string name)
+        {
+            return _reader.GetDecimal(_reader.GetOrdinal(name));
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                _reader.Dispose();
+            }
+            _disposed = true;
+        }
+    }
+
+    public class OctopusCommand
+    {
+        private readonly SqlCommand _cmd;
+
+        public OctopusCommand()
+        {
+            _cmd = new SqlCommand();
+        }
+
+        public OctopusCommand(string query, SqlConnection conn)
+        {
+            _cmd = new SqlCommand(query, conn);
+        }
+
+        public void AddParam(string name, object value)
+        {
+            Debug.Assert(_cmd != null, "Command is null");
+
+            Dictionary<Type, SqlDbType> table = new Dictionary<Type, SqlDbType>
+            {
+                {typeof(bool), SqlDbType.Bit}
+                , {typeof(string), SqlDbType.NVarChar}
+                , {typeof(char), SqlDbType.Char}
+                , {typeof(int), SqlDbType.Int}
+                , {typeof(OCurrency), SqlDbType.Money}
+                , {typeof(decimal), SqlDbType.Money}
+                , {typeof(DateTime), SqlDbType.DateTime}
+                , {typeof(double), SqlDbType.Float}
+            };
+
+            _cmd.Parameters.Add(name, table[value.GetType()]);
+            _cmd.Parameters[name].Value = value;
+        }
+
+        public void ExecuteAsStoredProcedure()
+        {
+            _cmd.CommandType = CommandType.StoredProcedure;
+        }
+
+        public OctopusReader ExecuteReader()
+        {
+            return new OctopusReader(_cmd.ExecuteReader());
+        }
+
+        public int ExecuteNonQuery()
+        {
+            return _cmd.ExecuteNonQuery();
+        }
+
+        public object ExecuteScalar()
+        {
+            return _cmd.ExecuteScalar();
+        }
+
+        public string CommandText
+        {
+            get
+            {
+                return _cmd.CommandText;
+            }
+
+            set
+            {
+                _cmd.CommandText = value;
+            }
+        }
+
+        public SqlConnection Connection
+        {
+            get
+            {
+                return _cmd.Connection;
+            }
+
+            set
+            {
+                _cmd.Connection = value;
+            }
+        }
+
+        public SqlTransaction Transaction
+        {
+            get
+            {
+                return _cmd.Transaction;
+            }
+            set
+            {
+                _cmd.Transaction = value;
+            }
+        }
+    }
+}

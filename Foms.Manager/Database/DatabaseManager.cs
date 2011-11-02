@@ -1,0 +1,522 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Diagnostics;
+using System.Text;
+using System.Xml.XPath;
+using System.IO;
+using System.Data;
+using System.Xml;
+using Foms.CoreDomain;
+using Foms.CoreDomain.Database;
+using Foms.Shared.Settings;
+
+namespace Foms.Manager.Database
+{
+    public class DatabaseManager
+    {
+        internal  string _database;
+
+        public DatabaseManager(User pUser)
+        {
+            _Init();
+        }
+
+        public DatabaseManager(string pTestDb)
+        {
+            _Init();
+        }
+        private static DatabaseManager _theUniqueInstance;
+
+        private void _Init()
+        {
+            _database = TechnicalSettings.DatabaseName;
+        }
+
+        public static DatabaseManager GetInstance(string pTestDb)
+        {
+            return _theUniqueInstance ?? (_theUniqueInstance = new DatabaseManager(pTestDb));
+        }
+
+        public static void CreateDatabase(string pDatabaseName, SqlConnection pSqlConnection)
+        {
+            string sqlText = "CREATE DATABASE " + pDatabaseName;
+            SqlCommand cmd = new SqlCommand(sqlText, pSqlConnection);
+
+            cmd.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Executes a SQL script file.<br/>
+        /// Each peace of script delimited by "GO" is executed individually.<br/>
+        /// If any error occurs, the script execution stops and returns an error.<br/>
+        /// Exept after the /** IGNORE ERRORS **/ section where all errors are ignored.<br/>
+        /// Warning : Only /*xxx*/ comments on a single line are supported!<br/>
+        /// </summary>
+        /// <param name="pScriptFile">Scripy file path</param>
+        /// <param name="pDatabaseName"></param>
+        /// <param name="pSqlConnection"></param>
+        /// <returns>Script exec result status</returns>
+
+        public static void ExecuteScript(string pScriptFile, string pDatabaseName, SqlConnection pSqlConnection)
+        {
+            List<string> queries = new List<string> {string.Format("USE [{0}]", pDatabaseName)};
+            queries.AddRange(_ParseSqlFile(pScriptFile));
+
+            foreach (string query in queries)
+            {
+                SqlCommand command = new SqlCommand(query, pSqlConnection) {CommandTimeout = 480};
+                command.ExecuteNonQuery();
+            }
+        }
+
+        private static List<string> _ParseSqlFile(string pScriptFile)
+        {
+            List<string> queries = new List<string>();
+            Encoding encoding = Encoding.GetEncoding("utf-8");
+            FileStream fs = new FileStream(pScriptFile, FileMode.Open);
+            using (StreamReader reader = new StreamReader(fs, encoding))
+            {
+                // Parse file and get individual queries (separated by GO)
+                while (!reader.EndOfStream)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    while (!reader.EndOfStream)
+                    {
+                        string line = reader.ReadLine();
+                        if (line.StartsWith("GO")) break;
+                        if ((!line.StartsWith("/*")) && (line.Length > 0))
+                        {
+                            sb.Append(line);
+                            sb.Append("\n");
+                        }
+                    }
+                    string q = sb.ToString();
+                    if ((!q.StartsWith("SET QUOTED_IDENTIFIER"))
+                        && (!q.StartsWith("SET ANSI_"))
+                        && (q.Length > 0))
+                    {
+                        queries.Add(q);
+                    }
+                }
+            }
+            return queries;
+        }
+
+        /// <summary>
+        /// Generate script for recreating objects and return
+        /// it to the caller.
+        /// </summary>
+        /// <returns>Script</returns>
+        public static string GetObjectLoadScript()
+        {
+            string path = Path.Combine(UserSettings.GetUpdatePath, "Objects.xml");
+            XPathDocument xmldoc = new XPathDocument(path);
+            XPathNavigator nav = xmldoc.CreateNavigator();
+            XPathExpression expr = nav.Compile("/database/object");
+            expr.AddSort("@priority", XmlSortOrder.Ascending, XmlCaseOrder.None, null, XmlDataType.Number);
+            XPathNodeIterator iterator = nav.Select(expr);
+
+            string retval = string.Empty;
+            while (iterator.MoveNext())
+            {
+                XPathNavigator create = iterator.Current.SelectSingleNode("create");
+                XPathNavigator drop = iterator.Current.SelectSingleNode("drop");
+                retval += string.Format("{0}\r\nGO\r\n\r\n{1}\r\nGO\r\n\r\n", drop.Value, create.Value);
+            }
+            return retval;
+        }
+
+        public static string GetDatabaseVersion(string pDatabase, SqlConnection pSqlConnection)
+        {
+            try
+            {
+                string sqlText = string.Format("USE {0} SELECT [value] FROM [TechnicalParameters] WHERE [name]='version'", pDatabase);
+                using (SqlCommand select = new SqlCommand(sqlText, pSqlConnection))
+                {
+                    using (SqlDataReader reader = select.ExecuteReader())
+                    {
+                        if (reader == null || !reader.HasRows) return string.Empty;
+                        reader.Read();
+                        return (string)reader["value"];
+                    }
+                }
+            }
+            catch (SqlException) //in case where database is not an "Octopus database"
+            {
+                return string.Empty;
+            }
+        }
+
+       
+
+        public static string GetDatabaseSize(string pDatabase, SqlConnection pSqlConnection)
+        {
+            string sql = string.Format("USE {0} EXEC sp_spaceused", pDatabase);
+            
+            using(SqlCommand cmd = new SqlCommand(sql, pSqlConnection))
+            {
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return string.Empty;
+                    if (reader.Read())
+                    {
+                        return (string)reader["database_size"];
+                    }
+                    return string.Empty;
+                }
+            }
+        }
+
+        public static string GetDatabasePath(SqlConnection pSqlConnection)
+        {
+            const string sqlText = @"DECLARE @rc INT, @dir NVARCHAR(4000)
+                  EXEC @rc = master.dbo.xp_instance_regread N'HKEY_LOCAL_MACHINE', N'Software\Microsoft\MSSQLServer\Setup', N'SQLPath', @dir OUTPUT, 'no_output'
+                  SELECT  @dir AS dir";
+
+            using (SqlCommand select = new SqlCommand(sqlText, pSqlConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return string.Empty;
+                    reader.Read();
+                    return (string)reader["dir"];
+                }
+            }
+        }
+
+      
+        public static void ShrinkDatabase(string pDatabaseName, SqlConnection pSqlConnection)
+        {
+            string database = TechnicalSettings.DatabaseName;
+            string sql1 = String.Format("ALTER DATABASE {0} SET RECOVERY SIMPLE", database);
+            string sql2 = String.Format("ALTER DATABASE {0} SET AUTO_SHRINK ON", database);
+
+            try
+            {
+                SqlCommand cmd = new SqlCommand(sql1, pSqlConnection);
+                cmd.ExecuteNonQuery();
+                cmd = new SqlCommand(sql2, pSqlConnection);
+                cmd.ExecuteNonQuery();
+
+                string sql = String.Format("DBCC SHRINKDATABASE ({0})", database);
+                cmd = new SqlCommand(sql, pSqlConnection);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception) { }
+        }
+
+        private static List<string> GetObjectNamesToDump()
+        {
+            /*
+             --Build script
+            SELECT 'retval.Add("' + name + '");'
+            FROM sysobjects
+            WHERE xtype IN ('P','V','FN') AND NAME NOT LIKE 'dt_%'
+            ORDER BY name 
+             */
+
+            List<string> retval = new List<string>
+            {
+                "check_installment_paid",
+                "PenaltiesCalculation",
+                "GetOLB",
+                "getLateDays",
+                "GetNbMembers",
+                "GetDueInterest",
+                "GetClientID",
+                "next_contractEvents",
+                "InstallmentSnapshot",
+                "ActiveLoans",
+                "ActiveClients",
+                "ExchangeRatesEx",
+                "GetListMembersGroupLoan",
+                "GetTrueLoanCycle",
+                "GetXR",
+                "CalculateLatePenalty",
+                "GetDisbursementDate",
+                "Disbursements",
+                "Disbursements_MC",
+                "RepaymentsAll",
+                "RepaymentsAll_MC",
+                "Repayments",
+                "Repayments_MC",
+                "Balances",
+                "Balances_MC",
+                "ClosedContracts",
+                "ClosedLoans",
+                "ClosedLoans_MC",
+                "ClosedContracts_MC", 
+                "StringListToTable", 
+                "AuditTrailEvents",
+                "RunLoanAccountingClosure",
+                "RunSavingAccountingClosure",
+                "ExportAcountingTransactions",
+                "GetAccountBalance",
+                "GetAccountChilds",
+                "GetChartOfAccountsBalances",
+                "IntListToTable",
+                "Clients",
+                "Alerts",
+                "getSavingBalance",
+                "ActiveSavingContracts",
+                "ActiveSavingContracts_MC",
+                "ActiveSavingAccounts",
+                "ActiveSavingAccounts_MC",
+                "RepaymentSchedule",
+                "SavingDeposits",
+                "SavingDeposits_MC",
+                "SavingWithdrawals",
+                "SavingWithdrawals_MC",
+                "SavingTransfers",
+                "SavingTransfers_MC",
+                "SavingCommissions",
+                "SavingCommissions_MC",
+                "SavingPenalties",
+                "SavingPenalties_MC",
+                "GetAccountBookings",
+                "GetBalanceByAccountCategory",
+                "ExpectedInstallments",
+                "ExpectedInstallments_MC",
+                "ActiveLoans_MC",
+                "LateAmounts",
+                "LateAmounts_MC",
+                "ActiveClients_MC",
+                "getEntryFees"
+            };
+            return retval;
+        }
+
+        public static string GetObjectCreateScript(string db, string name, SqlConnection conn)
+        {
+            string q = string.Format("{0}..sp_helptext", db);
+            var cmd = new SqlCommand(q, conn);
+            cmd.Parameters.AddWithValue("@objname", name);
+            cmd.CommandType = CommandType.StoredProcedure;
+            var buffer = new StringBuilder(2048);
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (null == reader) return string.Empty;
+                while (reader.Read())
+                {
+                    buffer.Append(DatabaseHelper.GetString("Text", reader));
+                }
+            }
+            return buffer.ToString();
+        }
+
+        public static string GetObjectDropScript(string db, string name, SqlConnection conn)
+        {
+            string q = @"SELECT xtype 
+            FROM {0}..sysobjects
+            WHERE name = @name";
+            q = string.Format(q, db);
+
+            SqlCommand c = new SqlCommand(q, conn);
+            c.Parameters.AddWithValue("@name", name);
+            string xtype = c.ExecuteScalar().ToString().Trim();
+
+            string xtypeObject = string.Empty;
+            switch (xtype)
+            {
+                case "FN":
+                case "IF":
+                case "TF":
+                    xtypeObject = "FUNCTION";
+                    break;
+
+                case "P":
+                    xtypeObject = "PROCEDURE";
+                    break;
+
+                case "V":
+                    xtypeObject = "VIEW";
+                    break;
+
+                default:
+                    Debug.Fail("Cannot be here.");
+                    break;
+            }
+
+            const string retval = @"IF  EXISTS (
+                SELECT * 
+                FROM sys.objects 
+                WHERE object_id = OBJECT_ID(N'dbo.{0}') AND type = N'{1}'
+            )
+            DROP {2} [dbo].[{0}]";
+
+            return string.Format(retval, name, xtype, xtypeObject);
+        }
+
+        public static void DumpObjects(string db, SqlConnection conn)
+        {
+            List<string> names = GetObjectNamesToDump();
+            XmlDocument doc = new XmlDocument();
+            XmlDeclaration dec = doc.CreateXmlDeclaration("1.0", "utf-8", null);
+            doc.AppendChild(dec);
+            XmlElement root = doc.CreateElement("database");
+            doc.AppendChild(root);
+
+            int priority = 1;
+            foreach (string name in names)
+            {
+                XmlElement node = doc.CreateElement("object");
+                node.SetAttribute("name", name);
+                node.SetAttribute("priority", Convert.ToString(priority));
+                root.AppendChild(node);
+
+                XmlElement createNode = doc.CreateElement("create");
+                string createScript = GetObjectCreateScript(db, name, conn);
+                XmlCDataSection createText = doc.CreateCDataSection(createScript);
+                createNode.AppendChild(createText);
+                node.AppendChild(createNode);
+
+                XmlElement dropNode = doc.CreateElement("drop");
+                string dropScript = GetObjectDropScript(db, name, conn);
+                XmlCDataSection dropText = doc.CreateCDataSection(dropScript);
+                dropNode.AppendChild(dropText);
+                node.AppendChild(dropNode);
+
+                priority++;
+            }
+
+            string file = Path.Combine(UserSettings.GetUpdatePath, "Objects.xml");
+            doc.Save(file);
+        }
+
+        public static void AddDatabaseToAccounts(string pAccountName, string pDatabaseName, string pLogin, string pPassword, SqlConnection pSqlConnection)
+        {
+            const string sqlText = @"INSERT INTO [Accounts].[dbo].[SqlAccounts]
+                                   ([account_name],[database_name],[user_name],[password],[active])
+                                    VALUES (@accountName, @databaseName, @login, @password,1)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, pSqlConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@accountName", insert, pAccountName);
+                DatabaseHelper.InsertStringNVarCharParam("@databaseName", insert, pDatabaseName);
+                DatabaseHelper.InsertStringNVarCharParam("@login", insert, pLogin);
+                DatabaseHelper.InsertStringNVarCharParam("@password", insert, pPassword);
+
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public static int UpdateAccountActive(string pAccountName, bool pActive, SqlConnection pSqlConnection)
+        {
+            const string sqlText = @"UPDATE [Accounts].[dbo].[SqlAccounts]
+                                     SET active = @active
+                                     WHERE [account_name] = @accountName";
+            using (SqlCommand update = new SqlCommand(sqlText, pSqlConnection))
+            {
+                DatabaseHelper.InsertBooleanParam("@active", update, pActive);
+                DatabaseHelper.InsertStringNVarCharParam("@accountName", update, pAccountName);
+
+                return update.ExecuteNonQuery();
+            }
+        }
+
+        public static List<SqlAccountsDatabase> GetListDatabasesIntoAccounts(SqlConnection pSqlConnection)
+        {
+            List<SqlAccountsDatabase> databases = new List<SqlAccountsDatabase>();
+
+            const string sqlText = @"SELECT *
+                                     FROM [Accounts].[dbo].[SqlAccounts]";
+
+            if (pSqlConnection.State == ConnectionState.Closed)
+                pSqlConnection.Open();
+
+            using (SqlCommand select = new SqlCommand(sqlText, pSqlConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+
+                    if (reader == null || !reader.HasRows) return databases;
+
+                    while (reader.Read())
+                    {
+                        databases.Add(new SqlAccountsDatabase
+                        {
+                            Account = DatabaseHelper.GetString("account_name", reader),
+                            Database = DatabaseHelper.GetString("database_name", reader),
+                            Login = DatabaseHelper.GetString("user_name", reader),
+                            Password = DatabaseHelper.GetString("password", reader),
+                            Active = DatabaseHelper.GetBoolean("active", reader)
+                        });
+                    }
+                }
+            }
+
+            foreach (SqlAccountsDatabase db in databases)
+            {
+                db.Version = GetDatabaseVersion(db.Database, pSqlConnection);
+            }
+
+            return databases;
+        }
+
+        public static string GetDatabaseNameForAccount(string pAccountName, SqlConnection pSqlConnection)
+        {
+            const string sqlText = @"SELECT database_name
+                                     FROM Accounts.dbo.SqlAccounts
+                                     WHERE account_name = @account";
+
+            if (pSqlConnection.State == ConnectionState.Closed)
+                pSqlConnection.Open();
+
+            using (SqlCommand select = new SqlCommand(sqlText, pSqlConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@account", select, pAccountName);
+                return (string)select.ExecuteScalar();
+            }
+        }
+
+        public static int ChangeAdminPasswordForAccount(string pAccountName, string pPassword, SqlConnection pSqlConnection)
+        {
+            const string sqlText = @"DECLARE @dbName NVARCHAR(50),
+                                             @query NVARCHAR(200)
+                                     
+                                     SELECT @dbName = database_name
+                                     FROM Accounts.dbo.SqlAccounts
+                                     WHERE account_name = @account
+    
+                                     SET @query = 'UPDATE ' + @dbName + '.dbo.Users	SET user_pass = ''' + @password + ''' WHERE [user_name] = ''admin'''
+        
+                                     EXEC (@query)";
+
+            if (pSqlConnection.State == ConnectionState.Closed)
+                pSqlConnection.Open();
+
+            using (SqlCommand update = new SqlCommand(sqlText, pSqlConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@account", update, pAccountName);
+                DatabaseHelper.InsertStringNVarCharParam("@password", update, pPassword);
+
+                return update.ExecuteNonQuery();
+            }
+        }
+    }
+}

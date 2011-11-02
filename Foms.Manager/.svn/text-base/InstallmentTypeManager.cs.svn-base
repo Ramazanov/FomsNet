@@ -1,0 +1,175 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+
+namespace Octopus.Manager
+{
+	/// <summary>
+	/// Summary description for InstallmentTypeManagement.
+	/// </summary>
+	public class InstallmentTypeManager : Manager
+	{
+        public InstallmentTypeManager(User pUser) : base(pUser) {}
+
+	    public InstallmentTypeManager(string testDB) : base(testDB) {}
+
+		public int AddInstallmentType(InstallmentType installmentType)
+		{
+			const string sqlText = @"INSERT INTO [InstallmentTypes]([name], [nb_of_days], [nb_of_months])
+			                         VALUES(@name, @days, @months) SELECT SCOPE_IDENTITY()";
+			
+			using(SqlCommand insert = new SqlCommand(sqlText,DefaultConnection))
+			{
+			    SetInstallmentType(insert, installmentType);
+			    return int.Parse(insert.ExecuteScalar().ToString());
+			}
+		}
+
+        public void EditInstallmentType(InstallmentType installmentType)
+        {
+            const string sqlText = @"UPDATE [InstallmentTypes] SET [name] = @name, [nb_of_days] = @days, [nb_of_months] = @months
+                                     WHERE id = @id";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection))
+            {
+                SetInstallmentType(insert, installmentType);
+                DatabaseHelper.InsertInt32Param("@id", insert, installmentType.Id);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void DeleteInstallmentType(InstallmentType installmentType)
+        {
+            const string sqlText = @"DELETE FROM [InstallmentTypes] WHERE id = @id";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", insert, installmentType.Id);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+	    private static void SetInstallmentType(SqlCommand pSqlCommand, InstallmentType pInstallmentType)
+	    {
+	        DatabaseHelper.InsertStringNVarCharParam("@name", pSqlCommand, pInstallmentType.Name);
+	        DatabaseHelper.InsertInt32Param("@days", pSqlCommand, pInstallmentType.NbOfDays);
+	        DatabaseHelper.InsertInt32Param("@months", pSqlCommand, pInstallmentType.NbOfMonths);
+	    }
+
+        public int NumberOfLinksToInstallmentType(InstallmentType installmentType)
+        {
+            const string sqlText = @"SELECT COUNT(installment_type) FROM
+                                    (
+                                    SELECT installment_type FROM Credit
+                                    UNION ALL
+                                    SELECT installment_type FROM dbo.Packages
+                                    UNION ALL
+                                    SELECT installment_types_id AS [installment_type] FROM dbo.TermDepositProducts
+                                    UNION ALL
+                                    SELECT agio_fees_freq AS [installment_type] FROM dbo.SavingBookProducts
+                                    UNION ALL
+                                    SELECT management_fees_freq AS [installment_type] FROM dbo.SavingBookProducts
+                                    ) AS T
+                                    WHERE T.installment_type = @id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, installmentType.Id);
+                return int.Parse(select.ExecuteScalar().ToString());
+            }
+        }
+
+        public List<InstallmentType> SelectAllInstallmentTypes()
+        {
+            List<InstallmentType> list = new List<InstallmentType>();
+			
+            const string sqlText = "SELECT * FROM InstallmentTypes ";
+
+			SqlCommand selectInstallments = new SqlCommand(sqlText, DefaultConnection);
+
+            using (SqlDataReader reader = selectInstallments.ExecuteReader())
+            {
+                if (reader == null || !reader.HasRows) return list;
+                while (reader.Read())
+                {
+                    list.Add(_GetInstallmentType(reader));
+                }
+                return list;
+            }
+		}
+
+        private static InstallmentType _GetInstallmentType(SqlDataReader reader)
+        {
+            return new InstallmentType
+                       {
+                           Id = DatabaseHelper.GetInt32("id", reader),
+                           Name = DatabaseHelper.GetString("name", reader),
+                           NbOfDays = DatabaseHelper.GetInt32("nb_of_days", reader),
+                           NbOfMonths = DatabaseHelper.GetInt32("nb_of_months", reader)
+                       };
+        }
+
+	    /// <summary>
+		/// InstallmentType Finder by id
+		/// </summary>
+        /// <param name="pInstallmentTypeId">id searched</param>
+		/// <returns></returns>
+		public InstallmentType SelectInstallmentType(int pInstallmentTypeId)
+		{
+			const string SqlText = "SELECT * FROM InstallmentTypes WHERE id = @id";
+
+			using(SqlCommand select = new SqlCommand(SqlText, DefaultConnection))
+			{
+                DatabaseHelper.InsertInt32Param("@id", select, pInstallmentTypeId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+                    return _GetInstallmentType(reader);
+                }
+			}
+		}
+
+        public InstallmentType SelectInstallmentTypeByName(string name)
+        {
+			const string SqlText = "SELECT * FROM InstallmentTypes WHERE name = @name";
+
+			using(SqlCommand select = new SqlCommand(SqlText,DefaultConnection))
+			{
+                DatabaseHelper.InsertStringNVarCharParam("@name", select, name);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+                    return _GetInstallmentType(reader);
+                }
+			}
+        }
+	}
+}

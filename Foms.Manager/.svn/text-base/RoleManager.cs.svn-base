@@ -1,0 +1,580 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using Octopus.CoreDomain;
+using System.Data.SqlClient;
+
+namespace Octopus.Manager
+{
+    /// <summary>
+    /// Description rйsumйe de RoleManager.
+    /// </summary>
+    public class RoleManager : Manager
+    {
+        public RoleManager(string testDb) : base(testDb) { }
+
+        public RoleManager(User pUser)
+            : base(pUser)
+        {
+
+        }
+
+        /// <summary>
+        /// Add Role in database
+        /// </summary>
+        /// <param name="pRole"></param>
+        /// <returns>Role id</returns>
+        public int AddRole(Role pRole)
+        {
+            const string sqlText = @"INSERT INTO [Roles]
+                                     ([deleted], [code], [description], [role_of_loan], [role_of_saving]) 
+                                     VALUES(@deleted, @code, @description, @role_of_loan, @role_of_saving) 
+                                     SELECT SCOPE_IDENTITY()";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertBooleanParam("@deleted", sqlCommand, false);
+                DatabaseHelper.InsertStringNVarCharParam("@code", sqlCommand, pRole.RoleName);
+                DatabaseHelper.InsertStringNVarCharParam("@description",sqlCommand,pRole.Description);
+                DatabaseHelper.InsertBooleanParam("@role_of_loan", sqlCommand, pRole.IsRoleForLoan);
+                DatabaseHelper.InsertBooleanParam("@role_of_saving", sqlCommand, pRole.IsRoleForSaving);
+
+                pRole.Id = int.Parse(sqlCommand.ExecuteScalar().ToString());
+                _SaveAllowedMenusForRole(pRole);
+                _SaveAllowedActionsForRole(pRole);
+            }
+            return pRole.Id;
+        }
+
+        /// <summary>
+        /// Update selected Role in database
+        /// </summary>
+        /// <param name="pRole"></param>
+        public void UpdateRole(Role pRole)
+        {
+            const string sqlText = @"UPDATE [Roles] 
+                                     SET [code]=@code, 
+                                         [deleted]=@deleted, 
+                                         [description]=@description,
+                                         [role_of_loan] = @role_of_loan, 
+                                         [role_of_saving] = @role_of_saving 
+                                     WHERE [id] = @RoleId";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@RoleId", sqlCommand, pRole.Id);
+                DatabaseHelper.InsertBooleanParam("@deleted", sqlCommand, pRole.IsDeleted);
+                DatabaseHelper.InsertStringNVarCharParam("@code", sqlCommand, pRole.RoleName);
+                DatabaseHelper.InsertStringNVarCharParam("@description",sqlCommand,pRole.Description);
+                DatabaseHelper.InsertBooleanParam("@role_of_loan", sqlCommand, pRole.IsRoleForLoan);
+                DatabaseHelper.InsertBooleanParam("@role_of_saving", sqlCommand, pRole.IsRoleForSaving);
+
+                sqlCommand.ExecuteNonQuery();
+                _SaveAllowedMenusForRole(pRole);
+                _SaveAllowedActionsForRole(pRole);
+            }
+        }
+
+        /// <summary>
+        /// DeleteAccount selected Role.
+        /// A Role was never erased, just update a boolean
+        /// </summary>
+        /// <param name="pRoleName"></param>
+        public void DeleteRole(string pRoleName)
+        {
+            const string sqlText = "UPDATE [Roles] SET deleted = 1 WHERE [code] = @code";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@code", sqlCommand, pRoleName);
+                sqlCommand.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Select a Role by its database id with an Sqltransaction contexte
+        /// </summary>
+        /// <param name="pRoleId"></param>
+        /// <param name="pIncludeDeletedRole"></param>
+        /// <param name="pSqlTransac"></param>
+        /// <returns>selected Role or null otherwise</returns>
+        public Role SelectRole(int pRoleId, bool pIncludeDeletedRole, SqlTransaction pSqlTransac)
+        {
+            string sqlText = @"SELECT [Roles].[id], [code], [deleted], [description], [role_of_loan], [role_of_saving] 
+                               FROM [Roles] WHERE [id] = @id ";
+
+            if (!pIncludeDeletedRole)
+                sqlText += " AND [deleted] = 0";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", sqlCommand, pRoleId);
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            Role role = _GetRole(reader) ;
+                            return role;
+
+                        }
+                    }
+                }
+                return null;
+            }
+        }
+        public int SelectUserForThisRole(string pRoleName)
+        {
+            string sqlText = @"SELECT TOP 1 [user_id] 
+                               FROM UserRole 
+                               INNER JOIN Roles ON UserRole.role_id = Roles.id 
+                               INNER JOIN Users ON Users.id = UserRole.[user_id]
+                               WHERE Roles.code = @roleCode AND Users.deleted = 0";
+            int foundId = 0;
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@roleCode", sqlCommand, pRoleName);
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            foundId = DatabaseHelper.GetInt32("user_id", reader);
+                        }
+                    }
+                }
+                return foundId;
+            }
+        }
+        /// <summary>
+        /// Select a Role by its database id
+        /// </summary>
+        /// <param name="pRoleId"></param>
+        /// <param name="pIncludeDeletedRole"></param>
+        /// <returns>selected Role or null otherwise</returns>
+        public Role SelectRole(int pRoleId, bool pIncludeDeletedRole)
+        {
+            return SelectRole(pRoleId, pIncludeDeletedRole, null);
+        }
+
+        public List<Role> SelectAllRoles(bool pSelectDeletedRoles)
+        {
+            string sqlText = @"SELECT [Roles].[id], [code], [deleted], [description], [role_of_loan], [role_of_saving]
+                               FROM [Roles] WHERE 1 = 1 ";
+
+            if (!pSelectDeletedRoles)
+                sqlText += " AND [deleted] = 0";
+
+            List<Role> Roles = new List<Role>();
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                            while (reader.Read())
+                                Roles.Add(_GetRole(reader));
+                    }
+                }
+            }
+            foreach (Role r in Roles)
+            {                              
+                r.SetMenuItems(GetAllowedMenuList(r.Id));
+                r.SetActionItems(GetAllowedActionList(r.Id));
+            }
+            return Roles;
+        }
+        /// <summary>
+        /// Select a role by its name
+        /// </summary>
+        /// <param name="pRoleName"></param>
+        /// <param name="pIncludeDeleted"></param>
+        /// <returns>selected role or null otherwise</returns>
+        public Role SelectRole(string pRoleName,bool pIncludeDeleted)
+        {
+            string sqlText = @"SELECT [id], [code], [deleted], [description], [role_of_loan], [role_of_saving]
+                                    FROM [Roles] WHERE [code] = @name ";
+
+            sqlText += pIncludeDeleted ? "" : "AND [deleted] = 0";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", sqlCommand, pRoleName);
+                Role role;
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    role = _GetRole(reader);
+                }
+
+                role.SetMenuItems(GetAllowedMenuList(role.Id));
+                role.SetActionItems(GetAllowedActionList(role.Id));
+                return role;
+            }
+        }
+
+        public void UpdateMenuList(List<MenuObject> pMenuTitles)
+        {
+
+            foreach (MenuObject mi in pMenuTitles)
+            {
+
+                try
+                {
+                    const string sqlText = @"INSERT INTO [MenuItems]([menu_name])
+                                        VALUES (@menu)";
+
+                    SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection);
+
+                    DatabaseHelper.InsertStringNVarCharParam("@menu", sqlCommand, mi.Name);                  
+                    sqlCommand.ExecuteScalar();
+                }
+                catch (SqlException e)
+                {
+                    if (e.Message.IndexOf("UNIQUE") != -1)
+                    {
+                        // ignore
+                        //reader.Close();
+                    }
+                    else
+                        throw;
+                }
+            }
+        }
+        public List<MenuObject> GetMenuList()
+        {
+            string sqlText = @"SELECT [id], [menu_name] FROM [MenuItems]";
+            
+            List<MenuObject> Menus = new List<MenuObject>();
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                            while (reader.Read())
+                            {
+                                Menus.Add(new MenuObject
+                                    {
+                                        Id = DatabaseHelper.GetInt32("id", reader),
+                                        Name = DatabaseHelper.GetString("menu_name", reader).Trim(),
+                                        NotSavedInDBYet = false
+                                    });
+                            }
+                    }
+                }
+            }
+            return Menus;
+        }
+        public MenuObject AddNewMenu(string pName)
+        {
+            MenuObject newMenu = new MenuObject();
+
+            const string sqlText = @"INSERT INTO [MenuItems]([menu_name])
+                                        VALUES (@menu) SELECT SCOPE_IDENTITY()";
+
+            SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection);
+
+            DatabaseHelper.InsertStringNVarCharParam("@menu", sqlCommand, pName.Trim());
+            newMenu.Id = int.Parse(sqlCommand.ExecuteScalar().ToString());
+            newMenu.NotSavedInDBYet = false;
+            newMenu.Name = pName;
+
+            return newMenu;
+        }
+        public Dictionary<MenuObject, bool> GetAllowedMenuList(int pRoleId)
+        {
+            string sqlText = @"SELECT MenuItems.[id], MenuItems.[menu_name], AllowedRoleMenus.allowed 
+                              FROM [MenuItems] 
+                              INNER JOIN AllowedRoleMenus ON MenuItems.id = AllowedRoleMenus.menu_item_id
+                              WHERE AllowedRoleMenus.role_id = @roleId";
+
+            Dictionary<MenuObject, bool> Menus = new Dictionary<MenuObject, bool>();
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRoleId);
+
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                            while (reader.Read())
+                            {
+                                Menus.Add(new MenuObject
+                                {
+                                    Id = DatabaseHelper.GetInt32("id", reader),
+                                    Name = DatabaseHelper.GetString("menu_name", reader).Trim(),
+                                    NotSavedInDBYet = false
+                                }, DatabaseHelper.GetBoolean("allowed", reader));
+                            }
+                    }
+                }
+            }
+            return Menus;
+        }
+        public Dictionary<ActionItemObject, bool> GetAllowedActionList(int pRoleId)
+        {
+            //select maintained allowed flags for actions or true if nothing was specified
+            string sqlText = @"SELECT ActionItems.[id], ActionItems.[class_name], ActionItems.[method_name], 
+                            ISNULL((SELECT allowed FROM AllowedRoleActions WHERE AllowedRoleActions.action_item_id = ActionItems.id AND 
+                            AllowedRoleActions.role_id = @roleId), 1) as allowed
+                             FROM ActionItems";
+
+            Dictionary<ActionItemObject, bool> Actions = new Dictionary<ActionItemObject, bool>();
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRoleId);
+
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                            while (reader.Read())
+                            {
+                                Actions.Add(new ActionItemObject
+                                {
+                                    Id = DatabaseHelper.GetInt32("id", reader),
+                                    ClassName = DatabaseHelper.GetString("class_name", reader).Trim(),
+                                    MethodName = DatabaseHelper.GetString("method_name", reader).Trim()
+                                }, DatabaseHelper.GetBoolean("allowed", reader));
+                            }
+                    }
+                }
+            }
+            return Actions;
+        }
+        public bool IsThisActionAllowedForThisRole(int pRoleId, ActionItemObject pAction)
+        {
+            string sqlText = @"SELECT allowed FROM AllowedRoleActions
+                            WHERE action_id = @actionId AND role_id = @roleId";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRoleId);
+                DatabaseHelper.InsertInt32Param("@actionId", sqlCommand, pAction.Id);
+
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                            return DatabaseHelper.GetBoolean("allowed", reader);
+                    }
+                }
+            }
+            return true;
+        }
+        private void  _SaveAllowedMenusForRole(Role pRole)
+        {
+            foreach (KeyValuePair<MenuObject, bool> kvp in pRole.GetMenuItems())
+            {
+                string sqlText = @"SELECT allowed FROM AllowedRoleMenus 
+                                        WHERE menu_item_id =@menuId AND role_id = @roleId";
+
+
+                using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+                {
+                    DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRole.Id);
+                    DatabaseHelper.InsertInt32Param("@menuId", sqlCommand, (kvp.Key as MenuObject).Id);
+                    SqlDataReader reader = sqlCommand.ExecuteReader();
+
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            bool oldValue = DatabaseHelper.GetBoolean("allowed", reader);
+                            reader.Close();
+                            if (oldValue != (bool)kvp.Value)
+                            {
+                                
+                                UpdateAllowedMenuItem(pRole.Id, kvp.Key.Id, kvp.Value);
+                            }
+                        }
+
+                        else
+                        {
+                            reader.Close();
+                            AddAllowedMenuItem(pRole.Id, kvp.Key.Id, kvp.Value);
+                        }
+                    }
+
+                }
+
+            }
+        }
+        private void _SaveAllowedActionsForRole(Role pRole)
+        {
+            foreach (KeyValuePair<ActionItemObject, bool> kvp in pRole.GetActionItems())
+            {
+                string sqlText = @"SELECT allowed FROM AllowedRoleActions 
+                                        WHERE action_item_id =@actionId AND role_id = @roleId";
+
+
+                using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+                {
+                    DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRole.Id);
+                    DatabaseHelper.InsertInt32Param("@actionId", sqlCommand, kvp.Key.Id);
+                    SqlDataReader reader = sqlCommand.ExecuteReader();
+
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            bool oldValue = DatabaseHelper.GetBoolean("allowed", reader);
+                            reader.Close();
+                            if (oldValue != kvp.Value)
+                            {
+
+                                UpdateAllowedActionItem(pRole.Id, kvp.Key.Id, kvp.Value);
+                            }
+                        }
+
+                        else
+                        {
+                            reader.Close();
+                            AddAllowedActionItem(pRole.Id, kvp.Key.Id, kvp.Value);
+                        }
+                    }
+
+                }
+
+            }
+        }
+        private void UpdateAllowedMenuItem(int pRoleId, int pMenuId, bool pAllowed)
+        {
+            const string sqlText = @"UPDATE [AllowedRoleMenus]
+                                            SET allowed = @allowed
+                                            WHERE [menu_item_id] = @menuId AND
+                                            role_id = @roleId";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertBooleanParam("@allowed", sqlCommand, pAllowed);
+                DatabaseHelper.InsertInt32Param("@menuId", sqlCommand, pMenuId);
+                DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRoleId);
+
+                sqlCommand.ExecuteNonQuery();
+            }
+        }
+        private void AddAllowedMenuItem(int pRoleId, int pMenuId, bool pAllowed)
+        {
+            const string sqlText = @"INSERT INTO AllowedRoleMenus (menu_item_id, role_id, allowed)
+                                        VALUES (@menuId, @roleId, @allowed)";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertBooleanParam("@allowed", sqlCommand, pAllowed);
+                DatabaseHelper.InsertInt32Param("@menuId", sqlCommand, pMenuId);
+                DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRoleId);
+
+                sqlCommand.ExecuteNonQuery();
+            }
+
+        }
+        private void UpdateAllowedActionItem(int pRoleId, int pActionId, bool pAllowed)
+        {
+            const string sqlText = @"UPDATE [AllowedRoleActions]
+                                            SET allowed = @allowed
+                                            WHERE [action_item_id] = @actionId AND
+                                            role_id = @roleId";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertBooleanParam("@allowed", sqlCommand, pAllowed);
+                DatabaseHelper.InsertInt32Param("@actionId", sqlCommand, pActionId);
+                DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRoleId);
+
+                sqlCommand.ExecuteNonQuery();
+            }
+        }
+        private void AddAllowedActionItem(int pRoleId, int pActionId, bool pAllowed)
+        {
+            const string sqlText = @"INSERT INTO AllowedRoleActions (action_item_id, role_id, allowed)
+                                        VALUES (@actionId, @roleId, @allowed)";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertBooleanParam("@allowed", sqlCommand, pAllowed);
+                DatabaseHelper.InsertInt32Param("@actionId", sqlCommand, pActionId);
+                DatabaseHelper.InsertInt32Param("@roleId", sqlCommand, pRoleId);
+
+                sqlCommand.ExecuteNonQuery();
+            }
+
+        }
+
+        private static Role _GetRole(SqlDataReader pReader)
+        {
+            Role role = new Role
+                {           
+                    Id = DatabaseHelper.GetInt32("id", pReader),
+                    RoleName = DatabaseHelper.GetString("code", pReader),
+                    IsDeleted = DatabaseHelper.GetBoolean("deleted", pReader),
+                    Description = DatabaseHelper.GetString("description",pReader),
+                    IsRoleForLoan = DatabaseHelper.GetBoolean("role_of_loan", pReader),
+                    IsRoleForSaving = DatabaseHelper.GetBoolean("role_of_saving", pReader)
+                };
+            return role;
+        }
+
+        public Dictionary<int, int> SelectUserToRole()
+        {
+            const string q = @"SELECT u.id AS user_id, r.id AS role_id
+                               FROM dbo.Users AS u
+                               LEFT JOIN dbo.Roles AS r ON r.code = u.role_code";
+
+            Dictionary<int, int> userToRole = new Dictionary<int, int>();
+            OctopusCommand c = new OctopusCommand(q, DefaultConnection);
+            using (OctopusReader r = c.ExecuteReader())
+            {
+                if (r.Empty) return userToRole;
+
+                while (r.Read())
+                {
+                    int userId = r.GetInt("user_id");
+                    int roleId = r.GetInt("role_id");
+                    userToRole.Add(userId, roleId);
+                }
+            }
+            return userToRole;
+        }
+    }
+}

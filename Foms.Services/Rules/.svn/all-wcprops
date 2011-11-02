@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Rules
+END
+IStrategyFundingLineEvent.cs
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Rules/IStrategyFundingLineEvent.cs
+END
+RegExCheckerServices.cs
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Rules/RegExCheckerServices.cs
+END
+ValidateAmountOfEventFundingLine.resx
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Rules/ValidateAmountOfEventFundingLine.resx
+END
+Context.cs
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Rules/Context.cs
+END
+ValidateAmountOfEventFundingLine.Designer.cs
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Rules/ValidateAmountOfEventFundingLine.Designer.cs
+END
+ValidateAmountofEventFundingLine.cs
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Rules/ValidateAmountofEventFundingLine.cs
+END

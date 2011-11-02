@@ -1,0 +1,242 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright ?2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.CoreDomain.FundingLines;
+using Octopus.CoreDomain.Products;
+using Octopus.Enums;
+using System.Data.SqlClient;
+
+namespace Octopus.Manager.Products
+{
+    public  class GuaranteeProductManager:Manager
+    {
+        public GuaranteeProductManager(string testDB):base(testDB){}
+        public GuaranteeProductManager(User pUser): base(pUser){}
+
+        private static void _SetGuaranteePackage(SqlCommand pSqlCommand, GuaranteeProduct pGuaranteePackage)
+        {
+            DatabaseHelper.InsertBooleanParam("@deleted", pSqlCommand, pGuaranteePackage.Delete);
+            DatabaseHelper.InsertStringNVarCharParam("@name", pSqlCommand, pGuaranteePackage.Name);
+            DatabaseHelper.InsertCharParam("@clientType", pSqlCommand, pGuaranteePackage.ClientType);
+            DatabaseHelper.InsertMoneyParam("@amount", pSqlCommand, pGuaranteePackage.Amount);
+            DatabaseHelper.InsertMoneyParam("@amountMin", pSqlCommand, pGuaranteePackage.AmountMin);
+            DatabaseHelper.InsertMoneyParam("@amountMax", pSqlCommand, pGuaranteePackage.AmountMax);
+
+            DatabaseHelper.InsertMoneyParam("@guarantedAmount", pSqlCommand, pGuaranteePackage.GuarantedAmount);
+            DatabaseHelper.InsertMoneyParam("@guarantedAmountMin", pSqlCommand, pGuaranteePackage.GuarantedAmountMin);
+            DatabaseHelper.InsertMoneyParam("@guarantedAmountMax", pSqlCommand, pGuaranteePackage.GuarantedAmountMax);
+            DatabaseHelper.InsertDoubleParam("@guaranteeFees", pSqlCommand, pGuaranteePackage.GuaranteeFees);
+            DatabaseHelper.InsertDoubleParam("@guaranteeFeesMin", pSqlCommand, pGuaranteePackage.GuaranteeFeesMin);
+            DatabaseHelper.InsertDoubleParam("@guaranteeFeesMax", pSqlCommand, pGuaranteePackage.GuaranteeFeesMax);
+
+
+            if (pGuaranteePackage.FundingLine != null)
+                DatabaseHelper.InsertInt32Param("@fundingLine_id", pSqlCommand, pGuaranteePackage.FundingLine.Id);
+            else
+                DatabaseHelper.InsertInt32Param("@fundingLine_id", pSqlCommand, null);
+
+            DatabaseHelper.InsertInt32Param("@currency_id", pSqlCommand, pGuaranteePackage.Currency.Id);
+
+            if (pGuaranteePackage.Id != null)
+            {
+                DatabaseHelper.InsertInt32Param("@packageId", pSqlCommand, pGuaranteePackage.Id);
+            }
+        }
+
+
+        public int AddGuaranteePackage(GuaranteeProduct pGuaranteePackage)
+        {
+            string sqlText = @"INSERT INTO [GuaranteesPackages]
+                       ([deleted],[name],[client_type],[amount],[amount_min],[amount_max],[rate]
+                       ,[rate_min],[rate_max],[guaranted_amount]
+                        ,[guaranted_amount_min],[guaranted_amount_max],[guarantee_fees]
+                        ,[guarantee_fees_min],[guarantee_fees_max],[fundingLine_id], [currency_id])
+                VALUES
+                        (@deleted,@name,@clientType,@amount,@amountMin,@amountMax,0,0,0,
+                        @guarantedAmount,@guarantedAmountMin,@guarantedAmountMax,
+                        @guaranteeFees,@guaranteeFeesMin,@guaranteeFeesMax,@fundingLine_id, @currency_id) SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insertPackage = new SqlCommand(sqlText, DefaultConnection);
+            _SetGuaranteePackage(insertPackage, pGuaranteePackage);
+
+            return int.Parse(insertPackage.ExecuteScalar().ToString());
+        }
+
+        public void UpdateGuaranteePackage(GuaranteeProduct pGuaranteePackage)
+        {
+            string sqlText = @"UPDATE
+                                  [GuaranteesPackages]
+                                SET
+                                  [deleted] = @deleted,
+                                  [name] = @name,
+                                  [client_type] = @clientType,
+                                  [amount] = @amount,
+                                  [amount_min] = @amountMin,
+                                  [amount_max] = @amountMax,
+                                  [rate] = 0,
+                                  [rate_min] = 0,
+                                  [rate_max] = 0,
+                                  [guaranted_amount] = @guarantedAmount,
+                                  [guaranted_amount_min] = @guarantedAmountMin,
+                                  [guaranted_amount_max] = @guarantedAmountMax,
+                                  [guarantee_fees] = @guaranteeFees,
+                                  [guarantee_fees_min] = @guaranteeFeesMin,
+                                  [guarantee_fees_max] = @guaranteeFeesMax,
+                                  [fundingLine_id] = @fundingLine_id,
+                                  [currency_id] = @currency_id
+                                  
+                                WHERE
+                                  [id] = @packageId";
+
+            SqlCommand updatePackage = new SqlCommand(sqlText, DefaultConnection);
+            _SetGuaranteePackage(updatePackage, pGuaranteePackage);
+
+            updatePackage.ExecuteNonQuery();
+        }
+
+        public GuaranteeProduct SelectGuaranteePackageById(int Id )
+        {
+            GuaranteeProduct guaranteePackage = null;
+            const string sqlText = @"SELECT GuaranteesPackages.[id],[deleted],GuaranteesPackages.[name],[client_type],[amount],[amount_min],[amount_max],[amount_limit],[amount_limit_min],[amount_limit_max]
+            ,[guaranted_amount],[guaranted_amount_min],[guaranted_amount_max],[guarantee_fees],[guarantee_fees_min],[guarantee_fees_max],[fundingLine_id], currency_id,
+            Currencies.name as currency_name, Currencies.code as currency_code,
+            Currencies.is_pivot as currency_is_pivot                      
+            FROM [GuaranteesPackages] 
+            INNER JOIN Currencies on GuaranteesPackages.currency_id = Currencies.id
+            WHERE GuaranteesPackages.[id]=@id ";
+       
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, Id);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    guaranteePackage = new GuaranteeProduct();
+                    guaranteePackage.FundingLine = new FundingLine();
+                    guaranteePackage.Id = DatabaseHelper.GetInt32("id", reader);
+                    guaranteePackage.Name = DatabaseHelper.GetString("name", reader);
+                    guaranteePackage.Delete = DatabaseHelper.GetBoolean("deleted", reader);
+                    guaranteePackage.ClientType = DatabaseHelper.GetChar("client_type", reader);
+                    guaranteePackage.Amount = DatabaseHelper.GetNullAuthorizedMoney("amount", reader);
+                    guaranteePackage.AmountMin = DatabaseHelper.GetNullAuthorizedMoney("amount_min", reader);
+                    guaranteePackage.AmountMax = DatabaseHelper.GetNullAuthorizedMoney("amount_max", reader);
+                    guaranteePackage.GuarantedAmount = DatabaseHelper.GetNullAuthorizedMoney("guaranted_amount", reader);
+                    guaranteePackage.GuarantedAmountMin = DatabaseHelper.GetNullAuthorizedMoney("guaranted_amount_min", reader);
+                    guaranteePackage.GuarantedAmountMax = DatabaseHelper.GetNullAuthorizedMoney("guaranted_amount_max", reader);
+                    guaranteePackage.GuaranteeFees = DatabaseHelper.GetNullAuthorizedDouble("guarantee_fees", reader);
+                    guaranteePackage.GuaranteeFeesMin = DatabaseHelper.GetNullAuthorizedDouble("guarantee_fees_min", reader);
+                    guaranteePackage.GuaranteeFeesMax = DatabaseHelper.GetNullAuthorizedDouble("guarantee_fees_max", reader);
+                    guaranteePackage.Currency = new Currency
+                                                    {
+                                                        Id =
+                                                            DatabaseHelper.GetInt32("currency_id", reader),
+                                                        Name = DatabaseHelper.GetString("currency_name", reader),
+                                                        Code = DatabaseHelper.GetString("currency_code", reader),
+                                                        IsPivot = DatabaseHelper.GetBoolean("currency_is_pivot", reader)
+                                                    };
+                    int? fundingLineId = DatabaseHelper.GetNullAuthorizedInt32("fundingLine_id", reader);
+                    if (fundingLineId.HasValue)
+                    {
+                        guaranteePackage.FundingLine = new FundingLine {Id = fundingLineId.Value};
+                    } 
+                }
+            }
+            return guaranteePackage;
+        }
+
+        public List<GuaranteeProduct> SelectAllGuaranteesPackages(bool pShowAlsoDeleted, OClientTypes pClientType)
+        {
+            List<GuaranteeProduct> guaranteesPackagesList = new List<GuaranteeProduct>();
+            string sqlText = "SELECT id FROM GuaranteesPackages WHERE 1 = 1";
+            const string sqlTextForAllGuaranteesPackages = " OR GuaranteesPackages.client_type = '-' )";
+            if (!pShowAlsoDeleted)
+                sqlText += " AND deleted = 0";
+
+            switch (pClientType)
+            {
+                case OClientTypes.Person:
+                    sqlText += " AND ( GuaranteesPackages.client_type = 'I' " + sqlTextForAllGuaranteesPackages;
+                    break;
+                case OClientTypes.Group:
+                    sqlText += "  AND ( GuaranteesPackages.client_type = 'G' " + sqlTextForAllGuaranteesPackages;
+                    break;
+                case OClientTypes.Corporate:
+                    sqlText += "  AND ( GuaranteesPackages.client_type = 'C' " + sqlTextForAllGuaranteesPackages;
+                    break;
+            }
+
+            using (SqlCommand selectGuaranteesPackages = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = selectGuaranteesPackages.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        while (reader.Read())
+                        {
+                            GuaranteeProduct gPack = new GuaranteeProduct();
+                            gPack.Id= DatabaseHelper.GetInt32("id", reader);
+                            guaranteesPackagesList.Add(gPack);
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < guaranteesPackagesList.Count; i++)
+            {
+                guaranteesPackagesList[i] = SelectGuaranteePackageById(guaranteesPackagesList[i].Id);
+            }
+            return guaranteesPackagesList;
+        }
+
+        public void DeleteGuaranteePackageById(int guaranteePackageId)
+        {
+            const string sqlText = "UPDATE GuaranteesPackages SET deleted = 1 WHERE id = @id";
+
+            SqlCommand deleteGuaranteePack = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", deleteGuaranteePack, guaranteePackageId);
+            deleteGuaranteePack.ExecuteNonQuery();
+        }
+
+        public bool IsThisGuaranteeProductNameAlreadyExist(string pGuaranteeProductName)
+        {
+            string sqlText = "SELECT name FROM GuaranteesPackages WHERE name = @name";
+            return _IsThisNameAreadyExist(sqlText, pGuaranteeProductName);
+        }
+
+        private bool _IsThisNameAreadyExist(string pSqlQuery, string pExpectedName)
+        {
+            SqlCommand command = new SqlCommand(pSqlQuery, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", command, pExpectedName);
+            using (SqlDataReader reader = command.ExecuteReader())
+                if (reader.HasRows)
+                    return true;
+
+            return false;
+        }
+    }
+}

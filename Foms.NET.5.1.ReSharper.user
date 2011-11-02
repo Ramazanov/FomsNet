@@ -1,0 +1,112 @@
+<Configuration>
+  <SettingsComponent>
+    <string />
+    <integer />
+    <boolean>
+      <setting name="SolutionAnalysisEnabled">False</setting>
+    </boolean>
+  </SettingsComponent>
+  <RecentFiles>
+    <RecentFiles>
+      <File id="963A6B8B-779C-4052-B39A-8ABBFBF16C1A/f:OctopusCommand.cs" caret="1493" fromTop="15" />
+      <File id="963A6B8B-779C-4052-B39A-8ABBFBF16C1A/f:SQLToolManager.cs" caret="1299" fromTop="20" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Database/f:SQLInfoEnumerator.cs" caret="0" fromTop="0" />
+      <File id="B3288E21-E5A9-4620-BEF3-AFB0B207655C/d:Settings/f:ApplicationSettings.cs" caret="4598" fromTop="12" />
+      <File id="B3288E21-E5A9-4620-BEF3-AFB0B207655C/f:AmountComparer.cs" caret="481" fromTop="8" />
+      <File id="B3288E21-E5A9-4620-BEF3-AFB0B207655C/d:Settings/f:TechnicalSettings.cs" caret="1368" fromTop="0" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:FrmGeneralSettings.cs" caret="19421" fromTop="243" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:FrmRoles.designer.cs" caret="8679" fromTop="110" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:UserControl/f:SweetBaseForm.cs" caret="684" fromTop="14" />
+      <File id="963A6B8B-779C-4052-B39A-8ABBFBF16C1A/f:MFIManager.cs" caret="149" fromTop="0" />
+      <File id="963A6B8B-779C-4052-B39A-8ABBFBF16C1A/f:RoleManager.cs" caret="11546" fromTop="0" />
+      <File id="A859D97A-51FB-4961-AF07-5856640511AF/f:RoleServices.cs" caret="6554" fromTop="17" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:UserControl/f:CollapsibleSplitter.cs" caret="8269" fromTop="19" />
+      <File id="D539C388-3848-4A3E-AB87-42B8E329755A/f:MenuObject.cs" caret="1261" fromTop="29" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/f:AppMain.cs" caret="3631" fromTop="17" />
+      <File id="D539C388-3848-4A3E-AB87-42B8E329755A/f:Role.cs" caret="4423" fromTop="20" />
+      <File id="D539C388-3848-4A3E-AB87-42B8E329755A/f:ActionItemObject.cs" caret="1376" fromTop="18" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:FrmRoles.cs" caret="4432" fromTop="22" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:UserControl/f:SweetButton.cs" caret="4037" fromTop="0" />
+      <File id="A859D97A-51FB-4961-AF07-5856640511AF/f:ServicesHelper.cs" caret="1332" fromTop="15" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:UserControl/f:SweetForm.Designer.cs" caret="2228" fromTop="19" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.designer.cs" caret="5029" fromTop="15" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.cs" caret="9192" fromTop="21" />
+      <File id="963A6B8B-779C-4052-B39A-8ABBFBF16C1A/f:UserManager.cs" caret="4547" fromTop="66" />
+      <File id="B3288E21-E5A9-4620-BEF3-AFB0B207655C/f:ZipHelper.cs" caret="4079" fromTop="7" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/f:AboutOctopus.cs" caret="2213" fromTop="9" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/f:LotrasmicMainWindowForm.cs" caret="14152" fromTop="19" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="14827" fromTop="83" />
+      <File id="941B6658-6BC7-46AC-BB38-DBAB2835923E/f:Program.cs" caret="1342" fromTop="28" />
+      <File id="B3288E21-E5A9-4620-BEF3-AFB0B207655C/f:ExportFile.cs" caret="2681" fromTop="17" />
+    </RecentFiles>
+    <RecentEdits>
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:UserControl/f:SweetForm.Designer.cs" caret="39951" fromTop="19" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.cs" caret="6796" fromTop="17" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.cs" caret="7086" fromTop="20" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.cs" caret="8888" fromTop="15" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.cs" caret="8888" fromTop="23" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.cs" caret="8888" fromTop="15" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.designer.cs" caret="5029" fromTop="15" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Configuration/f:UserForm.cs" caret="9195" fromTop="21" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/f:LotrasmicMainWindowForm.cs" caret="16099" fromTop="16" />
+      <File id="963A6B8B-779C-4052-B39A-8ABBFBF16C1A/f:UserManager.cs" caret="38466" fromTop="66" />
+      <File id="B3288E21-E5A9-4620-BEF3-AFB0B207655C/f:ZipHelper.cs" caret="6171" fromTop="9" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/f:AboutOctopus.cs" caret="11443" fromTop="19" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="0" fromTop="0" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="1380" fromTop="28" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="1362" fromTop="24" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="5205" fromTop="17" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="13049" fromTop="26" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="13049" fromTop="17" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="16051" fromTop="17" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="16233" fromTop="21" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="11518" fromTop="22" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="9226" fromTop="17" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="119044" fromTop="13" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/f:LotrasmicMainWindowForm.cs" caret="14152" fromTop="19" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="1362" fromTop="17" />
+      <File id="098C8842-6538-4B87-8851-BB1B1FA379FE/d:Export/f:ExportBookingsForm.cs" caret="2923" fromTop="17" />
+      <File id="941B6658-6BC7-46AC-BB38-DBAB2835923E/f:Program.cs" caret="676" fromTop="16" />
+      <File id="941B6658-6BC7-46AC-BB38-DBAB2835923E/f:Program.cs" caret="1342" fromTop="28" />
+      <File id="B3288E21-E5A9-4620-BEF3-AFB0B207655C/f:ExportFile.cs" caret="3189" fromTop="37" />
+    </RecentEdits>
+  </RecentFiles>
+  <NAntValidationSettings>
+    <NAntPath value="" />
+  </NAntValidationSettings>
+  <UnitTestRunner>
+    <Providers />
+  </UnitTestRunner>
+  <UnitTestRunnerNUnit>
+    <NUnitInstallDir IsNull="False">
+    </NUnitInstallDir>
+    <UseAddins>Never</UseAddins>
+  </UnitTestRunnerNUnit>
+  <CompletionStatisticsManager>
+    <ItemStatistics item="Default">
+      <Item value="return" priority="1" />
+      <Item value="false" priority="0" />
+      <Item value="throw" priority="1" />
+      <Item value="new" priority="1" />
+      <Item value="Exception" priority="0" />
+      <Item value="Exception`0" priority="1" />
+      <Item value="Services" priority="0" />
+      <Item value="DefaultConnection" priority="0" />
+      <Item value="Services`0" priority="0" />
+      <Item value="base" priority="0" />
+      <Item value="pUser" priority="0" />
+      <Item value="using" priority="1" />
+      <Item value="Foms" priority="1" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@Foms.DatabaseConnection.ConnectionManager">
+      <Item value="GetInstance`0" priority="0" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@Foms.GUI.UserControl.SweetButton">
+      <Item value="ButtonIcon`0" priority="0" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@Foms.GUI.UserControl.SweetButton+ButtonIcon">
+      <Item value="Close" priority="0" />
+      <Item value="None" priority="0" />
+    </ItemStatistics>
+  </CompletionStatisticsManager>
+</Configuration>

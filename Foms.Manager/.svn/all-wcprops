@@ -1,0 +1,143 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager
+END
+ConsoManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/ConsoManager.cs
+END
+QuestionnaireManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/QuestionnaireManager.cs
+END
+InstallmentManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/InstallmentManager.cs
+END
+NonWorkingDateManagement.cs
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/NonWorkingDateManagement.cs
+END
+LocationsManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/LocationsManager.cs
+END
+InstallmentTypeManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/InstallmentTypeManager.cs
+END
+SQLToolManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/SQLToolManager.cs
+END
+BranchManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/BranchManager.cs
+END
+InstallmentTypeManagement.cs
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/InstallmentTypeManagement.cs
+END
+PicturesManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/PicturesManager.cs
+END
+ReportsManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/ReportsManager.cs
+END
+OctopusCommand.cs
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/OctopusCommand.cs
+END
+AssemblyInfo.cs
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/AssemblyInfo.cs
+END
+RoleManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/RoleManager.cs
+END
+FundingLineManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/FundingLineManager.cs
+END
+Octopus.Manager.csproj
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Octopus.Manager.csproj
+END
+EconomicActivityLoanHistoryManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/EconomicActivityLoanHistoryManager.cs
+END
+ProjectManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/ProjectManager.cs
+END
+EconomicActivityManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/EconomicActivityManager.cs
+END
+DatabaseHelper.cs
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/DatabaseHelper.cs
+END
+MFIManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/MFIManager.cs
+END
+UserManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/UserManager.cs
+END
+Manager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Manager.cs
+END

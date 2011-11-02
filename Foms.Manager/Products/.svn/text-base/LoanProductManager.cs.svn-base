@@ -1,0 +1,1529 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.CoreDomain.Contracts.Loans.Installments;
+using Octopus.CoreDomain.FundingLines;
+using Octopus.CoreDomain.LoanCycles;
+using Octopus.CoreDomain.Products;
+using Octopus.Enums;
+using System.Data.SqlClient;
+
+namespace Octopus.Manager.Products
+{
+    /// <summary>
+    /// This class provides all the methods required to manages Package datas in database
+    /// </summary>
+    public class LoanProductManager : Manager
+    {
+        private readonly InstallmentTypeManager installmentTypeManagement;
+
+        public LoanProductManager(User pUser): base(pUser)
+        {
+            installmentTypeManagement = new InstallmentTypeManager(pUser);
+        }
+
+        public LoanProductManager(string testDB) : base(testDB)
+        {
+            installmentTypeManagement = new InstallmentTypeManager(testDB);
+        }
+
+        private static void SetProduct(SqlCommand pSqlCommand, LoanProduct pPackage)
+        {
+            DatabaseHelper.InsertInt32Param("@packageId", pSqlCommand, pPackage.Id);
+            DatabaseHelper.InsertBooleanParam("@deleted", pSqlCommand, pPackage.Delete);
+            DatabaseHelper.InsertStringNVarCharParam("@name", pSqlCommand, pPackage.Name);
+            DatabaseHelper.InsertStringNVarCharParam("@code", pSqlCommand, pPackage.Code);
+            DatabaseHelper.InsertCharParam("@clientType", pSqlCommand, pPackage.ClientType);
+            DatabaseHelper.InsertInt32Param("@installmentTypeId", pSqlCommand, pPackage.InstallmentType.Id);
+            DatabaseHelper.InsertSmalIntParam("@loanType", pSqlCommand, (int)pPackage.LoanType);
+            DatabaseHelper.InsertSmalIntParam("@rounding_type", pSqlCommand, (int)pPackage.RoundingType);
+            DatabaseHelper.InsertMoneyParam("@amount", pSqlCommand, pPackage.Amount);
+            DatabaseHelper.InsertMoneyParam("@amountMin", pSqlCommand, pPackage.AmountMin);
+            DatabaseHelper.InsertMoneyParam("@amountMax", pSqlCommand, pPackage.AmountMax);
+
+            DatabaseHelper.InsertDoubleParam("@interestRate", pSqlCommand, pPackage.InterestRate);
+            DatabaseHelper.InsertDoubleParam("@interestRateMin", pSqlCommand, pPackage.InterestRateMin);
+            DatabaseHelper.InsertDoubleParam("@interestRateMax", pSqlCommand, pPackage.InterestRateMax);         
+   
+            DatabaseHelper.InsertInt32Param("@gracePeriod", pSqlCommand, pPackage.GracePeriod);
+            DatabaseHelper.InsertInt32Param("@gracePeriodMin", pSqlCommand, pPackage.GracePeriodMin);
+            DatabaseHelper.InsertInt32Param("@gracePeriodMax", pSqlCommand, pPackage.GracePeriodMax);
+            DatabaseHelper.InsertInt32Param("@grace_period_of_latefees", pSqlCommand, pPackage.GracePeriodOfLateFees);
+            
+            DatabaseHelper.InsertInt32Param("@nbOfInstallments", pSqlCommand, pPackage.NbOfInstallments);
+            DatabaseHelper.InsertInt32Param("@nbOfInstallmentsMin", pSqlCommand, pPackage.NbOfInstallmentsMin);
+            DatabaseHelper.InsertInt32Param("@nbOfInstallmentsMax", pSqlCommand, pPackage.NbOfInstallmentsMax);
+            
+            DatabaseHelper.InsertDoubleParam("@anticipatedTotalRepaymentPenalties", pSqlCommand, pPackage.AnticipatedTotalRepaymentPenalties);
+            DatabaseHelper.InsertDoubleParam("@anticipatedTotalRepaymentPenaltiesMin", pSqlCommand, pPackage.AnticipatedTotalRepaymentPenaltiesMin);
+            DatabaseHelper.InsertDoubleParam("@anticipatedTotalRepaymentPenaltiesMax", pSqlCommand, pPackage.AnticipatedTotalRepaymentPenaltiesMax);
+
+            DatabaseHelper.InsertDoubleParam("@anticipatedPartialRepaymentPenalties", pSqlCommand, pPackage.AnticipatedPartialRepaymentPenalties);
+            DatabaseHelper.InsertDoubleParam("@anticipatedPartialRepaymentPenaltiesMin", pSqlCommand, pPackage.AnticipatedPartialRepaymentPenaltiesMin);
+            DatabaseHelper.InsertDoubleParam("@anticipatedPartialRepaymentPenaltiesMax", pSqlCommand, pPackage.AnticipatedPartialRepaymentPenaltiesMax);
+            
+            DatabaseHelper.InsertDoubleParam("@entryFees", pSqlCommand, 0);
+            DatabaseHelper.InsertDoubleParam("@entryFeesMin", pSqlCommand, 0);
+            DatabaseHelper.InsertDoubleParam("@entryFeesMax", pSqlCommand, 0);
+            DatabaseHelper.InsertBooleanParam("@entryFeesPercentage", pSqlCommand, pPackage.EntryFeesPercentage);
+            DatabaseHelper.InsertBooleanParam("@chargeInterestWithInGracePeriod", pSqlCommand, pPackage.ChargeInterestWithinGracePeriod);
+            
+            DatabaseHelper.InsertSmalIntParam("@AnticipatedTotalRepaymentPenaltiesBase", pSqlCommand, (int)pPackage.AnticipatedTotalRepaymentPenaltiesBase);
+            DatabaseHelper.InsertSmalIntParam("@AnticipatedPartialRepaymentPenaltiesBase", pSqlCommand, (int)pPackage.AnticipatedPartialRepaymentPenaltiesBase);
+            
+            DatabaseHelper.InsertBooleanParam("@keepExpectedInstallment", pSqlCommand, pPackage.KeepExpectedInstallment);
+            DatabaseHelper.InsertBooleanParam("@fake", pSqlCommand, pPackage.Fake);
+            DatabaseHelper.InsertInt32Param("@currency_id", pSqlCommand, pPackage.Currency.Id);
+
+            if (pPackage.FundingLine != null)
+                DatabaseHelper.InsertInt32Param("@fundingLine_id", pSqlCommand, pPackage.FundingLine.Id);
+            else
+                DatabaseHelper.InsertInt32Param("@fundingLine_id", pSqlCommand, null);
+            
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesInitialAmount", pSqlCommand, pPackage.NonRepaymentPenalties.InitialAmount);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOlb", pSqlCommand, pPackage.NonRepaymentPenalties.OLB);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOverdueInterest", pSqlCommand, pPackage.NonRepaymentPenalties.OverDueInterest);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOverduePrincipal", pSqlCommand, pPackage.NonRepaymentPenalties.OverDuePrincipal);
+
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesInitialAmountMin", pSqlCommand, pPackage.NonRepaymentPenaltiesMin.InitialAmount);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOlbMin", pSqlCommand, pPackage.NonRepaymentPenaltiesMin.OLB);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOverdueInterestMin", pSqlCommand, pPackage.NonRepaymentPenaltiesMin.OverDueInterest);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOverduePrincipalMin", pSqlCommand, pPackage.NonRepaymentPenaltiesMin.OverDuePrincipal);
+
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesInitialAmountMax", pSqlCommand, pPackage.NonRepaymentPenaltiesMax.InitialAmount);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOlbMax", pSqlCommand, pPackage.NonRepaymentPenaltiesMax.OLB);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOverdueInterestMax", pSqlCommand, pPackage.NonRepaymentPenaltiesMax.OverDueInterest);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOverduePrincipalMax", pSqlCommand, pPackage.NonRepaymentPenaltiesMax.OverDuePrincipal);
+            
+            if (pPackage.UseLoanCycle)
+                DatabaseHelper.InsertInt32Param("@cycleId", pSqlCommand, pPackage.CycleId);
+            else
+                DatabaseHelper.InsertInt32Param("@cycleId", pSqlCommand, null);
+
+            if (pPackage.ExoticProduct == null)
+                DatabaseHelper.InsertInt32Param("@exoticId", pSqlCommand, null);
+            else
+                DatabaseHelper.InsertInt32Param("@exoticId", pSqlCommand, pPackage.ExoticProduct.Id);
+            
+            /* Line of credit */
+            DatabaseHelper.InsertInt32Param("@DrawingsNumber", pSqlCommand, pPackage.DrawingsNumber);
+
+            DatabaseHelper.InsertMoneyParam("@AmountUnderLoc", pSqlCommand, pPackage.AmountUnderLoc);
+            DatabaseHelper.InsertMoneyParam("@AmountUnderLocMin", pSqlCommand, pPackage.AmountUnderLocMin);
+            DatabaseHelper.InsertMoneyParam("@AmountUnderLocMax", pSqlCommand, pPackage.AmountUnderLocMax);
+
+            DatabaseHelper.InsertInt32Param("@MaturityLoc", pSqlCommand, pPackage.MaturityLoc);
+            DatabaseHelper.InsertInt32Param("@MaturityLocMin", pSqlCommand, pPackage.MaturityLocMin);
+            DatabaseHelper.InsertInt32Param("@MaturityLocMax", pSqlCommand, pPackage.MaturityLocMax);
+            DatabaseHelper.InsertBooleanParam("@activated_loc", pSqlCommand, pPackage.ActivatedLOC);
+
+            DatabaseHelper.InsertBooleanParam("@allow_flexible_schedule", pSqlCommand, pPackage.AllowFlexibleSchedule);
+
+            /* Some coolish Guarantors and Collaterals */
+            DatabaseHelper.InsertBooleanParam("@use_guarantor_collateral", pSqlCommand, pPackage.UseGuarantorCollateral);
+            DatabaseHelper.InsertBooleanParam("@set_separate_guarantor_collateral", pSqlCommand, pPackage.SetSeparateGuarantorCollateral);
+            DatabaseHelper.InsertInt32Param("@percentage_total_guarantor_collateral", pSqlCommand, pPackage.PercentageTotalGuarantorCollateral);
+            DatabaseHelper.InsertInt32Param("@percentage_separate_guarantor", pSqlCommand, pPackage.PercentageSeparateGuarantour);
+            DatabaseHelper.InsertInt32Param("@percentage_separate_collateral", pSqlCommand, pPackage.PercentageSeparateCollateral);
+            
+            // Some cool stuff for compulsory savings
+            DatabaseHelper.InsertBooleanParam("@use_compulsory_savings", pSqlCommand, pPackage.UseCompulsorySavings);
+            DatabaseHelper.InsertInt32Param("@compulsory_amount", pSqlCommand, pPackage.CompulsoryAmount);
+            DatabaseHelper.InsertInt32Param("@compulsory_amount_min", pSqlCommand, pPackage.CompulsoryAmountMin);
+            DatabaseHelper.InsertInt32Param("@compulsory_amount_max", pSqlCommand, pPackage.CompulsoryAmountMax);
+        }
+
+        /// <summary>
+        /// Method to add a package into database. We use the NullableTypes to make the correspondance between
+        /// nullable int, decimal and double types in database and our own objects
+        /// </summary>
+        /// <param name="pPackage">Package Object</param>
+        /// <returns>The id of the package which has been added</returns>
+        public int Add(LoanProduct pPackage)
+        {
+            int identity;
+            const string sqlText = @"INSERT INTO [Packages]
+               ([deleted]
+                ,[name]
+                ,[code]
+                ,[client_type]
+                ,[amount]
+                ,[amount_min]
+                ,[amount_max]
+                ,[interest_rate]
+                ,[interest_rate_min]
+                ,[interest_rate_max]
+                ,[installment_type]
+                ,[grace_period]
+                ,[grace_period_min]
+                ,[grace_period_max]
+                ,[number_of_installments]
+                ,[number_of_installments_min]
+                ,[number_of_installments_max]
+                ,[anticipated_total_repayment_penalties]
+                ,[anticipated_total_repayment_penalties_min]
+                ,[anticipated_total_repayment_penalties_max]
+                ,[anticipated_partial_repayment_penalties]
+                ,[anticipated_partial_repayment_penalties_min]
+                ,[anticipated_partial_repayment_penalties_max]
+                ,[exotic_id]
+                ,[entry_fees]
+                ,[entry_fees_min]
+                ,[entry_fees_max]
+                ,[entry_fees_percentage]
+                ,[loan_type]
+                ,[keep_expected_installment]
+                ,[charge_interest_within_grace_period]
+                ,[anticipated_total_repayment_base]
+                ,[anticipated_partial_repayment_base]
+                ,[cycle_id]
+                ,[non_repayment_penalties_based_on_overdue_interest]
+                ,[non_repayment_penalties_based_on_initial_amount]
+                ,[non_repayment_penalties_based_on_olb]
+                ,[non_repayment_penalties_based_on_overdue_principal]
+                ,[non_repayment_penalties_based_on_overdue_interest_min]
+                ,[non_repayment_penalties_based_on_initial_amount_min]
+                ,[non_repayment_penalties_based_on_olb_min]
+                ,[non_repayment_penalties_based_on_overdue_principal_min]
+                ,[non_repayment_penalties_based_on_overdue_interest_max]
+                ,[non_repayment_penalties_based_on_initial_amount_max]
+                ,[non_repayment_penalties_based_on_olb_max]
+                ,[non_repayment_penalties_based_on_overdue_principal_max]
+                ,[fundingLine_id]
+                ,[fake]
+                ,[currency_id]
+                ,[rounding_type]
+                ,[grace_period_of_latefees]
+                ,[number_of_drawings_loc]
+                ,[amount_under_loc]
+                ,[amount_under_loc_min]
+                ,[amount_under_loc_max]
+                ,[maturity_loc]
+                ,[maturity_loc_min]
+                ,[maturity_loc_max]
+                ,[activated_loc]
+                ,[allow_flexible_schedule]
+                ,[use_guarantor_collateral]
+	            ,[set_separate_guarantor_collateral]
+	            ,[percentage_total_guarantor_collateral]
+	            ,[percentage_separate_guarantor]
+	            ,[percentage_separate_collateral]
+                ,[use_compulsory_savings]
+	            ,[compulsory_amount]
+	            ,[compulsory_amount_min]
+	            ,[compulsory_amount_max])
+                VALUES
+                (@deleted
+                ,@name
+                ,@code
+                ,@clientType
+                ,@amount
+                ,@amountMin
+                ,@amountMax
+                ,@interestRate
+                ,@interestRateMin
+                ,@interestRateMax
+                ,@installmentTypeId
+                ,@gracePeriod
+                ,@gracePeriodMin
+                ,@gracePeriodMax
+                ,@nbOfInstallments
+                ,@nbOfInstallmentsMin
+                ,@nbOfInstallmentsMax
+                ,@anticipatedTotalRepaymentPenalties
+                ,@anticipatedTotalRepaymentPenaltiesMin
+                ,@anticipatedTotalRepaymentPenaltiesMax
+                ,@anticipatedPartialRepaymentPenalties
+                ,@anticipatedPartialRepaymentPenaltiesMin
+                ,@anticipatedPartialRepaymentPenaltiesMax                
+                ,@exoticId
+                ,@entryFees
+                ,@entryFeesMin
+                ,@entryFeesMax
+                ,@entryFeesPercentage
+                ,@loanType
+                ,@keepExpectedInstallment
+                ,@chargeInterestWithInGracePeriod
+                ,@AnticipatedTotalRepaymentPenaltiesBase
+                ,@AnticipatedPartialRepaymentPenaltiesBase
+                ,@cycleId
+                ,@nonRepaymentPenaltiesOverdueInterest
+                ,@nonRepaymentPenaltiesInitialAmount
+                ,@nonRepaymentPenaltiesOlb
+                ,@nonRepaymentPenaltiesOverduePrincipal
+                ,@nonRepaymentPenaltiesOverdueInterestMin
+                ,@nonRepaymentPenaltiesInitialAmountMin
+                ,@nonRepaymentPenaltiesOlbMin
+                ,@nonRepaymentPenaltiesOverduePrincipalMin
+                ,@nonRepaymentPenaltiesOverdueInterestMax
+                ,@nonRepaymentPenaltiesInitialAmountMax
+                ,@nonRepaymentPenaltiesOlbMax
+                ,@nonRepaymentPenaltiesOverduePrincipalMax
+                ,@fundingLine_id
+                ,@fake
+                ,@currency_id
+                ,@rounding_type
+                ,@grace_period_of_latefees
+                ,@DrawingsNumber
+                ,@AmountUnderLoc
+                ,@AmountUnderLocMin
+                ,@AmountUnderLocMax
+                ,@MaturityLoc
+                ,@MaturityLocMin
+                ,@MaturityLocMax
+                ,@activated_loc
+                ,@allow_flexible_schedule
+                ,@use_guarantor_collateral
+	            ,@set_separate_guarantor_collateral
+	            ,@percentage_total_guarantor_collateral
+	            ,@percentage_separate_guarantor
+	            ,@percentage_separate_collateral
+                ,@use_compulsory_savings
+	            ,@compulsory_amount
+	            ,@compulsory_amount_min
+	            ,@compulsory_amount_max)
+                SELECT SCOPE_IDENTITY()";
+
+            using(SqlCommand insertPackage = new SqlCommand(sqlText, DefaultConnection))
+            {
+                SetProduct(insertPackage, pPackage);
+                identity= int.Parse(insertPackage.ExecuteScalar().ToString());
+            }
+
+            foreach (ProductClientType clientType in pPackage.ProductClientTypes)
+            {
+                if (clientType.IsChecked)
+                {
+                    string sqlTextForClientTypes = string.Format(@"INSERT INTO PackagesClientTypes 
+                                                         ([client_type_id], [package_id])
+                                                          VALUES({0}, {1})", 
+                                                            clientType.TypeId, identity);
+                    using (SqlCommand cmd = new SqlCommand(sqlTextForClientTypes, DefaultConnection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            return identity;
+        }
+
+        public void UpdatePackage(LoanProduct pPackage, bool pUpdateContracts)
+        {
+            string sqlText = @"UPDATE [Packages] 
+                SET [deleted] = @deleted
+                ,[name] = @name
+                ,[code] = @code
+                ,[client_type] = @clientType
+                ,[amount] = @amount
+                ,[amount_min] = @amountMin
+                ,[amount_max] = @amountMax
+                ,[interest_rate] = @interestRate
+                ,[interest_rate_min] = @interestRateMin
+                ,[interest_rate_max] = @interestRateMax
+                ,[installment_type] = @installmentTypeId
+                ,[grace_period] = @gracePeriod
+                ,[grace_period_min] = @gracePeriodMin
+                ,[grace_period_max] = @gracePeriodMax
+                ,[number_of_installments] = @nbOfInstallments
+                ,[number_of_installments_min] = @nbOfInstallmentsMin
+                ,[number_of_installments_max] = @nbOfInstallmentsMax
+                ,[anticipated_total_repayment_penalties] = @anticipatedTotalRepaymentPenalties
+                ,[anticipated_total_repayment_penalties_min] = @anticipatedTotalRepaymentPenaltiesMin
+                ,[anticipated_total_repayment_penalties_max] = @anticipatedTotalRepaymentPenaltiesMax
+                ,[anticipated_partial_repayment_penalties] = @anticipatedPartialRepaymentPenalties
+                ,[anticipated_partial_repayment_penalties_min] = @anticipatedPartialRepaymentPenaltiesMin
+                ,[anticipated_partial_repayment_penalties_max] = @anticipatedPartialRepaymentPenaltiesMax
+                ,[exotic_id] = @exoticId
+                --,[entry_fees] = @entryFees
+                ,[entry_fees_min] = @entryFeesMin
+                ,[entry_fees_max] = @entryFeesMax
+                ,[entry_fees_percentage] = @entryFeesPercentage
+                ,[loan_type] = @loanType
+                ,[keep_expected_installment] = @keepExpectedInstallment
+                ,[charge_interest_within_grace_period] = @chargeInterestWithInGracePeriod
+                ,[anticipated_total_repayment_base] = @AnticipatedTotalRepaymentPenaltiesBase
+                ,[anticipated_partial_repayment_base] = @AnticipatedPartialRepaymentPenaltiesBase  
+                ,[cycle_id] = @cycleId
+                ,[non_repayment_penalties_based_on_overdue_interest] = @nonRepaymentPenaltiesOverdueInterest
+                ,[non_repayment_penalties_based_on_initial_amount] = @nonRepaymentPenaltiesInitialAmount
+                ,[non_repayment_penalties_based_on_olb] = @nonRepaymentPenaltiesOlb
+                ,[non_repayment_penalties_based_on_overdue_principal] = @nonRepaymentPenaltiesOverduePrincipal
+                ,[non_repayment_penalties_based_on_overdue_interest_min] = @nonRepaymentPenaltiesOverdueInterestMin
+                ,[non_repayment_penalties_based_on_initial_amount_min] = @nonRepaymentPenaltiesInitialAmountMin
+                ,[non_repayment_penalties_based_on_olb_min] = @nonRepaymentPenaltiesOlbMin
+                ,[non_repayment_penalties_based_on_overdue_principal_min] = @nonRepaymentPenaltiesOverduePrincipalMin
+                ,[non_repayment_penalties_based_on_overdue_interest_max] = @nonRepaymentPenaltiesOverdueInterestMax
+                ,[non_repayment_penalties_based_on_initial_amount_max] = @nonRepaymentPenaltiesInitialAmountMax
+                ,[non_repayment_penalties_based_on_olb_max] = @nonRepaymentPenaltiesOlbMax
+                ,[non_repayment_penalties_based_on_overdue_principal_max] = @nonRepaymentPenaltiesOverduePrincipalMax
+                ,[rounding_type] = @rounding_type
+                ,[grace_period_of_latefees] = @grace_period_of_latefees
+                ,[fundingLine_id] = @fundingLine_id, [fake] = @fake
+                ,[number_of_drawings_loc] = @DrawingsNumber
+                ,[amount_under_loc] = @AmountUnderLoc
+                ,[amount_under_loc_min] = @AmountUnderLocMin
+                ,[amount_under_loc_max] = @AmountUnderLocMax
+                ,[maturity_loc] = @MaturityLoc
+                ,[maturity_loc_min] = @MaturityLocMin
+                ,[maturity_loc_max] = @MaturityLocMax
+                ,[activated_loc] = @activated_loc
+                ,[allow_flexible_schedule] = @allow_flexible_schedule
+                ,[use_guarantor_collateral] = @use_guarantor_collateral
+                ,[set_separate_guarantor_collateral] = @set_separate_guarantor_collateral
+                ,[percentage_total_guarantor_collateral] = @percentage_total_guarantor_collateral
+                ,[percentage_separate_guarantor] = @percentage_separate_guarantor
+                ,[percentage_separate_collateral] = @percentage_separate_collateral
+                ,[use_compulsory_savings] = @use_compulsory_savings
+                ,[compulsory_amount] = @compulsory_amount
+                ,[compulsory_amount_min] = @compulsory_amount_min
+                ,[compulsory_amount_max] = @compulsory_amount_max
+                WHERE id = @packageId";
+
+            using(SqlCommand updatePackage = new SqlCommand(sqlText, DefaultConnection))
+            {
+                SetProduct(updatePackage, pPackage);
+                updatePackage.ExecuteNonQuery();
+            }
+
+            sqlText = string.Format(@"DELETE FROM PackagesClientTypes WHERE package_id={0}", pPackage.Id);
+            SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection);
+            cmd.ExecuteNonQuery();
+
+            
+            foreach (ProductClientType clientType in pPackage.ProductClientTypes)
+            {
+                if (clientType.IsChecked)
+                {
+                    sqlText = string.Format(@"INSERT INTO PackagesClientTypes ([client_type_id], [package_id])
+                                     VALUES({0}, {1})", clientType.TypeId, pPackage.Id);
+                    using (cmd = new SqlCommand(sqlText,DefaultConnection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+
+            if (!pUpdateContracts) return;
+
+            sqlText = @"UPDATE Credit 
+                       SET anticipated_total_repayment_penalties = ISNULL(@anticipated_total_repayment_penalties, 0), 
+                       anticipated_partial_repayment_penalties = ISNULL(@anticipated_partial_repayment_penalties, 0),   
+                       non_repayment_penalties_based_on_overdue_principal = ISNULL(@non_repayment_penalties_based_on_overdue_principal, 0),
+                       non_repayment_penalties_based_on_initial_amount = ISNULL(@non_repayment_penalties_based_on_initial_amount, 0),
+                       non_repayment_penalties_based_on_olb = ISNULL(@non_repayment_penalties_based_on_olb, 0),
+                       non_repayment_penalties_based_on_overdue_interest = ISNULL(@non_repayment_penalties_based_on_overdue_interest, 0),
+                       [grace_period_of_latefees] = ISNULL(@grace_period_of_latefees, 0),
+                       [number_of_drawings_loc] = ISNULL(@number_of_drawings_loc, 0), 
+                       [amount_under_loc] = ISNULL(@amount_under_loc, 0),
+                       [maturity_loc] = ISNULL(@maturity_loc, 0),
+                       [anticipated_partial_repayment_base] = ISNULL(@AnticipatedPartialRepaymentPenaltiesBase, 0),
+                       [anticipated_total_repayment_base] = ISNULL(@AnticipatedTotalRepaymentPenaltiesBase, 0)
+                       WHERE package_id = @packageId";
+
+            using (SqlCommand updatePackage = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDoubleParam("@anticipated_total_repayment_penalties", updatePackage,pPackage.AnticipatedTotalRepaymentPenalties);
+                DatabaseHelper.InsertDoubleParam("@anticipated_partial_repayment_penalties", updatePackage, pPackage.AnticipatedPartialRepaymentPenalties);
+                
+                DatabaseHelper.InsertDoubleParam("@non_repayment_penalties_based_on_overdue_principal",updatePackage, pPackage.NonRepaymentPenalties.OverDuePrincipal);
+                DatabaseHelper.InsertDoubleParam("@non_repayment_penalties_based_on_initial_amount", updatePackage,pPackage.NonRepaymentPenalties.InitialAmount);
+                DatabaseHelper.InsertDoubleParam("@non_repayment_penalties_based_on_olb", updatePackage,pPackage.NonRepaymentPenalties.OLB);
+                DatabaseHelper.InsertDoubleParam("@non_repayment_penalties_based_on_overdue_interest", updatePackage,pPackage.NonRepaymentPenalties.OverDueInterest);
+                DatabaseHelper.InsertDoubleParam("@grace_period_of_latefees", updatePackage, pPackage.GracePeriodOfLateFees);
+
+                DatabaseHelper.InsertInt32Param("@number_of_drawings_loc", updatePackage, pPackage.DrawingsNumber);
+                DatabaseHelper.InsertMoneyParam("@amount_under_loc", updatePackage, pPackage.AmountUnderLoc);
+                DatabaseHelper.InsertInt32Param("@maturity_loc", updatePackage, pPackage.MaturityLoc);
+
+                DatabaseHelper.InsertSmalIntParam("@AnticipatedTotalRepaymentPenaltiesBase", 
+                    updatePackage, (int)pPackage.AnticipatedTotalRepaymentPenaltiesBase);
+                DatabaseHelper.InsertSmalIntParam("@AnticipatedPartialRepaymentPenaltiesBase", 
+                    updatePackage, (int)pPackage.AnticipatedPartialRepaymentPenaltiesBase);
+
+                DatabaseHelper.InsertInt32Param("@packageId", updatePackage, pPackage.Id);
+
+                updatePackage.ExecuteNonQuery();
+            }
+        }
+
+        public void DeleteEntryFees(LoanProduct product)
+        {
+            string sqlText = @"UPDATE EntryFees SET
+                               [is_deleted]=1
+                               WHERE id=@id";
+            if (product.DeletedEntryFees== null) return;
+            foreach (EntryFee fee in product.DeletedEntryFees)
+            {
+                using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+                {
+                    DatabaseHelper.InsertInt32Param("@id", cmd, fee.Id);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdateEntryFees(LoanProduct product)
+        {
+            string sqlText =
+                @"UPDATE EntryFees
+                  SET
+                  [name_of_fee]=@name_of_fee
+                 ,[min]=@min
+                 ,[max]=@max
+                 ,[value]=@value
+                 ,[rate]=@rate
+                 ,[fee_index]=@fee_index
+                 WHERE id=@id";
+            if (product.EntryFees==null)return;
+            foreach (EntryFee fee in product.EntryFees)
+            {
+                using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+                {
+                    DatabaseHelper.InsertInt32Param("@id", cmd, fee.Id);
+                    DatabaseHelper.InsertStringNVarCharParam("@name_of_fee", cmd, fee.NameOfFee);
+                    DatabaseHelper.InsertMoneyParam("@min", cmd, fee.Min);
+                    DatabaseHelper.InsertMoneyParam("@max", cmd, fee.Max);
+                    DatabaseHelper.InsertMoneyParam("@value", cmd, fee.Value);
+                    DatabaseHelper.InsertBooleanParam("rate", cmd, fee.IsRate);
+                    DatabaseHelper.InsertInt32Param("@fee_index", cmd, fee.Index);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void InsertEntryFees(List<EntryFee> entryFees, int productId)
+        {
+            string sqlText = @"INSERT INTO EntryFees 
+                (id_product, name_of_fee, min, max, value, rate, fee_index)
+                VALUES (@id_product, @name_of_fee, @min, @max, @value, @rate, @fee_index)";
+            foreach (var entryFee in entryFees)
+            {
+                using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+                {
+                    DatabaseHelper.InsertInt32Param("@id_product", cmd, productId);
+                    DatabaseHelper.InsertStringNVarCharParam("@name_of_fee", cmd, entryFee.NameOfFee);
+                    DatabaseHelper.InsertMoneyParam("@min", cmd, entryFee.Min);
+                    DatabaseHelper.InsertMoneyParam("@max", cmd, entryFee.Max);
+                    DatabaseHelper.InsertMoneyParam("@value", cmd, entryFee.Value);
+                    DatabaseHelper.InsertBooleanParam("rate", cmd, entryFee.IsRate);
+                    DatabaseHelper.InsertInt32Param("@fee_index", cmd, entryFee.Index);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<LoanCycle> SelectLoanCycles()
+        {
+            List<LoanCycle> loanCycles = new List<LoanCycle>();
+            string sqlText = @"SELECT [id], [name]  FROM [dbo].[Cycles]";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        LoanCycle loanCycle = new LoanCycle();
+                        loanCycle.Id = (int) reader["id"];
+                        loanCycle.Name = (string) reader["name"];
+                        loanCycles.Add(loanCycle);
+                    }
+                }
+            }
+            return loanCycles;
+        }
+
+        public List<MaturityCycle> SelectMaturityCycleParams(int productId, int cycleId)
+        {
+            List<MaturityCycle> cycleParameters = new List<MaturityCycle>();
+            string sqlText = @"SELECT [id]
+                                  ,[loan_cycle]
+                                  ,[min]
+                                  ,[max]
+                                  ,[cycle_object_id]
+                                  ,[cycle_id]
+                              FROM [dbo].[CycleParameters] 
+                              WHERE [cycle_object_id]=3 
+                                    AND [cycle_id]=@cycle_id
+                              ORDER BY [loan_cycle]";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@cycle_id", cmd, cycleId);
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        MaturityCycle parameter = new MaturityCycle();
+                        parameter.Id = (int)reader["id"];
+                        parameter.LoanCycle = (int)reader["loan_cycle"];
+                        parameter.Min = (decimal)reader["min"];
+                        parameter.Max = (decimal) reader["max"];
+                        parameter.CycleObjectId = (int)reader["cycle_object_id"];
+                        parameter.CycleId = (int?)reader["cycle_id"];
+                        cycleParameters.Add(parameter);
+                    }
+                }
+            }
+            return cycleParameters; 
+        }
+
+        public List<RateCycle> SelectRateCycleParams(int cycleId)
+        {
+            List<RateCycle> cycleParameters = new List<RateCycle>();
+            string sqlText = @"SELECT [id]
+                                  ,[loan_cycle]
+                                  ,[min]
+                                  ,[max]
+                                  ,[cycle_object_id]
+                                  ,[cycle_id]
+                              FROM [dbo].[CycleParameters] 
+                              WHERE [cycle_object_id]=2 
+                                    AND [cycle_id]=@cycle_id
+                              ORDER BY [loan_cycle]";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@cycle_id", cmd, cycleId);
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        RateCycle parameter = new RateCycle();
+                        parameter.Id = (int)reader["id"];
+                        parameter.LoanCycle = (int)reader["loan_cycle"];
+                        parameter.Min = (decimal)reader["min"];
+                        parameter.Max = (decimal)reader["max"];
+                        parameter.CycleObjectId = (int)reader["cycle_object_id"];
+                        parameter.CycleId = (int?)reader["cycle_id"];
+                        cycleParameters.Add(parameter);
+                    }
+                }
+            }
+            return cycleParameters;
+        }
+
+        public List<LoanAmountCycle> SelectLoanAmountCycleParams(int cycleId)
+        {
+            List<LoanAmountCycle> cycleParameters = new List<LoanAmountCycle>();
+            string sqlText = @"SELECT [id]
+                                  ,[loan_cycle]
+                                  ,[min]
+                                  ,[max]
+                                  ,[cycle_object_id]
+                                  ,[cycle_id]
+                              FROM [dbo].[CycleParameters] 
+                              WHERE [cycle_object_id]=1 
+                                    AND [cycle_id]=@cycle_id
+                              ORDER BY [loan_cycle]";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@cycle_id", cmd, cycleId);
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        LoanAmountCycle parameter = new LoanAmountCycle();
+                        parameter.Id = (int) reader["id"];
+                        parameter.LoanCycle = (int) reader["loan_cycle"];
+                        parameter.Min = (decimal) reader["min"];
+                        parameter.Max = (decimal) reader["max"];
+                        parameter.CycleObjectId = (int) reader["cycle_object_id"];
+                        parameter.CycleId = (int?) reader["cycle_id"];
+                        cycleParameters.Add(parameter);
+                    }
+                }
+            }
+            return cycleParameters;
+        }
+
+        public void DeleteCycles(int objectId, int cycleId)
+        {
+            string cmdText =
+                @"DELETE FROM [dbo].[CycleParameters]
+                              WHERE [cycle_object_id]=@cycle_object_id 
+                              AND [cycle_id]=@cycle_id";
+            using (SqlCommand cmd = new SqlCommand(cmdText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@cycle_object_id", cmd, objectId);
+                DatabaseHelper.InsertInt32Param("@cycle_id", cmd, cycleId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void InsertLoanAmountCycleParams(List<LoanAmountCycle> loanAmountCycles)
+        {
+            string cmdText =
+                @"INSERT INTO [dbo].[CycleParameters]
+                            ([loan_cycle]
+                            ,[min]
+                            ,[max]
+                            ,[cycle_object_id]
+                            ,[cycle_id])
+                    VALUES
+                           (@loan_cycle
+                           ,@min
+                           ,@max
+                           ,@cycle_object_id
+                           ,@cycle_id)";
+            foreach (var amountCycle in loanAmountCycles)
+            {
+                using (SqlCommand cmd = new SqlCommand(cmdText, DefaultConnection))
+                {
+                    SetCommand(cmd, amountCycle);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void SetCommand(SqlCommand cmd, Cycle cycle)
+        {
+            DatabaseHelper.InsertInt32Param("@loan_cycle", cmd, cycle.LoanCycle);
+            DatabaseHelper.InsertDecimalParam("@min", cmd, cycle.Min.Value);
+            DatabaseHelper.InsertDecimalParam("@max", cmd, cycle.Max.Value);
+            DatabaseHelper.InsertInt32Param("@cycle_object_id", cmd, cycle.CycleObjectId);
+            DatabaseHelper.InsertInt32Param("@cycle_id", cmd, cycle.CycleId);
+        }
+
+        public void InsertRateCycleParams(List<RateCycle> rateCycles)
+        {
+            string cmdText =
+                @"INSERT INTO [dbo].[CycleParameters]
+                            ([loan_cycle]
+                            ,[min]
+                            ,[max]
+                            ,[cycle_object_id]
+                            ,[cycle_id])
+                    VALUES
+                           (@loan_cycle
+                           ,@min
+                           ,@max
+                           ,@cycle_object_id
+                           ,@cycle_id)";
+            foreach (var rateCycle in rateCycles)
+            {
+                using (SqlCommand cmd = new SqlCommand(cmdText, DefaultConnection))
+                {
+                    SetCommand(cmd, rateCycle);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void InsertMaturityCycleParams(List<MaturityCycle> maturityCycles)
+        {
+            string cmdText =
+                @"INSERT INTO [dbo].[CycleParameters]
+                            ([loan_cycle]
+                            ,[min]
+                            ,[max]
+                            ,[cycle_object_id]
+                            ,[cycle_id])
+                    VALUES
+                           (@loan_cycle
+                           ,@min
+                           ,@max
+                           ,@cycle_object_id
+                           ,@cycle_id)";
+            foreach (var maturityCycle in maturityCycles)
+            {
+                using (SqlCommand cmd = new SqlCommand(cmdText, DefaultConnection))
+                {
+                    SetCommand(cmd, maturityCycle);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<CycleObject> SelectCycleObjects()
+        {
+            string sqlText = @"SELECT [id], [name]
+                               FROM [dbo].[CycleObjects]
+                               ORDER BY [id]";
+            List<CycleObject> cycleObjects = new List<CycleObject>();
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        CycleObject cycleObject = new CycleObject((int)reader[0], (string)reader[1]);
+                        cycleObjects.Add(cycleObject);
+                    }
+                }
+            }
+            return cycleObjects;
+        }
+
+        public List<EntryFee> SelectEntryFees(int productId, bool withDeletedFees)
+        {
+            List<EntryFee> entryFees=new List<EntryFee>();
+            string sqlText =
+                            @"SELECT [id]
+                             ,[name_of_fee]
+                             ,[min]
+                             ,[max]
+                             ,[value]
+                             ,[rate]
+                             ,[fee_index]
+                            FROM [dbo].[EntryFees]
+                            WHERE id_product=@id_product";
+            if (!withDeletedFees)
+                sqlText += " AND [is_deleted]<>1";
+            sqlText += @" ORDER BY [fee_index]";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id_product", cmd, productId);
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        EntryFee entryFee = new EntryFee();
+                        entryFee.Id = (int) reader[0];
+                        entryFee.NameOfFee =(string)reader[1];
+
+                        if (!string.IsNullOrEmpty(reader[2].ToString()))
+                            entryFee.Min = (decimal?)reader[2];
+                        else
+                            entryFee.Min = null;
+                        if (!string.IsNullOrEmpty(reader[3].ToString()))
+                            entryFee.Max = (decimal?)reader[3];
+                        else
+                            entryFee.Max = null;
+
+                        if (!string.IsNullOrEmpty(reader[4].ToString()))
+                            entryFee.Value = (decimal?)reader[4];
+                        else
+                            entryFee.Value = null;
+                        if (!string.IsNullOrEmpty(reader[5].ToString()))
+                            entryFee.IsRate = (bool)reader[5];
+                        else
+                            entryFee.IsRate = false;
+                        entryFee.Index = (int) reader[6];
+                        entryFees.Add(entryFee);
+                    }
+                }
+            }
+            return entryFees;
+        }
+
+        public EntryFee SelectEntryFeeById(int entryFeeId)
+        {
+            EntryFee entryFee = new EntryFee();
+            string sqlText =
+                            @"SELECT [id]
+                             ,[name_of_fee]
+                             ,[min]
+                             ,[max]
+                             ,[value]
+                             ,[rate]
+                             ,[fee_index]
+                            FROM [dbo].[EntryFees]
+                            WHERE [id]=@entry_fee_id";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@entry_fee_id", cmd, entryFeeId);
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        entryFee.Id = (int) reader[0];
+                        entryFee.NameOfFee = (string)reader[1];
+
+                        if (!string.IsNullOrEmpty(reader[2].ToString()))
+                            entryFee.Min = (decimal?)reader[2];
+                        else
+                            entryFee.Min = null;
+                        if (!string.IsNullOrEmpty(reader[3].ToString()))
+                            entryFee.Max = (decimal?)reader[3];
+                        else
+                            entryFee.Max = null;
+
+                        if (!string.IsNullOrEmpty(reader[4].ToString()))
+                            entryFee.Value = (decimal?)reader[4];
+                        else
+                            entryFee.Value = null;
+                        if (!string.IsNullOrEmpty(reader[5].ToString()))
+                            entryFee.IsRate = (bool)reader[5];
+                        else
+                            entryFee.IsRate = false;
+                        entryFee.Index = (int)reader[6];
+                    }
+                }
+            }
+            return entryFee;
+        }
+
+        private bool _IsThisNameAreadyExist(string pSqlQuery,string pExpectedName)
+        {
+            SqlCommand command = new SqlCommand(pSqlQuery, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", command, pExpectedName);
+            using (SqlDataReader reader = command.ExecuteReader())
+            {
+                if (reader == null || !reader.HasRows) return false;
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Look if selected product name already exist in database
+        /// </summary>
+        /// <param name="pPackageName"></param>
+        /// <returns>true or false</returns>
+        public bool IsThisProductNameAlreadyExist(string pPackageName)
+        {
+            const string sqlText = "SELECT name FROM Packages WHERE name = @name";
+            return _IsThisNameAreadyExist(sqlText, pPackageName);
+        }
+
+        /// <summary>
+        /// Look if selected Exotic Product name already exist in database
+        /// </summary>
+        /// <param name="pExoticName"></param>
+        /// <returns></returns>
+        public bool IsThisExoticProductNameAlreadyExist(string pExoticName)
+        {
+            const string sqlText = "SELECT name FROM Exotics WHERE name = @name";
+            return _IsThisNameAreadyExist(sqlText, pExoticName);
+        }
+
+        /// <summary>
+        /// Look if selected Amount cycle stock name already exist in database
+        /// </summary>
+        /// <param name="pAmountCycleStockName"></param>
+        /// <returns></returns>
+        public bool IsLoanCycleNameAlreadyExist(string pAmountCycleStockName)
+        {
+            const string sqlText = "SELECT name FROM Cycles WHERE name = @name";
+            return _IsThisNameAreadyExist(sqlText, pAmountCycleStockName);
+        }
+
+        private static LoanProduct _GetProduct(SqlDataReader pReader)
+        {
+            LoanProduct package = new LoanProduct();
+            package.Id = DatabaseHelper.GetInt32("id", pReader);
+            package.Delete = DatabaseHelper.GetBoolean("deleted", pReader);
+            package.Name = DatabaseHelper.GetString("name", pReader);
+            package.Code = DatabaseHelper.GetString("code", pReader);
+            package.ClientType = DatabaseHelper.GetChar("client_type", pReader);
+            package.LoanType = (OLoanTypes)DatabaseHelper.GetSmallInt("loan_type", pReader);
+            package.RoundingType = (ORoundingType)DatabaseHelper.GetSmallInt("rounding_type", pReader);
+            package.Amount = DatabaseHelper.GetNullAuthorizedMoney("amount", pReader);
+            package.AmountMin = DatabaseHelper.GetNullAuthorizedMoney("amount_min", pReader);
+            package.AmountMax = DatabaseHelper.GetNullAuthorizedMoney("amount_max", pReader);
+            package.InterestRate = DatabaseHelper.GetNullAuthorizedDouble("interest_rate", pReader);
+            package.InterestRateMin = DatabaseHelper.GetNullAuthorizedDouble("interest_rate_min", pReader);
+            package.InterestRateMax = DatabaseHelper.GetNullAuthorizedDouble("interest_rate_max", pReader);
+            package.GracePeriod = DatabaseHelper.GetNullAuthorizedInt32("grace_period", pReader);
+            package.GracePeriodMin = DatabaseHelper.GetNullAuthorizedInt32("grace_period_min", pReader);
+            package.GracePeriodMax = DatabaseHelper.GetNullAuthorizedInt32("grace_period_max", pReader);
+            package.GracePeriodOfLateFees = DatabaseHelper.GetNullAuthorizedInt32("grace_period_of_latefees", pReader);
+            package.NbOfInstallments = DatabaseHelper.GetNullAuthorizedInt32("number_of_installments", pReader);
+            package.NbOfInstallmentsMin = DatabaseHelper.GetNullAuthorizedInt32("number_of_installments_min", pReader);
+            package.NbOfInstallmentsMax = DatabaseHelper.GetNullAuthorizedInt32("number_of_installments_max", pReader);
+            
+            package.AnticipatedTotalRepaymentPenalties = DatabaseHelper.GetNullAuthorizedDouble("anticipated_total_repayment_penalties", pReader);
+            package.AnticipatedTotalRepaymentPenaltiesMin = DatabaseHelper.GetNullAuthorizedDouble("anticipated_total_repayment_penalties_min", pReader);
+            package.AnticipatedTotalRepaymentPenaltiesMax = DatabaseHelper.GetNullAuthorizedDouble("anticipated_total_repayment_penalties_max", pReader);
+            
+            package.AnticipatedPartialRepaymentPenalties = DatabaseHelper.GetNullAuthorizedDouble("anticipated_partial_repayment_penalties", pReader);
+            package.AnticipatedPartialRepaymentPenaltiesMin = DatabaseHelper.GetNullAuthorizedDouble("anticipated_partial_repayment_penalties_min", pReader);
+            package.AnticipatedPartialRepaymentPenaltiesMax = DatabaseHelper.GetNullAuthorizedDouble("anticipated_partial_repayment_penalties_max", pReader);
+            
+            package.EntryFeesPercentage = DatabaseHelper.GetNullAuthorizedBoolean("entry_fees_percentage", pReader) ?? true;
+            
+            package.ChargeInterestWithinGracePeriod = DatabaseHelper.GetBoolean("charge_interest_within_grace_period", pReader);
+            package.KeepExpectedInstallment = DatabaseHelper.GetBoolean("keep_expected_installment", pReader);
+            
+            package.AnticipatedTotalRepaymentPenaltiesBase = (OAnticipatedRepaymentPenaltiesBases)DatabaseHelper.GetSmallInt("anticipated_total_repayment_base", pReader);
+            package.AnticipatedPartialRepaymentPenaltiesBase = (OAnticipatedRepaymentPenaltiesBases)DatabaseHelper.GetSmallInt("anticipated_partial_repayment_base", pReader);
+
+            package.NonRepaymentPenalties.InitialAmount = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_initial_amount", pReader);
+            package.NonRepaymentPenalties.OLB = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_olb", pReader);
+            package.NonRepaymentPenalties.OverDueInterest = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_overdue_interest", pReader);
+            package.NonRepaymentPenalties.OverDuePrincipal = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_overdue_principal", pReader);
+
+            package.NonRepaymentPenaltiesMin.InitialAmount = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_initial_amount_min", pReader);
+            package.NonRepaymentPenaltiesMin.OLB = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_olb_min", pReader);
+            package.NonRepaymentPenaltiesMin.OverDuePrincipal = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_overdue_principal_min", pReader);
+            package.NonRepaymentPenaltiesMin.OverDueInterest = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_overdue_interest_min", pReader);
+
+            package.NonRepaymentPenaltiesMax.InitialAmount = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_initial_amount_max", pReader);
+            package.NonRepaymentPenaltiesMax.OLB = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_olb_max", pReader);
+            package.NonRepaymentPenaltiesMax.OverDueInterest = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_overdue_interest_max", pReader);
+            package.NonRepaymentPenaltiesMax.OverDuePrincipal = DatabaseHelper.GetNullAuthorizedDouble("non_repayment_penalties_based_on_overdue_principal_max", pReader);
+            package.Fake = DatabaseHelper.GetBoolean("fake", pReader);
+            package.AllowFlexibleSchedule = DatabaseHelper.GetBoolean("allow_flexible_schedule", pReader);
+            
+            package.UseGuarantorCollateral = DatabaseHelper.GetBoolean("use_guarantor_collateral", pReader);
+            package.SetSeparateGuarantorCollateral = DatabaseHelper.GetBoolean("set_separate_guarantor_collateral", pReader);
+
+            package.PercentageTotalGuarantorCollateral = DatabaseHelper.GetInt32("percentage_total_guarantor_collateral", pReader);
+            package.PercentageSeparateGuarantour = DatabaseHelper.GetInt32("percentage_separate_guarantor", pReader);
+            package.PercentageSeparateCollateral = DatabaseHelper.GetInt32("percentage_separate_collateral", pReader);
+
+            package.UseCompulsorySavings = DatabaseHelper.GetBoolean("use_compulsory_savings", pReader);
+            package.CompulsoryAmount = DatabaseHelper.GetNullAuthorizedInt32("compulsory_amount", pReader);
+            package.CompulsoryAmountMin = DatabaseHelper.GetNullAuthorizedInt32("compulsory_amount_min", pReader);
+            package.CompulsoryAmountMax = DatabaseHelper.GetNullAuthorizedInt32("compulsory_amount_max", pReader);
+
+            if (DatabaseHelper.GetNullAuthorizedInt32("fundingLine_id", pReader).HasValue)
+            {
+                package.FundingLine = new FundingLine {Id = DatabaseHelper.GetNullAuthorizedInt32("fundingLine_id", pReader).Value};
+                package.FundingLine.Name = DatabaseHelper.GetString("funding_line_name", pReader);
+                package.FundingLine.Currency = new Currency
+                                                   {Id = DatabaseHelper.GetInt32("funding_line_currency_id", pReader)};
+            }
+            if (DatabaseHelper.GetNullAuthorizedInt32("currency_id", pReader).HasValue)
+            {
+                package.Currency = new Currency
+                                       {
+                                           Id = DatabaseHelper.GetInt32("currency_id", pReader),
+                                           Code = DatabaseHelper.GetString("currency_code", pReader),
+                                           Name = DatabaseHelper.GetString("currency_name", pReader),
+                                           IsPivot = DatabaseHelper.GetBoolean("currency_is_pivot", pReader),
+                                           IsSwapped = DatabaseHelper.GetBoolean("currency_is_swapped", pReader),
+                                           UseCents = DatabaseHelper.GetBoolean("currency_use_cents", pReader)
+                                       };
+            }
+
+            /* Line of credit */
+            package.DrawingsNumber = DatabaseHelper.GetNullAuthorizedInt32("number_of_drawings_loc", pReader);
+
+            package.AmountUnderLoc = DatabaseHelper.GetNullAuthorizedMoney("amount_under_loc", pReader);
+            package.AmountUnderLocMin = DatabaseHelper.GetNullAuthorizedMoney("amount_under_loc_min", pReader);
+            package.AmountUnderLocMax = DatabaseHelper.GetNullAuthorizedMoney("amount_under_loc_max", pReader);
+
+            package.MaturityLoc = DatabaseHelper.GetNullAuthorizedInt32("maturity_loc", pReader);
+            package.MaturityLocMin = DatabaseHelper.GetNullAuthorizedInt32("maturity_loc_min", pReader);
+            package.MaturityLocMax = DatabaseHelper.GetNullAuthorizedInt32("maturity_loc_max", pReader);
+            package.ActivatedLOC = DatabaseHelper.GetBoolean("activated_loc", pReader);
+            package.CycleId = DatabaseHelper.GetNullAuthorizedInt32("cycle_id", pReader);
+            return package;
+        }
+
+        /// <summary>
+        /// This method allows us to select a package from database.  We use the NullableTypes to make the correspondance between
+        /// nullable int, decimal and double types in database and our own objects
+        /// </summary>
+        /// <param name="pProductId">id's of package searched</param>
+        /// <returns>A package Object if id matches with datas in database, null if not</returns>
+
+        public LoanProduct Select(int pProductId)
+        {
+            LoanProduct package;
+            int? installmentTypeId;
+            int? exoticProductId;
+            int? amountCycleStockId;
+
+            const string sqlText = @"SELECT Packages.*, 
+                                       FundingLines.name AS funding_line_name,
+                                       FundingLines.currency_id as funding_line_currency_id,
+                                       Currencies.name as currency_name, 
+                                       Currencies.code as currency_code,
+                                       Currencies.is_pivot as currency_is_pivot, 
+                                       Currencies.is_swapped as currency_is_swapped,
+                                       Currencies.use_cents as currency_use_cents
+                                     FROM Packages 
+                                     LEFT JOIN FundingLines ON Packages.fundingLine_id = FundingLines.id
+				                     LEFT JOIN Currencies on Packages.currency_id = Currencies.id
+                                     WHERE Packages.id  = @id";
+
+            using(SqlCommand selectPackage = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectPackage, pProductId);
+
+                using (SqlDataReader reader = selectPackage.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+
+                    package = _GetProduct(reader);
+                    amountCycleStockId = DatabaseHelper.GetNullAuthorizedInt32("cycle_id", reader);
+                    installmentTypeId = DatabaseHelper.GetNullAuthorizedInt32("installment_type", reader);
+                    exoticProductId = DatabaseHelper.GetNullAuthorizedInt32("exotic_id", reader);
+                }
+            }
+            if(installmentTypeId.HasValue) package.InstallmentType = installmentTypeManagement.SelectInstallmentType(installmentTypeId.Value);
+            if(exoticProductId.HasValue) package.ExoticProduct = SelectExoticProductById(exoticProductId.Value);
+//            if(amountCycleStockId.HasValue) package.AmountCycles = _SelectAmountCycleStockById(amountCycleStockId.Value);
+
+            return package;
+        }
+
+        public LoanProduct SelectByContractId(int contractId)
+        {
+            LoanProduct package;
+            int? installmentTypeId;
+            int? exoticProductId;
+            int? amountCycleStockId;
+
+            const string sqlText = @"SELECT 
+                                       Packages.*, 
+                                       FundingLines.name AS funding_line_name,
+                                       FundingLines.currency_id as funding_line_currency_id,
+                                       Currencies.name as currency_name, 
+                                       Currencies.code as currency_code,
+                                       Currencies.is_pivot as currency_is_pivot, 
+                                       Currencies.is_swapped as currency_is_swapped,
+                                       Currencies.use_cents as currency_use_cents
+                                     FROM Packages 
+                                     INNER JOIN Credit ON Packages.id = Credit.package_id
+                                     LEFT JOIN FundingLines ON Packages.fundingLine_id = FundingLines.id
+				                     LEFT JOIN Currencies on Packages.currency_id = Currencies.id
+                                     WHERE Credit.id  = @id";
+
+            using (SqlCommand selectPackage = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectPackage, contractId);
+
+                using (SqlDataReader reader = selectPackage.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+
+                    package = _GetProduct(reader);
+                    amountCycleStockId = DatabaseHelper.GetNullAuthorizedInt32("cycle_id", reader);
+                    installmentTypeId = DatabaseHelper.GetNullAuthorizedInt32("installment_type", reader);
+                    exoticProductId = DatabaseHelper.GetNullAuthorizedInt32("exotic_id", reader);
+                }
+            }
+            if (installmentTypeId.HasValue) package.InstallmentType = installmentTypeManagement.SelectInstallmentType(installmentTypeId.Value);
+            if (exoticProductId.HasValue) package.ExoticProduct = SelectExoticProductById(exoticProductId.Value);
+//            if (amountCycleStockId.HasValue) package.AmountCycles = _SelectAmountCycleStockById(amountCycleStockId.Value);
+
+            return package;
+        }
+
+        public LoanProduct SelectByName(string name)
+        {
+            LoanProduct package;
+            int? installmentTypeId;
+            int? exoticProductId;
+            int? amountCycleStockId;
+
+            const string sqlText = @"SELECT Packages.*, FundingLines.name AS funding_line_name,FundingLines.currency_id as funding_line_currency_id,
+                Currencies.name as currency_name, Currencies.code as currency_code,
+                Currencies.is_pivot as currency_is_pivot, Currencies.is_swapped as currency_is_swapped,
+                Currencies.use_cents as currency_use_cents
+                FROM Packages 
+                LEFT JOIN FundingLines ON Packages.fundingLine_id = FundingLines.id
+				LEFT JOIN Currencies on Packages.currency_id = Currencies.id
+                WHERE Packages.name  = @name";
+
+            using(SqlCommand selectPackage = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", selectPackage, name);
+
+                using (SqlDataReader reader = selectPackage.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+
+                    package = _GetProduct(reader);
+                    amountCycleStockId = DatabaseHelper.GetNullAuthorizedInt32("cycle_id", reader);
+                    installmentTypeId = DatabaseHelper.GetNullAuthorizedInt32("installment_type", reader);
+                    exoticProductId = DatabaseHelper.GetNullAuthorizedInt32("exotic_id", reader);
+                }
+            }
+            if(installmentTypeId.HasValue) package.InstallmentType = installmentTypeManagement.SelectInstallmentType(installmentTypeId.Value);
+            if(exoticProductId.HasValue) package.ExoticProduct = SelectExoticProductById(exoticProductId.Value);
+//            if(amountCycleStockId.HasValue) package.AmountCycles = _SelectAmountCycleStockById(amountCycleStockId.Value);
+
+            return package;
+        }
+
+//        private AmountCycleStock _SelectAmountCycleStockById(int pStockId)
+//        {
+//            AmountCycleStock stock;
+//            const string sqlText = @"SELECT id,name FROM Cycles WHERE id = @id";
+//
+//            SqlCommand selectExoticProduct = new SqlCommand(sqlText, DefaultConnection);
+//            DatabaseHelper.InsertInt32Param("@id", selectExoticProduct, pStockId);
+//
+//            using (SqlDataReader reader = selectExoticProduct.ExecuteReader())
+//            {
+//                if (reader == null || !reader.HasRows) return null;
+//
+//                reader.Read();
+//                stock = new AmountCycleStock
+//                            {
+//                                Id = DatabaseHelper.GetInt32("id", reader),
+//                                Name = DatabaseHelper.GetString("name", reader)
+//                            };
+//
+//            }
+//
+//            stock.Add(_SelectAmountCyclesByAmountCycleStockId(stock.Id));
+//
+//            return stock;
+//        }
+
+        /// <summary>
+        /// Select all packages in database
+        /// </summary>
+        /// <param name="pShowAlsoDeleted"></param>
+        /// <returns>a list contains all packages</returns>
+        /// <param name="pClientType"></param>
+        public List<LoanProduct> SelectAllPackages(bool pShowAlsoDeleted, OClientTypes pClientType)
+        {
+            List<LoanProduct> packagesList = new List<LoanProduct>();
+            string sqlText = @"SELECT DISTINCT 
+                                [dbo].[Packages].[id] 
+                              FROM [dbo].[Packages] 
+                              INNER JOIN [dbo].[PackagesClientTypes] ON [dbo].[Packages].[id]=[dbo].[PackagesClientTypes].[package_id] 
+                              INNER JOIN [dbo].[ClientTypes] ON [dbo].[ClientTypes].[id]=[dbo].[PackagesClientTypes].[client_type_id] 
+                            WHERE 1 = 1";
+            if (!pShowAlsoDeleted)
+                sqlText += " AND [dbo].[Packages].[deleted] = 0";
+
+            switch (pClientType)
+            {
+                case OClientTypes.Person:
+                    sqlText += " AND [dbo].[ClientTypes].[type_name] ='Individual' ";
+                    break;
+                case OClientTypes.Group:
+                    sqlText += "  AND [dbo].[ClientTypes].[type_name]='Group' ";
+                    break;
+                case OClientTypes.Corporate:
+                    sqlText += "  AND [dbo].[ClientTypes].[type_name]='Corporate' ";
+                    break;
+                case OClientTypes.Village:
+                    sqlText += " AND [dbo].[ClientTypes].[type_name]='Village' ";
+                    break;
+            }
+
+            using (SqlCommand selectPackages = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = selectPackages.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<LoanProduct>();
+                    while (reader.Read())
+                    {
+                        LoanProduct pack = new LoanProduct {Id = DatabaseHelper.GetInt32("id", reader)};
+                        packagesList.Add(pack);
+                    }
+                }
+            }
+            for (int i = 0; i < packagesList.Count; i++)
+            {
+                packagesList[i] = Select(packagesList[i].Id);
+            }
+            return packagesList;
+        }
+
+        /// <summary>
+        /// Delete a product
+        /// </summary>
+        /// <param name="pProductId"></param>
+        public void DeleteProduct(int pProductId)
+        {
+            const string sqlText = @"UPDATE Packages SET deleted = 1 WHERE id = @id";
+
+            using (SqlCommand deletePack = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", deletePack, pProductId);
+                deletePack.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Add an exotic product in databse
+        /// </summary>
+        /// <param name="pExoticInstallmentsTable"></param>
+        /// <returns>database id</returns>
+        public int AddExoticInstallmentsTable(ExoticInstallmentsTable pExoticInstallmentsTable)
+        {
+            const string sqlText = @"INSERT INTO Exotics (name) VALUES (@name) SELECT SCOPE_IDENTITY()";
+
+            using(SqlCommand insertExoticProduct = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", insertExoticProduct, pExoticInstallmentsTable.Name);
+                return int.Parse(insertExoticProduct.ExecuteScalar().ToString());
+            }
+        }
+
+        /// <summary>
+        /// Add a loan cycle into the databse
+        /// </summary>
+        /// <param name="loanCycle">An instance of the class LoanCycle</param>
+        /// <param name="transac">SQL transaction</param>
+        /// <returns></returns>
+        public int InsertLoanCycle(LoanCycle loanCycle, SqlTransaction transac)
+        {
+            const string sqlText = "INSERT INTO Cycles (name) VALUES (@name) SELECT SCOPE_IDENTITY()";
+
+            using(SqlCommand insertAmountCycleStock = new SqlCommand(sqlText, DefaultConnection, transac))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", insertAmountCycleStock, loanCycle.Name);
+                return int.Parse(insertAmountCycleStock.ExecuteScalar().ToString());
+            }
+        }
+
+        private static ExoticInstallmentsTable _GetExoticProduct(SqlDataReader pReader)
+        {
+            return new ExoticInstallmentsTable
+                       {
+                           Id = DatabaseHelper.GetInt32("id", pReader),
+                           Name = DatabaseHelper.GetString("name", pReader)
+                       };
+        }
+
+        private ExoticInstallmentsTable SelectExoticProductById(int exoId)
+        {
+            ExoticInstallmentsTable exoticProduct;
+
+            const string sqlText = "SELECT [id], name FROM Exotics WHERE id = @id";
+
+            using (SqlCommand selectExoticProduct = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectExoticProduct, exoId);
+                using (SqlDataReader reader = selectExoticProduct.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    exoticProduct = _GetExoticProduct(reader);
+                }
+            }
+
+            exoticProduct.Add(_SelectExoticInstallmentsByProductId(exoticProduct.Id));
+            return exoticProduct;
+        }
+
+        /// <summary>
+        /// Select all exotic product
+        /// </summary>
+        /// <returns></returns>
+        public List<ExoticInstallmentsTable> SelectAllInstallmentsTables()
+        {
+            List<ExoticInstallmentsTable> list = new List<ExoticInstallmentsTable>();
+            const string sqlText = "SELECT [id],name FROM Exotics";
+
+            using (SqlCommand selectExoticProducts = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = selectExoticProducts.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new List<ExoticInstallmentsTable>();
+                    while (reader.Read())
+                    {
+                        list.Add(_GetExoticProduct(reader));
+                    }
+                }
+            }
+
+            foreach (ExoticInstallmentsTable e in list)
+            {
+                e.Add(_SelectExoticInstallmentsByProductId(e.Id));
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Add an exotic installment in database
+        /// </summary>
+        /// <param name="exoticInstallment"></param>
+        /// <param name="product"></param>
+        public void AddExoticInstallment(ExoticInstallment exoticInstallment, ExoticInstallmentsTable product)
+        {
+            const string sqlText = @"INSERT INTO ExoticInstallments (number,principal_coeff,interest_coeff,exotic_id)
+                         VALUES (@number,@principalCoeff,@interestCoeff,@exoticId)";
+
+            using (SqlCommand insertExoticInstallment = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@number", insertExoticInstallment, exoticInstallment.Number);
+                DatabaseHelper.InsertDoubleParam("@principalCoeff", insertExoticInstallment,exoticInstallment.PrincipalCoeff);
+                DatabaseHelper.InsertDoubleParam("@interestCoeff", insertExoticInstallment,exoticInstallment.InterestCoeff);
+                DatabaseHelper.InsertInt32Param("@exoticId", insertExoticInstallment, product.Id);
+                insertExoticInstallment.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Add an amount cycle in database
+        /// </summary>
+        /// <param name="pAmountCycle"></param>
+        /// <param name="pStock"></param>
+        /// <param name="transac"></param>
+//        public void AddAmountCycle(AmountCycle pAmountCycle, AmountCycleStock pStock,SqlTransaction transac)
+//        {
+//            const string sqlText = @"INSERT INTO [AmountCycles]([cycle_id],[number], [amount_min],[amount_max])
+//                         VALUES (@cycle,@number,ISNULL(@min,0), ISNULL(@max, 0))";
+//
+//            using(SqlCommand insertAmountCycle = new SqlCommand(sqlText, DefaultConnection, transac))
+//            {
+//                DatabaseHelper.InsertInt32Param("@cycle", insertAmountCycle, pStock.Id);
+//                DatabaseHelper.InsertDoubleParam("@number", insertAmountCycle, pAmountCycle.Number);
+//                DatabaseHelper.InsertMoneyParam("@min", insertAmountCycle, pAmountCycle.Min);
+//                DatabaseHelper.InsertMoneyParam("@max", insertAmountCycle, pAmountCycle.Max);
+//
+//                insertAmountCycle.ExecuteNonQuery();
+//            }
+//        }
+
+        private List<ExoticInstallment> _SelectExoticInstallmentsByProductId(int productId)
+        {
+            List<ExoticInstallment> list = new List<ExoticInstallment>();
+            const string sqlText = @"SELECT number,principal_coeff,interest_coeff 
+                                   FROM ExoticInstallments 
+                                   WHERE exotic_id =@exoticId";
+
+            using(SqlCommand selectExoticInstallments = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@exoticId", selectExoticInstallments, productId);
+
+                using (SqlDataReader reader = selectExoticInstallments.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new List<ExoticInstallment>();
+                    while (reader.Read())
+                    {
+                        ExoticInstallment exoticInstallment = _GetExoticInstallment(reader);
+                        list.Add(exoticInstallment);
+                    }
+                }
+                return list;
+            }
+        }
+
+        private static ExoticInstallment _GetExoticInstallment(SqlDataReader pReader)
+        {
+            return new ExoticInstallment
+                       {
+                           Number = DatabaseHelper.GetInt32("number", pReader),
+                           PrincipalCoeff = DatabaseHelper.GetDouble("principal_coeff",pReader),
+                           InterestCoeff =DatabaseHelper.GetNullAuthorizedDouble("interest_coeff", pReader)
+                       };
+        }
+
+//        private List<AmountCycle> _SelectAmountCyclesByAmountCycleStockId(int number)
+//        {
+//            List<AmountCycle> cycleStock = new List<AmountCycle>();
+//            const string sqlText = @"SELECT [number], [amount_min], [amount_max] 
+//                                    FROM [AmountCycles] WHERE cycle_id = @number ORDER BY number";
+//
+//            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+//            {
+//                DatabaseHelper.InsertInt32Param("@number", select, number);
+//                using (SqlDataReader reader = select.ExecuteReader())
+//                {
+//                    if(reader == null || !reader.HasRows) return new List<AmountCycle>();
+//                    while (reader.Read())
+//                    {
+//                        AmountCycle cycle = _GetAmountCycle(reader);
+//                        cycleStock.Add(cycle);
+//                    }
+//                }
+//            }
+//            return cycleStock;
+//        }
+
+//        private static AmountCycle _GetAmountCycle(SqlDataReader pReader)
+//        {
+//            return new AmountCycle
+//                       {
+//                           Number = DatabaseHelper.GetInt32("number", pReader),
+//                           Min = DatabaseHelper.GetMoney("amount_min", pReader),
+//                           Max = DatabaseHelper.GetMoney("amount_max", pReader)
+//                       };
+//        }
+
+//        private static AmountCycleStock _GetAmountCycleStock(SqlDataReader pReader)
+//        {
+//            return new AmountCycleStock
+//                       {
+//                           Name = DatabaseHelper.GetString("name", pReader),
+//                           Id = DatabaseHelper.GetInt32("id", pReader)
+//                       };
+//        }
+
+        /// <summary>
+        /// Select all amount cycles stock
+        /// </summary>
+        /// <returns></returns>
+//        public List<AmountCycleStock> SelectAllAmountCyclesStock()
+//        {
+//            List<AmountCycleStock> cycleStocks = new List<AmountCycleStock>();
+//            const string sqlText = "SELECT [id], [name] FROM [Cycles]";
+//
+//            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+//            {
+//                using (SqlDataReader reader = select.ExecuteReader())
+//                {
+//                    if(reader == null || !reader.HasRows) return new List<AmountCycleStock>();
+//                    while (reader.Read())
+//                    {
+//                        cycleStocks.Add(_GetAmountCycleStock(reader));
+//                    }
+//                }
+//            }
+//
+//            foreach (AmountCycleStock stock in cycleStocks)
+//            {
+//                stock.Add(_SelectAmountCyclesByAmountCycleStockId(stock.Id));
+//            }
+//            return cycleStocks;
+//        }
+
+        public List<ProductClientType> SelectClientTypes()
+        {
+            List<ProductClientType> clientTypes = new List<ProductClientType>();
+            string sqlText = @"SELECT [id], [type_name] 
+                             FROM  [dbo].[ClientTypes]";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader dataReader = cmd.ExecuteReader())
+                {
+                    while (dataReader.Read())
+                    {
+                        clientTypes.Add(new ProductClientType((int)dataReader[0], (string)dataReader[1]));
+                    }
+                }
+            }
+            return clientTypes;
+        }
+
+        public void GetAssignedTypes(List<ProductClientType> productClientTypes, int productId)
+        {
+            foreach (ProductClientType clientType in productClientTypes)
+            {
+                string sqlText = string.Format(
+                    @"SELECT client_type_id
+                            ,package_id
+                     FROM [dbo].[PackagesClientTypes]
+                     WHERE client_type_id={0} AND package_id={1}",
+                    clientType.TypeId, productId);
+                SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection);
+                SqlDataReader dataReader = cmd.ExecuteReader();
+                if (dataReader.HasRows)
+                {
+                    clientType.IsChecked = true;
+                }
+                dataReader.Close();
+            }
+        }
+    }
+}

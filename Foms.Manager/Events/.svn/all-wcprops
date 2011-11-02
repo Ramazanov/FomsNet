@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Events
+END
+CorporateEventManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Events/CorporateEventManager.cs
+END
+EventManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Events/EventManager.cs
+END
+FundingLineEventManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Events/FundingLineEventManager.cs
+END
+TrancheEventManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Events/TrancheEventManager.cs
+END
+SavingEventManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Events/SavingEventManager.cs
+END

@@ -1,0 +1,379 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Diagnostics;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Events.Saving;
+using Octopus.CoreDomain.Products;
+using Octopus.Enums;
+
+namespace Octopus.Manager.Events
+{
+	public class SavingEventManager : Manager
+	{
+		public SavingEventManager(User pUser) : base(pUser) {}
+
+		public SavingEventManager(string db) : base(db) {}
+		
+		public int Add(SavingEvent pSavingEvent, int pSavingContractId, SqlTransaction sqlTransac)
+		{
+			const string sqlText = @"INSERT INTO [SavingEvents](
+                                       [user_id], 
+                                       [contract_id], 
+                                       [code], 
+                                       [amount], 
+                                       [description], 
+				                       [deleted], 
+                                       [creation_date], 
+                                       [cancelable], 
+                                       [is_fired], 
+                                       [related_contract_code], 
+                                       [fees],
+                                       [savings_method], 
+                                       [pending],
+                                       [pending_event_id])
+				                     VALUES(
+                                       @user_id, 
+                                       @contract_id, 
+                                       @code, 
+                                       @amount, 
+                                       @description, 
+                                       @deleted, 
+                                       @creation_date, 
+                                       @cancelable, 
+                                       @is_fired, 
+                                       @related_contract_code, 
+                                       @fees,
+                                       @savings_method,
+                                       @pending,
+                                       @pending_event_id)
+				                     SELECT CONVERT(int, SCOPE_IDENTITY())";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@user_id", insert, pSavingEvent.User.Id);
+                DatabaseHelper.InsertInt32Param("@contract_id", insert, pSavingContractId);
+                DatabaseHelper.InsertStringVarCharParam("@code", insert, pSavingEvent.Code);
+                DatabaseHelper.InsertMoneyParam("@amount", insert, pSavingEvent.Amount);
+                DatabaseHelper.InsertStringNVarCharParam("@description", insert, pSavingEvent.Description);
+                DatabaseHelper.InsertBooleanParam("@deleted", insert, pSavingEvent.Deleted);
+                DatabaseHelper.InsertDateTimeParam("@creation_date", insert, pSavingEvent.Date);
+                DatabaseHelper.InsertBooleanParam("@cancelable", insert, pSavingEvent.Cancelable);
+                DatabaseHelper.InsertBooleanParam("@is_fired", insert, pSavingEvent.IsFired);
+                DatabaseHelper.InsertStringNVarCharParam("@related_contract_code", insert, pSavingEvent is SavingTransferEvent ?
+                        ((SavingTransferEvent)pSavingEvent).RelatedContractCode : null);
+                DatabaseHelper.InsertMoneyParam("@fees", insert, pSavingEvent is ISavingsFees ? ((ISavingsFees)pSavingEvent).Fee : null);
+                if (pSavingEvent.SavingsMethod.HasValue)
+                    DatabaseHelper.InsertSmalIntParam("@savings_method", insert, (int)pSavingEvent.SavingsMethod.Value);
+                else
+                    DatabaseHelper.InsertNullValue("@savings_method", insert);
+                DatabaseHelper.InsertBooleanParam("@pending", insert, pSavingEvent.IsPending);
+                if (pSavingEvent.PendingEventId.HasValue)
+                    DatabaseHelper.InsertInt32Param("@pending_event_id", insert, pSavingEvent.PendingEventId);
+                else
+                    DatabaseHelper.InsertNullValue("@pending_event_id", insert);
+
+                pSavingEvent.Id = (int)insert.ExecuteScalar();
+                return pSavingEvent.Id;
+            }
+		}
+
+        public void FireEvent(int savingEventId, SqlTransaction sqlTransac)
+        {
+            const string sqlText = @"UPDATE [SavingEvents] 
+                                     SET [is_fired] = @is_fired 
+                                     WHERE [id] = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                DatabaseHelper.InsertBooleanParam("@is_fired", update, true);
+                DatabaseHelper.InsertInt32Param("@id", update, savingEventId);
+
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void MakeEventExported(int pSavingEventId, SqlTransaction sqlTransac)
+        {
+            const string sqlText = @"UPDATE [SavingEvents] 
+                                     SET [is_exported] = @is_exported 
+                                     WHERE [id] = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                DatabaseHelper.InsertBooleanParam("@is_exported", update, true);
+                DatabaseHelper.InsertInt32Param("@id", update, pSavingEventId);
+
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void ChangePendingEventStatus(int pSavingEventId, bool isPending, SqlTransaction sqlTransac)
+        {
+            const string sqlText = @"UPDATE [SavingEvents] 
+                                     SET [pending] = @pending 
+                                     WHERE [id] = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                DatabaseHelper.InsertBooleanParam("@pending", update, isPending);
+                DatabaseHelper.InsertInt32Param("@id", update, pSavingEventId);
+
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateEventDescription(int pSavingEventId, string pDescription, SqlTransaction sqlTransac)
+        {
+            const string sqlText = @"UPDATE [SavingEvents] 
+                                     SET [description] = @description 
+                                     WHERE [id] = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@description", update, pDescription);
+                DatabaseHelper.InsertInt32Param("@id", update, pSavingEventId);
+
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public List<SavingEvent> SelectEvents(int pSavingId, ISavingProduct pProduct)
+		{
+            const string sqlText = @"SELECT  
+                                        SavingEvents.id ,
+                                        SavingEvents.user_id ,
+                                        SavingEvents.code ,
+                                        SavingEvents.amount ,
+                                        SavingEvents.description + '  #' + sc.code + '-' + CONVERT(NVARCHAR(50), SavingEvents.id) AS description,
+                                        SavingEvents.creation_date ,
+                                        SavingEvents.cancelable ,
+                                        SavingEvents.is_fired ,
+                                        SavingEvents.deleted ,
+                                        SavingEvents.related_contract_code ,
+                                        SavingEvents.fees ,
+                                        SavingEvents.savings_method ,
+                                        SavingEvents.pending ,
+                                        SavingEvents.pending_event_id ,
+                                        Users.id AS user_id ,
+                                        Users.deleted ,
+                                        Users.user_name ,
+                                        Users.user_pass ,
+                                        Users.role_code ,
+                                        Users.first_name ,
+                                        Users.last_name
+                                FROM    SavingEvents
+                                INNER JOIN Users ON SavingEvents.user_id = Users.id
+                                INNER JOIN dbo.SavingContracts sc 
+                                  ON SavingEvents.contract_id = sc.id
+				                WHERE SavingEvents.contract_id = @id 
+                                ORDER BY SavingEvents.id";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pSavingId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new List<SavingEvent>();
+
+                    List<SavingEvent> eventList = new List<SavingEvent>();
+                    while (reader.Read())
+                    {
+                        eventList.Add(_ReadEvent(reader, pProduct));
+                    }
+                    return eventList;
+                }
+            }
+		}
+
+        public List<SavingEvent> SelectEventsForClosure()
+        {
+            const string sqlText = @"SELECT 
+                                       SavingEvents.id, 
+                                       SavingEvents.user_id, 
+                                       SavingEvents.code, 
+                                       SavingEvents.amount, 
+                                       SavingEvents.description, 
+                                       SavingEvents.creation_date, 
+                                       SavingEvents.cancelable, 
+                                       SavingEvents.is_fired, 
+                                       SavingEvents.deleted, 
+                                       SavingEvents.related_contract_code, 
+                                       SavingEvents.fees,
+                                       SavingEvents.savings_method,
+                                       SavingEvents.pending,
+                                       SavingEvents.pending_event_id,
+				                       Users.id AS user_id, 
+                                       Users.deleted, 
+                                       Users.user_name, 
+                                       Users.user_pass, 
+                                       Users.role_code, 
+                                       Users.first_name, 
+                                       Users.last_name 
+				                     FROM SavingEvents 
+                                     INNER JOIN Users ON SavingEvents.user_id = Users.id
+				                     WHERE SavingEvents.deleted = 0 
+                                       AND SavingEvents.is_exported = 0
+                                     ORDER BY SavingEvents.id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<SavingEvent>();
+
+                    List<SavingEvent> eventList = new List<SavingEvent>();
+                    while (reader.Read())
+                    {
+                        eventList.Add(_ReadEvent(reader, null));
+                    }
+                    return eventList;
+                }
+            }
+        }
+
+        private static SavingEvent _ReadEvent(SqlDataReader pReader, ISavingProduct pProduct)
+        {
+            SavingEvent e;
+            string code = DatabaseHelper.GetString("code", pReader);
+
+            switch (code)
+            {
+                case OSavingEvents.Deposit:
+                    e = new SavingDepositEvent();
+                    break;
+                case OSavingEvents.Withdraw:
+                    e = new SavingWithdrawEvent();
+                    break;
+                case OSavingEvents.Accrual:
+                    e = new SavingInterestsAccrualEvent();
+                    break;
+                case OSavingEvents.Posting:
+                    e = new SavingInterestsPostingEvent();
+                    break;
+                case OSavingEvents.InitialDeposit:
+                    e = new SavingInitialDepositEvent();
+                    break;
+                case OSavingEvents.CreditTransfer:
+                    e = new SavingCreditTransferEvent();
+                    break;
+                case OSavingEvents.DebitTransfer:
+                    e = new SavingDebitTransferEvent();
+                    break;
+                case OSavingEvents.ManagementFee:
+                    e = new SavingManagementFeeEvent();
+                    break;
+                case OSavingEvents.SavingClosure:
+                    e = new SavingClosureEvent();
+                    break;
+                case OSavingEvents.Close:
+                    e = new SavingCloseEvent();
+                    break;
+                case OSavingEvents.OverdraftFees:
+                    e = new SavingOverdraftFeeEvent();
+                    break;
+                case OSavingEvents.Agio:
+                    e = new SavingAgioEvent();
+                    break;
+                case OSavingEvents.PendingDeposit:
+                    e = new SavingPendingDepositEvent();
+                    break;
+                case OSavingEvents.Reopen:
+                    e = new SavingReopenEvent();
+                    break;
+                case OSavingEvents.PendingDepositRefused:
+                    e = new SavingPendingDepositRefusedEvent();
+                    break;
+                case OSavingEvents.SpecialOperationCredit:
+                    e = new SavingCreditOperationEvent();
+                    break;
+                case OSavingEvents.SpecialOperationDebit:
+                    e = new SavingDebitOperationEvent();
+                    break;
+                default:
+                    Debug.Fail("Failed to create saving event object");
+                    throw new Exception();
+            }
+
+			e.Id = DatabaseHelper.GetInt32("id", pReader);
+			e.Code = DatabaseHelper.GetString("code", pReader);
+			e.Amount = DatabaseHelper.GetMoney("amount", pReader);
+			e.Description = DatabaseHelper.GetString("description", pReader);
+			e.Deleted = DatabaseHelper.GetBoolean("deleted", pReader);
+			e.Date = DatabaseHelper.GetDateTime("creation_date", pReader);
+			e.Cancelable = DatabaseHelper.GetBoolean("cancelable", pReader);
+			e.IsFired = DatabaseHelper.GetBoolean("is_fired", pReader);
+
+            if(pProduct != null)
+              e.ProductType = pProduct.GetType();
+
+            if (DatabaseHelper.GetNullAuthorizedSmallInt("savings_method", pReader).HasValue)
+                e.SavingsMethod = (OSavingsMethods)DatabaseHelper.GetNullAuthorizedSmallInt("savings_method", pReader).Value;
+            
+            e.IsPending = DatabaseHelper.GetBoolean("pending", pReader);
+            e.PendingEventId = DatabaseHelper.GetNullAuthorizedInt32("pending_event_id", pReader);
+            
+            if (pProduct != null)
+            {
+                e.ProductType = pProduct.GetType();
+            }
+
+            if (e is SavingTransferEvent)
+            {
+                ((SavingTransferEvent)e).RelatedContractCode = DatabaseHelper.GetString("related_contract_code", pReader);
+            }
+
+            if (e is ISavingsFees)
+            {
+                ((ISavingsFees) e).Fee = DatabaseHelper.GetNullAuthorizedMoney("fees", pReader);
+            }
+
+			e.User = new User
+            {
+			    Id = DatabaseHelper.GetInt32("user_id", pReader),
+			    UserName = DatabaseHelper.GetString("user_name", pReader),
+			    Password = DatabaseHelper.GetString("user_pass", pReader),
+			    LastName = DatabaseHelper.GetString("last_name", pReader),
+			    FirstName = DatabaseHelper.GetString("first_name", pReader)
+            };
+            e.User.SetRole(DatabaseHelper.GetString("role_code", pReader));
+            
+			return e;
+        }
+
+		public void DeleteEventInDatabase(SavingEvent pSavingEvent, SqlTransaction sqlTransac)
+		{
+			string sqlTextEventsType = "UPDATE [SavingEvents] SET [deleted] = 1 WHERE id = @id";
+
+            SqlCommand delete = new SqlCommand(sqlTextEventsType, DefaultConnection, sqlTransac);
+
+			DatabaseHelper.InsertInt32Param("@id", delete, pSavingEvent.Id);
+            delete.ExecuteNonQuery();
+		}
+	}
+}

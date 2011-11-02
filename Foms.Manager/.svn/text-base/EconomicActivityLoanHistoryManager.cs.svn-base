@@ -1,0 +1,217 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using Octopus.CoreDomain;
+using System.Data.SqlClient;
+using Octopus.CoreDomain.EconomicActivities;
+
+namespace Octopus.Manager
+{
+	/// <summary>
+    /// Summary description for EconomicActivityLoanHistoryManager.
+	/// </summary>
+	public class EconomicActivityLoanHistoryManager : Manager
+	{
+	    //private readonly LoanManager _loanManager;
+	    //private readonly ClientManager _clientManager;
+        //private readonly EconomicActivityManager _economicActivityManager;
+
+        public EconomicActivityLoanHistoryManager(string testDB) : base(testDB)
+        {
+            //_loanManager = new LoanManager(testDB);
+            //_clientManager = new ClientManager(testDB);
+            //_economicActivityManager = new EconomicActivityManager(testDB);
+        }
+
+        public EconomicActivityLoanHistoryManager(User pUser) : base(pUser)
+        {
+            //_loanManager = new LoanManager(pUser);
+            //_clientManager = new ClientManager(pUser, false, false);
+            //_economicActivityManager = new EconomicActivityManager(pUser);            
+        }
+
+        public void AddEconomicActivityLoanHistory(EconomicActivityLoanHistory activityLoanHistory, SqlTransaction sqlTransaction)
+		{
+            const string sqlText = @"INSERT INTO EconomicActivityLoanHistory 
+                                    ([contract_id],[person_id],[group_id],[economic_activity_id],[deleted]) 
+                                    VALUES (@contract_id, @person_id, @group_id, @economic_activity_id, @deleted)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransaction))
+		    {
+                DatabaseHelper.InsertInt32Param("@contract_id", insert, activityLoanHistory.Contract.Id);
+                DatabaseHelper.InsertInt32Param("@person_id", insert, activityLoanHistory.Person.Id);
+                if (activityLoanHistory.Group != null)
+                    DatabaseHelper.InsertInt32Param("@group_id", insert, activityLoanHistory.Group.Id);
+                else
+                    DatabaseHelper.InsertNullValue("@group_id", insert);
+                DatabaseHelper.InsertInt32Param("@economic_activity_id", insert, activityLoanHistory.EconomicActivity.Id);
+                DatabaseHelper.InsertBooleanParam("@deleted", insert, activityLoanHistory.Deleted);
+
+		        insert.ExecuteNonQuery();
+		    }
+		}
+
+        public void UpdateDeletedEconomicActivityLoanHistory(int contractId, int personId, int economicActivityId, 
+            SqlTransaction sqlTransaction, bool deleted)
+		{
+            const string sqlText = @"UPDATE EconomicActivityLoanHistory 
+                                    SET deleted = @deleted, economic_activity_id = @economic_activity_id 
+                                    WHERE contract_id = @contract_id AND person_id = @person_id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransaction))
+		    {
+                DatabaseHelper.InsertInt32Param("@contract_id", update, contractId);
+                DatabaseHelper.InsertInt32Param("@person_id", update, personId);
+                DatabaseHelper.InsertInt32Param("@economic_activity_id", update, economicActivityId);
+                DatabaseHelper.InsertBooleanParam("@deleted", update, deleted);
+
+		        update.ExecuteNonQuery();
+		    }
+		}
+
+        public bool EconomicActivityLoanHistoryExists(int contractId, int personId, SqlTransaction sqlTransaction)
+        {
+            int id = 0;
+            const string sqlText = @"SELECT contract_id, person_id, group_id, economic_activity_id, deleted 
+                                     FROM EconomicActivityLoanHistory 
+                                     WHERE contract_id = @contract_id AND person_id = @person_id ";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection, sqlTransaction))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_id", sqlCommand, contractId);
+                DatabaseHelper.InsertInt32Param("@person_id", sqlCommand, personId);
+
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            id = DatabaseHelper.GetInt32("contract_id", reader);
+                        }
+                    }
+                }
+            }
+            return id == 0 ? false : true;
+        }
+
+        public bool EconomicActivityLoanHistoryDeleted(int contractId, int personId, SqlTransaction sqlTransaction)
+        {
+            int id = 0;
+            const string sqlText = @"SELECT contract_id, person_id, group_id, economic_activity_id, deleted 
+                                     FROM EconomicActivityLoanHistory 
+                                     WHERE contract_id = @contract_id AND person_id = @person_id AND deleted = 1";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection, sqlTransaction))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_id", sqlCommand, contractId);
+                DatabaseHelper.InsertInt32Param("@person_id", sqlCommand, personId);
+
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            id = DatabaseHelper.GetInt32("contract_id", reader);
+                        }
+                    }
+                }
+            }
+            return id == 0 ? false : true;
+        }
+
+        /*public EconomicActivityLoanHistory SelectEconomicActivityLoanHistory(int contractId, int personId, SqlTransaction sqlTransaction)
+        {
+            int? groupId = null;
+            //int economicActivityId = 0;
+            var ealh = new EconomicActivityLoanHistory();
+
+            const string sqlText = @"SELECT contract_id, person_id, group_id, economic_activity_id, deleted 
+                                     FROM EconomicActivityLoanHistory 
+                                     WHERE contract_id = @contract_id AND person_id = @person_id ";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, sqlTransaction))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_id", select, contractId);
+                DatabaseHelper.InsertInt32Param("@person_id", select, personId);
+
+                SqlDataReader pReader = select.ExecuteReader();
+                //ealh = GetEconomicActivityLoanHistory(reader);
+                if (pReader != null)
+                {
+                    if (pReader.HasRows)
+                    {
+                        pReader.Read();
+                        ealh.Contract.Id = contractId;
+                        ealh.Person.Id = personId;
+                        ealh.EconomicActivity.Id = DatabaseHelper.GetInt32("economic_activity_id", pReader);
+                        groupId = DatabaseHelper.GetInt32("group_id", pReader);
+                        if (groupId != null) ealh.Group.Id = groupId.Value;
+                        ealh.Deleted = DatabaseHelper.GetBoolean("deleted", pReader);
+
+                        //contractId = DatabaseHelper.GetInt32("contract_id", pReader);
+                        //personId = DatabaseHelper.GetInt32("person_id", pReader);
+                        //economicActivityId = DatabaseHelper.GetInt32("economic_activity_id", pReader);
+                    }
+                }
+                sqlTransaction.Commit();
+                pReader.Dispose();
+            }
+            return ealh;
+        }*/
+
+        /*private EconomicActivityLoanHistory GetEconomicActivityLoanHistory(SqlDataReader pReader)
+        {
+            int personId = 0;
+            int contractId = 0;
+            int? groupId = null;
+            int economicActivityId = 0;
+
+            var ealh = new EconomicActivityLoanHistory();
+            if (pReader != null)
+            {
+                if (pReader.HasRows)
+                {
+                    pReader.Read();
+                    contractId = DatabaseHelper.GetInt32("contract_id", pReader);
+                    personId = DatabaseHelper.GetInt32("person_id", pReader);
+                    economicActivityId = DatabaseHelper.GetInt32("economic_activity_id", pReader);
+                    groupId = DatabaseHelper.GetInt32("group_id", pReader);
+                    ealh.Deleted = DatabaseHelper.GetBoolean("deleted", pReader);
+                }
+            }
+
+            ealh.Contract = _loanManager.SelectLoan(contractId, true, true, true);
+            ealh.Person = _clientManager.SelectPersonById(personId);
+            ealh.EconomicActivity = _economicActivityManager.SelectEconomicActivity(economicActivityId);
+            ealh.Group = groupId == null ? null : _clientManager.SelectGroupById(groupId.Value);
+
+            return ealh;
+        }*/
+
+	}
+}

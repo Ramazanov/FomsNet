@@ -1,0 +1,342 @@
+﻿using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Collections;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.CoreDomain.Contracts.Guarantees;
+using Octopus.Enums;
+using Octopus.Manager.Accounting;
+using Octopus.Manager.Contracts;
+using Octopus.Manager.Products;
+using Octopus.Shared;
+using Octopus.Manager.Events;
+using Octopus.Shared.Settings;
+
+namespace Octopus.Manager
+{
+    /// <summary>
+    /// GuaranteeContractManagement contains all methods relative to selecting, inserting, updating
+    /// and deleting guaranteeContract objects to and from our database.
+    /// </summary>
+    public class GuaranteeContractManager : Manager
+    {
+        private readonly InstallmentTypeManager _installmentTypeManagement;
+        private readonly InstallmentManager _installmentManagement;
+        private readonly UserManager _userManager;
+        private readonly EventManager _eventManagement;
+        private readonly ApplicationSettings _databaseParameters;
+        private readonly AccountManager _accountManager;
+        private readonly LoanManager _creditContratManager;
+        private readonly FundingLineManager _fundingLineManager;
+        private readonly GuaranteeProductManager _guaranteePackageManager;
+
+        private readonly User _user = new User();
+
+        public GuaranteeContractManager(User pUser) : base(pUser)
+        {
+            _user = pUser;
+            _userManager = new UserManager(pUser);
+            _installmentTypeManagement = new InstallmentTypeManager(pUser);
+            _installmentManagement = new InstallmentManager(pUser);
+            _eventManagement = new EventManager(pUser);
+            _databaseParameters = ApplicationSettings.GetInstance(pUser.Md5);
+            _accountManager = new AccountManager(pUser);
+            _creditContratManager = new LoanManager(pUser);
+
+            _fundingLineManager = new FundingLineManager(pUser);
+            _guaranteePackageManager = new GuaranteeProductManager(pUser);
+        }
+
+        public GuaranteeContractManager(string testDB)
+            : base(testDB)
+        {
+            _userManager = new UserManager(testDB);
+            _installmentTypeManagement = new InstallmentTypeManager(testDB);
+            _installmentManagement = new InstallmentManager(testDB);
+            _eventManagement = new EventManager(testDB);
+            _databaseParameters = ApplicationSettings.GetInstance("");
+            _accountManager = new AccountManager(testDB);
+            _fundingLineManager = new FundingLineManager(testDB);
+            _creditContratManager = new LoanManager(testDB);
+            _guaranteePackageManager = new GuaranteeProductManager(testDB);
+        }
+
+        public GuaranteeContractManager(string testDB, User pUser) 
+            : base(testDB)
+        {
+            _user = pUser;
+            _userManager = new UserManager(testDB, _user);
+            _installmentTypeManagement = new InstallmentTypeManager(testDB);
+            _installmentManagement = new InstallmentManager(testDB);
+            _eventManagement = new EventManager(testDB);
+            _databaseParameters = ApplicationSettings.GetInstance("");
+            _accountManager = new AccountManager(testDB);
+            _fundingLineManager=new FundingLineManager(testDB);
+            _creditContratManager = new LoanManager(testDB);
+            _guaranteePackageManager = new GuaranteeProductManager(testDB);
+         }
+
+        private int _AddGuarantee(Guarantee contract, int pProjectId, SqlTransaction sqlTransac)
+        {
+            string sqlText = "INSERT INTO [Contracts]([contract_code], [branch_code], [closed], " +
+                "[creation_date], [start_date], [align_disbursed_date], [close_date], [rural],[project_id],[credit_commitee_comment],[credit_commitee_date]) " +
+                "VALUES(@code, @branchCode, @closed, @creationDate, @startDate, @align_disbursed_date, @closeDate, @rural,@projectId,@creditCommiteeComment,@creditCommiteeDate) SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+
+            DatabaseHelper.InsertStringNVarCharParam("@code", insert, "fake_code");
+            DatabaseHelper.InsertStringVarCharParam("@branchCode", insert, contract.BranchCode);
+            DatabaseHelper.InsertBooleanParam("@closed", insert, contract.Closed);
+            DatabaseHelper.InsertDateTimeParam("@creationDate", insert, contract.CreationDate);
+            DatabaseHelper.InsertDateTimeParam("@startDate", insert, contract.StartDate);
+            DatabaseHelper.InsertDateTimeParam("@align_disbursed_date", insert, contract.StartDate);
+            DatabaseHelper.InsertDateTimeParam("@closeDate", insert, contract.CloseDate);
+            DatabaseHelper.InsertBooleanParam("@rural", insert, contract.Rural);
+            DatabaseHelper.InsertInt32Param("@projectId", insert, pProjectId);
+            DatabaseHelper.InsertDateTimeParam("@creditCommiteeDate", insert, contract.CreditCommiteeDate);
+            DatabaseHelper.InsertStringNVarCharParam("@creditCommiteeComment", insert, contract.CreditCommiteeComment);
+
+            contract.Id = int.Parse(insert.ExecuteScalar().ToString());
+
+            if (contract.Code == null)
+
+                contract.Code = contract.GenerateGuaranteeCode();
+
+            SqlCommand updateCode = new SqlCommand("UPDATE Contracts SET contract_code = @code WHERE id = @id", DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertStringNVarCharParam("@code", updateCode, contract.Code);
+            DatabaseHelper.InsertInt32Param("@id", updateCode, contract.Id);
+            updateCode.ExecuteNonQuery();
+
+            return contract.Id;
+        }
+
+        public int AddGuarantee(Guarantee contract, int pProjectId, SqlTransaction sqlTransac)
+        {
+            contract.Id = _AddGuarantee(contract, pProjectId, sqlTransac);
+
+            string sqlText = @"INSERT INTO [Guarantees]([id], [guarantee_package_id], [amount], 
+                [amount_limit], [amount_guaranted],[guarantee_fees],[fundingLine_id],[activated],[loanofficer_id],[banque]) 
+                VALUES(@id, @guarantee_package_id, @amount, @amount_limit, @amount_guaranted,@guarantee_fees,
+                @fundingLine_id,@activated,@loanofficer_id,@banque) SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+           
+            DatabaseHelper.InsertInt32Param("@id", insert, contract.Id);
+            DatabaseHelper.InsertMoneyParam("@amount", insert, contract.Amount);
+            DatabaseHelper.InsertMoneyParam("@amount_limit", insert, contract.AmountLimit);
+            DatabaseHelper.InsertMoneyParam("@amount_guaranted", insert, contract.AmountGuaranted);
+            DatabaseHelper.InsertDoubleParam("@guarantee_fees", insert, contract.GuaranteeFees);
+            DatabaseHelper.InsertBooleanParam("@activated", insert, contract.Activated);
+            DatabaseHelper.InsertStringNVarCharParam("@banque", insert, contract.Banque);
+
+            if (contract.Guaranteespackage != null)
+                DatabaseHelper.InsertInt32Param("@guarantee_package_id", insert, contract.Guaranteespackage.Id);
+            else
+                DatabaseHelper.InsertNullValue("@guarantee_package_id", insert);
+
+            if (contract.FundingLine != null)
+                DatabaseHelper.InsertInt32Param("@fundingLine_id", insert, contract.FundingLine.Id);
+            else
+                DatabaseHelper.InsertNullValue("@fundingLine_id", insert);
+            if (contract.LoanOfficer != null)
+                DatabaseHelper.InsertInt32Param("@loanofficer_id", insert, contract.LoanOfficer.Id);
+            else
+                DatabaseHelper.InsertNullValue("@loanofficer_id", insert);
+
+
+            insert.ExecuteNonQuery();
+
+            return contract.Id;
+        }
+
+
+
+        public void UpdateGuarantee(Guarantee contract, SqlTransaction sqlTransac)
+        
+        {
+
+            string sqlText = "UPDATE Guarantees SET " +
+               "loanofficer_id = @loanofficer_id, " +
+               "fundingLine_id = @fundingLine_id, " +
+               "amount = @amount," +
+               "banque = @banque, " +
+               "activated = @activated " +
+               " WHERE id = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            
+            DatabaseHelper.InsertInt32Param("@id", update, contract.Id);
+            DatabaseHelper.InsertMoneyParam("@amount", update, contract.Amount);
+            DatabaseHelper.InsertBooleanParam("@activated", update, contract.Activated);
+            DatabaseHelper.InsertStringNVarCharParam("@banque", update, contract.Banque);
+            
+            if (contract.FundingLine != null)
+                DatabaseHelper.InsertInt32Param("@fundingLine_id", update, contract.FundingLine.Id);
+            else
+                DatabaseHelper.InsertNullValue("@fundingLine_id", update);
+
+            if (contract.LoanOfficer != null)
+                DatabaseHelper.InsertInt32Param("@loanofficer_id", update, contract.LoanOfficer.Id);
+            
+            else
+                DatabaseHelper.InsertNullValue("@loanofficer_id", update);
+
+
+            update.ExecuteNonQuery();
+
+            sqlText = @"UPDATE Contracts 
+                        SET rural = @rural, 
+                        start_date = @startDate, 
+                        close_date = @closeDate, 
+                        closed = @closed 
+                        WHERE id = @id";
+
+            SqlCommand update2 = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertBooleanParam("@rural", update2, contract.Rural);
+            DatabaseHelper.InsertDateTimeParam("@startDate", update2, contract.StartDate);
+            DatabaseHelper.InsertDateTimeParam("@closeDate", update2, contract.CloseDate);
+            DatabaseHelper.InsertBooleanParam("@closed", update2, contract.Closed);
+            DatabaseHelper.InsertInt32Param("@id", update2, contract.Id);
+            update2.ExecuteNonQuery();
+        }
+
+        private Guarantee _SelectGuaranteeById(int pContractId)
+        {
+            Guarantee guaranteeContract = null;
+            int? guaranteePackageId = null;
+            int? loanOfficerId = null;
+            int? fundingLineId = null;
+            
+
+            string sqlText = @"SELECT Guarantees.id AS guarantee_id, Guarantees.guarantee_package_id, Guarantees.amount, Guarantees.amount_limit, Guarantees.banque, 
+                            Guarantees.amount_guaranted, Guarantees.guarantee_fees, 
+                            Guarantees.loanofficer_id, Guarantees.fundingLine_id,Guarantees.activated,
+                            Contracts.contract_code, Tiers.client_type_code, 
+                            Contracts.branch_code, Contracts.creation_date, Contracts.start_date, Contracts.align_disbursed_date,
+                            Contracts.close_date, Contracts.rural, Contracts.closed , Contracts.credit_commitee_date,Contracts.credit_commitee_comment, Contracts.status
+                            FROM Contracts 
+                            INNER JOIN Guarantees ON Contracts.id = Guarantees.id 
+                            INNER JOIN Projects ON Contracts.project_id = Projects.id 
+                            INNER JOIN Tiers ON Projects.tiers_id = Tiers.id 
+                            WHERE Guarantees.id = @id";
+
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pContractId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    guaranteeContract = new Guarantee(_user, ApplicationSettings.GetInstance(_user.Md5), NonWorkingDateSingleton.GetInstance(_user.Md5), ProvisionTable.GetInstance(_user));
+                    guaranteeContract.Id = DatabaseHelper.GetInt32("guarantee_id", reader);
+                    guaranteeContract.ClientType = DatabaseHelper.GetChar("client_type_code", reader) == 'I'
+                                                    ? OClientTypes.Person
+                                                    : OClientTypes.Group;
+                    guaranteePackageId = DatabaseHelper.GetInt32("guarantee_package_id", reader);
+                    guaranteeContract.ContractStatus =  (OContractStatus)DatabaseHelper.GetSmallInt("status", reader);
+                    guaranteeContract.Amount = DatabaseHelper.GetMoney("amount", reader);
+                    guaranteeContract.AmountLimit = DatabaseHelper.GetNullAuthorizedMoney("amount_limit", reader);
+                    guaranteeContract.Banque = DatabaseHelper.GetString("banque", reader);
+                    loanOfficerId = DatabaseHelper.GetInt32("loanofficer_id", reader);
+                    fundingLineId = DatabaseHelper.GetNullAuthorizedInt32("fundingLine_id", reader);
+                    guaranteeContract.GuaranteeFees = DatabaseHelper.GetNullAuthorizedDouble("guarantee_fees", reader);
+                    guaranteeContract.Code = DatabaseHelper.GetString("contract_code", reader);
+                    guaranteeContract.BranchCode = DatabaseHelper.GetString("branch_code", reader);
+                    guaranteeContract.CreationDate = DatabaseHelper.GetDateTime("creation_date", reader);
+                    guaranteeContract.StartDate = DatabaseHelper.GetDateTime("start_date", reader);
+                    guaranteeContract.CloseDate = DatabaseHelper.GetDateTime("close_date", reader);
+                    guaranteeContract.Closed = DatabaseHelper.GetBoolean("closed", reader);
+                    guaranteeContract.Rural = DatabaseHelper.GetBoolean("rural", reader);
+                    guaranteeContract.Activated = DatabaseHelper.GetBoolean("activated", reader);
+                    guaranteeContract.CreditCommiteeComment = DatabaseHelper.GetString("credit_commitee_comment", reader);
+                    guaranteeContract.CreditCommiteeDate = DatabaseHelper.GetNullAuthorizedDateTime("credit_commitee_date", reader);
+
+                    guaranteeContract.AmountGuaranted = DatabaseHelper.GetNullAuthorizedMoney("amount_guaranted", reader);
+                }
+            }
+
+            if (guaranteePackageId.HasValue)
+                guaranteeContract.Guaranteespackage = _guaranteePackageManager.SelectGuaranteePackageById(guaranteePackageId.Value);
+
+
+            if (loanOfficerId.HasValue)
+                guaranteeContract.LoanOfficer = _userManager.SelectUser(loanOfficerId.Value, true);
+
+           
+            if (fundingLineId.HasValue)
+                guaranteeContract.FundingLine = _fundingLineManager.SelectFundingLineById(fundingLineId.Value, true);
+
+            return guaranteeContract;
+        }
+
+        public Guarantee SelectGuaranteeById(int contractId)
+        {
+            return _SelectGuaranteeById(contractId);
+        }
+
+        public void UpdateContractGuaranteeStatus(Guarantee pGuarantee, SqlTransaction pTransaction)
+        {
+            string sqlText = "UPDATE [Contracts] SET [status] = @status, [credit_commitee_date] = @date, [credit_commitee_comment] = @comment WHERE id = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pTransaction);
+
+            DatabaseHelper.InsertInt32Param("@id", update, pGuarantee.Id);
+            DatabaseHelper.InsertSmalIntParam("@status", update, (int)pGuarantee.ContractStatus);
+            DatabaseHelper.InsertDateTimeParam("@date", update, pGuarantee.CreditCommiteeDate);
+            DatabaseHelper.InsertStringNVarCharParam("@comment", update, pGuarantee.CreditCommiteeComment);
+
+            update.ExecuteNonQuery();
+        }
+
+        public List<Guarantee> SelectGuaranteesByProjectId(int pProjectId)
+        {
+            List<Guarantee> contractList = new List<Guarantee>();
+            ArrayList clientIds = new ArrayList();
+
+            string sqlText = "SELECT Contracts.id FROM Contracts,Guarantees WHERE Contracts.id = Guarantees.id AND project_id = @id";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pProjectId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    clientIds.Add(DatabaseHelper.GetInt32("id", reader));
+                }
+            }
+
+            foreach (int id in clientIds)
+            {
+                contractList.Add(_SelectGuaranteeById(id));
+            }
+
+            return contractList;
+        }
+
+        public void ActivateGuaranteeById(int guaranteeId,SqlTransaction pTransaction)
+        {
+
+            string sqlText = "UPDATE Guarantees SET activated = 1 WHERE id = @id";
+
+            SqlCommand activateGuarantee = new SqlCommand(sqlText, DefaultConnection, pTransaction);
+            
+            DatabaseHelper.InsertInt32Param("@id", activateGuarantee, guaranteeId);
+            activateGuarantee.ExecuteNonQuery();
+        }
+        //
+        // a guarantee is considered as deleted when 'closed' atribute is set to 1  : to refactor 
+        //
+        public void DeleteGuaranteeById(int guaranteeId, SqlTransaction pTransaction)
+        {
+            string sqlText = "UPDATE [Contracts] SET [closed] = 1 WHERE id = @id";
+
+            SqlCommand deleteGuarantee = new SqlCommand(sqlText, DefaultConnection, pTransaction);
+
+            DatabaseHelper.InsertInt32Param("@id", deleteGuarantee, guaranteeId);
+            deleteGuarantee.ExecuteNonQuery();
+        }
+    }
+}

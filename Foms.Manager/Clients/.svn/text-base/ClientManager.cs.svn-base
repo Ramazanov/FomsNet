@@ -1,0 +1,3253 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using System.Collections;
+using Octopus.CoreDomain.Clients;
+using Octopus.CoreDomain.Contracts.Loans;
+using Octopus.CoreDomain.FundingLines;
+using Octopus.CoreDomain.SearchResult;
+using Octopus.Enums;
+using Octopus.Manager.Contracts;
+using Octopus.Shared;
+using Octopus.Manager.QueryForObject;
+using Octopus.Shared.Settings;
+
+namespace Octopus.Manager.Clients
+{
+    /// <summary>
+    /// ClientManagement contains all methods relative to selecting, inserting, updating
+    /// and deleting person and group objects to and from our database.
+    /// </summary>
+    public class ClientManager : Manager
+    {
+        private readonly EconomicActivityManager _doam;
+        private readonly LocationsManager _locations;
+        private readonly ProjectManager _projectManager;
+        private readonly SavingManager _savingManager;
+        private readonly UserManager _userManager;
+
+        public ClientManager(User pUser, bool pInitializeProject, bool pInitializeSavings) : base(pUser)
+        {
+            _doam = new EconomicActivityManager(pUser);
+            _locations = new LocationsManager(pUser);
+            if (pInitializeProject)
+                _projectManager = new ProjectManager(pUser, true);
+            if (pInitializeSavings)
+                _savingManager = new SavingManager(pUser);
+            _userManager = new UserManager(pUser);
+        }
+
+        public ClientManager(string pTestDb) : base(pTestDb)
+        {
+            _doam = new EconomicActivityManager(pTestDb);
+            _locations = new LocationsManager(pTestDb);
+            _projectManager = new ProjectManager(pTestDb);
+            _savingManager = new SavingManager(pTestDb);
+            _userManager = new UserManager(pTestDb);
+        }
+
+        public void UpdateTiers(IClient pTiers, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"UPDATE [Tiers] SET  [scoring]=@scoring, 
+                [active]=@active, [loan_cycle] = @loanCycle, [bad_client]=@badClient, [other_org_name]=@otherOrgName, 
+                [other_org_amount]=@otherOrgAmount, [other_org_debts]=@otherOrgDebts, [district_id]=@districtId, 
+                [city]=@city, [address]=@address, [secondary_district_id]=@secondaryDistrictId, 
+                [secondary_city]=@secondaryCity, [secondary_address]=@secondaryAddress, 
+                [cash_input_voucher_number]=@cashInput, [cash_output_voucher_number]=@cashOutput,
+                [home_phone] = @homePhone,[personal_phone]=@personalPhone,
+                [secondary_home_phone]= @secondaryHomePhone,
+                [secondary_personal_phone]=@secondaryPersonalPhone,
+                [e_mail] = @email,[secondary_e_mail] = @secondaryEmail,[home_type] = @homeType, 
+                [secondary_homeType] = @secondaryHomeType,
+                [other_org_comment] = @otherOrgComment, [sponsor1] = @sponsor1,[sponsor2] = @sponsor2,
+                [sponsor1_comment] = @sponsor1Comment,[sponsor2_comment] = @sponsor2Comment,
+                [follow_up_comment] = @followUpComment,
+                [zipCode] = @zipCode, [secondary_zipCode] = @secondaryZipCode 
+                WHERE id = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@zipCode", update, pTiers.ZipCode);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryZipCode", update, pTiers.SecondaryZipCode);
+                DatabaseHelper.InsertStringNVarCharParam("@homeType", update, pTiers.HomeType);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryHomeType", update, pTiers.SecondaryHomeType);
+                DatabaseHelper.InsertStringNVarCharParam("@email", update, pTiers.Email);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryEmail", update, pTiers.SecondaryEmail);
+                DatabaseHelper.InsertInt32Param("@id", update, pTiers.Id);
+                DatabaseHelper.InsertDoubleParam("@scoring", update, pTiers.Scoring);
+                DatabaseHelper.InsertBooleanParam("@active", update, pTiers.Active);
+                DatabaseHelper.InsertBooleanParam("@badClient", update, pTiers.BadClient);
+                DatabaseHelper.InsertInt32Param("@loanCycle", update, pTiers.LoanCycle);
+                DatabaseHelper.InsertStringNVarCharParam("@otherOrgName", update, pTiers.OtherOrgName);
+                DatabaseHelper.InsertMoneyParam("@otherOrgAmount", update, pTiers.OtherOrgAmount);
+                DatabaseHelper.InsertMoneyParam("@otherOrgDebts", update, pTiers.OtherOrgDebts);
+                DatabaseHelper.InsertStringNVarCharParam("@city", update,string.IsNullOrEmpty(pTiers.City)
+                                                             ? pTiers.City
+                                                             : pTiers.City.ToUpper());
+                DatabaseHelper.InsertStringNVarCharParam("@address", update, pTiers.Address);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryCity", update,string.IsNullOrEmpty(pTiers.SecondaryCity)
+                                                             ? pTiers.SecondaryCity
+                                                             : pTiers.SecondaryCity.ToUpper());
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryAddress", update, pTiers.SecondaryAddress);
+
+                DatabaseHelper.InsertStringNVarCharParam("@homePhone", update, pTiers.HomePhone);
+                DatabaseHelper.InsertStringNVarCharParam("@personalPhone", update, pTiers.PersonalPhone);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryHomePhone", update, pTiers.SecondaryHomePhone);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryPersonalPhone", update,pTiers.SecondaryPersonalPhone);
+                DatabaseHelper.InsertInt32Param("@cashInput", update, pTiers.CashReceiptIn);
+                DatabaseHelper.InsertInt32Param("@cashOutput", update, pTiers.CashReceiptOut);
+                DatabaseHelper.InsertStringNVarCharParam("@otherOrgComment", update, pTiers.OtherOrgComment);
+                DatabaseHelper.InsertStringNVarCharParam("@sponsor1", update, pTiers.Sponsor1);
+                DatabaseHelper.InsertStringNVarCharParam("@sponsor2", update, pTiers.Sponsor2);
+                DatabaseHelper.InsertStringNVarCharParam("@sponsor1Comment", update, pTiers.Sponsor1Comment);
+                DatabaseHelper.InsertStringNVarCharParam("@sponsor2Comment", update, pTiers.Sponsor2Comment);
+                DatabaseHelper.InsertStringNVarCharParam("@followUpComment", update, pTiers.FollowUpComment);
+
+                if (pTiers.District != null)
+                    DatabaseHelper.InsertInt32Param("@districtId", update, pTiers.District.Id);
+                else
+                    DatabaseHelper.InsertInt32Param("@districtId", update, null);
+
+                if (pTiers.SecondaryDistrict != null)
+                    DatabaseHelper.InsertInt32Param("@secondaryDistrictId", update, pTiers.SecondaryDistrict.Id);
+                else
+                    DatabaseHelper.InsertInt32Param("@secondaryDistrictId", update, null);
+
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public int AddPerson(Person pPerson, SqlTransaction pSqlTransac)
+        {
+            int tiersId = _AddTiers(pPerson, pSqlTransac);
+
+            if (pPerson.PersonalBank != null)
+                pPerson.PersonalBank.Id = _AddBank(pPerson.PersonalBank, pSqlTransac);
+
+            if (pPerson.BusinessBank != null)
+                pPerson.BusinessBank.Id = _AddBank(pPerson.BusinessBank, pSqlTransac);
+
+            const string sqlText = @"INSERT INTO [Persons]([id], [first_name], [sex], [identification_data], [last_name], 
+                [birth_date], [household_head], [nb_of_dependents], [nb_of_children], [children_basic_education], 
+                [livestock_number], [livestock_type], [landplot_size], [home_size], [home_time_living_in], 
+                [capital_other_equipments], [activity_id], [experience], [nb_of_people], [monthly_income], 
+                [monthly_expenditure], [comments],[father_name],[mother_name],[image_path],[birth_place],[nationality],
+                [study_level],[SS],[CAF],[housing_situation],[handicapped],[professional_situation],
+                [professional_experience],[first_contact],[first_appointment],[family_situation],[povertylevel_childreneducation],
+                [povertylevel_economiceducation],[povertylevel_socialparticipation],[povertylevel_healthsituation],
+                [unemployment_months],[bank_situation],[personalBank_id],[businessBank_id]) 
+                VALUES(@id, @firstName, @sex, @identificationData, @lastName, @birthDate, @householdHead, 
+                @nbOfDependents, @nbOfChildren, @childrenBasicEducation, @livestockNumber, @livestockType, 
+                @landplotSize, @homeSize, @homeTimeLivingIn, @capitalOtherEquipments, @activityId, @experience, 
+                @nbOfPeople, @monthlyIncome, @monthlyExpenditure, @comments,@fatherName,@motherName,@imagePath
+                ,@BirthPlace,@Nationality,@StudyLevel,@SS,@CAF,@HousingSituation,@handicapped,
+                @professionalSituation,@professionalExperience,@firstContact,@firstAppointment,@family_situation,@povertyLevelChildrenEducation
+                ,@povertyLevelEconomicEducation,@povertyLevelSocialParticipation,@povertyLevelHealthSituation,
+                @unemploymentMonths,@bankSituation,@personalBankId,@businessBankId)";
+
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                
+                DatabaseHelper.InsertBooleanParam("@handicapped", insert, pPerson.Handicapped);
+                DatabaseHelper.InsertStringNVarCharParam("@BirthPlace", insert, pPerson.BirthPlace);
+                DatabaseHelper.InsertDateTimeParam("@firstContact", insert, pPerson.FirstContact);
+                DatabaseHelper.InsertDateTimeParam("@firstAppointment", insert, pPerson.FirstAppointment);
+                DatabaseHelper.InsertStringNVarCharParam("@professionalExperience", insert,
+                                                         pPerson.ProfessionalExperience);
+                DatabaseHelper.InsertStringNVarCharParam("@professionalSituation", insert, pPerson.ProfessionalSituation);
+                DatabaseHelper.InsertStringNVarCharParam("@Nationality", insert, pPerson.Nationality);
+                DatabaseHelper.InsertInt32Param("@unemploymentMonths", insert, pPerson.UnemploymentMonths);
+                DatabaseHelper.InsertStringNVarCharParam("@bankSituation", insert, pPerson.BankSituation);
+                DatabaseHelper.InsertStringNVarCharParam("@SS", insert, pPerson.SSNumber);
+                DatabaseHelper.InsertStringNVarCharParam("@StudyLevel", insert, pPerson.StudyLevel);
+                DatabaseHelper.InsertStringNVarCharParam("@CAF", insert, pPerson.CAFNumber);
+                DatabaseHelper.InsertStringNVarCharParam("@HousingSituation", insert, pPerson.HousingSituation);
+
+                DatabaseHelper.InsertInt32Param("@id", insert, tiersId);
+                DatabaseHelper.InsertInt32Param("@povertyLevelChildrenEducation", insert,
+                                                pPerson.PovertyLevelIndicators.ChildrenEducation);
+                DatabaseHelper.InsertInt32Param("@povertyLevelHealthSituation", insert,
+                                                pPerson.PovertyLevelIndicators.HealthSituation);
+                DatabaseHelper.InsertInt32Param("@povertyLevelSocialParticipation", insert,
+                                                pPerson.PovertyLevelIndicators.SocialParticipation);
+                DatabaseHelper.InsertInt32Param("@povertyLevelEconomicEducation", insert,
+                                                pPerson.PovertyLevelIndicators.EconomicEducation);
+
+                DatabaseHelper.InsertStringNVarCharParam("@firstName", insert, pPerson.FirstName);
+                DatabaseHelper.InsertCharParam("@sex", insert, pPerson.Sex);
+                DatabaseHelper.InsertStringNVarCharParam("@identificationData", insert, pPerson.IdentificationData);
+                DatabaseHelper.InsertStringNVarCharParam("@lastName", insert, pPerson.LastName);
+                DatabaseHelper.InsertDateTimeParam("@birthDate", insert, pPerson.DateOfBirth);
+                DatabaseHelper.InsertBooleanParam("@householdHead", insert, pPerson.HouseHoldHead);
+                DatabaseHelper.InsertInt32Param("@nbOfDependents", insert, pPerson.NbOfDependents);
+                DatabaseHelper.InsertInt32Param("@nbOfChildren", insert, pPerson.NbOfChildren);
+                DatabaseHelper.InsertInt32Param("@childrenBasicEducation", insert, pPerson.ChildrenBasicEducation);
+                DatabaseHelper.InsertInt32Param("@livestockNumber", insert, pPerson.LivestockNumber);
+                DatabaseHelper.InsertStringNVarCharParam("@livestockType", insert, pPerson.LivestockType);
+                DatabaseHelper.InsertDoubleParam("@landPlotSize", insert, pPerson.LandplotSize);
+                DatabaseHelper.InsertDoubleParam("@homeSize", insert, pPerson.HomeSize);
+                DatabaseHelper.InsertInt32Param("@homeTimeLivingIn", insert, pPerson.HomeTimeLivingIn);
+                DatabaseHelper.InsertStringNVarCharParam("@capitalOtherEquipments", insert,
+                                                         pPerson.CapitalOthersEquipments);
+                DatabaseHelper.InsertInt32Param("@experience", insert, pPerson.Experience);
+                DatabaseHelper.InsertInt32Param("@nbOfPeople", insert, pPerson.NbOfPeople);
+                DatabaseHelper.InsertMoneyParam("@monthlyIncome", insert, pPerson.MonthlyIncome);
+                DatabaseHelper.InsertMoneyParam("@monthlyExpenditure", insert, pPerson.MonthlyExpenditure);
+                DatabaseHelper.InsertStringNVarCharParam("@comments", insert, pPerson.Comments);
+                DatabaseHelper.InsertStringNVarCharParam("@fatherName", insert, pPerson.FatherName);
+                DatabaseHelper.InsertStringNVarCharParam("@motherName", insert, pPerson.MotherName);
+                DatabaseHelper.InsertStringNVarCharParam("@imagePath", insert, pPerson.Image);
+                DatabaseHelper.InsertStringNVarCharParam("@family_situation", insert, pPerson.FamilySituation);
+
+                if (pPerson.PersonalBank != null)
+                    DatabaseHelper.InsertInt32Param("@personalBankId", insert, pPerson.PersonalBank.Id);
+                else
+                    DatabaseHelper.InsertInt32Param("@personalBankId", insert, null);
+
+                if (pPerson.BusinessBank != null)
+                    DatabaseHelper.InsertInt32Param("@businessBankId", insert, pPerson.BusinessBank.Id);
+                else
+                    DatabaseHelper.InsertInt32Param("@businessBankId", insert, null);
+
+                if (pPerson.Activity != null)
+                    DatabaseHelper.InsertInt32Param("@activityId", insert, pPerson.Activity.Id);
+                else
+                    DatabaseHelper.InsertInt32Param("@activityId", insert, null);
+
+                insert.ExecuteNonQuery();
+            }
+            pPerson.Id = tiersId;
+            AddCustomizedFields(pPerson, pSqlTransac);
+
+            return tiersId;
+        }
+
+        public Person SelectPersonById(int pPersonId)
+        {
+            Person person = null;
+            int? districtId = null;
+            int? secondaryDistrictId = null;
+            int? activityId = null;
+            int? personalBankId = null;
+            int? businessBankId = null;
+
+            string sqlText = @"SELECT 
+                                 Tiers.id AS tiers_id, 
+                                 Tiers.client_type_code, 
+                                 Tiers.scoring, 
+                                 Tiers.loan_cycle,
+                                 Tiers.active, 
+                                 Tiers.bad_client, 
+                                 Tiers.other_org_name, 
+                                 Tiers.other_org_amount, 
+                                 Tiers.other_org_debts, 
+                                 Tiers.district_id, 
+                                 Tiers.city, 
+                                 Tiers.address, 
+                                 Tiers.secondary_district_id, 
+                                 Tiers.secondary_city, 
+                                 Tiers.secondary_address, 
+                                 Tiers.cash_input_voucher_number, 
+                                 Tiers.cash_output_voucher_number,
+                                 Tiers.status,
+                                 Tiers.home_phone, 
+                                 Tiers.personal_phone,
+                                 Tiers.secondary_home_phone,
+                                 Tiers.secondary_personal_phone,
+                                 Tiers.e_mail,
+                                 Tiers.secondary_e_mail,
+                                 Tiers.home_type,
+                                 Tiers.zipCode, 
+                                 Tiers.secondary_zipCode,
+                                 Tiers.secondary_homeType,
+                                 Tiers.other_org_comment,
+                                 Tiers.sponsor1,Tiers.sponsor2,
+                                 Tiers.sponsor1_comment,Tiers.sponsor2_comment,
+                                 Tiers.follow_up_comment,
+                                 Persons.first_name, 
+                                 Persons.sex, 
+                                 Persons.identification_data, 
+                                 Persons.last_name, 
+                                 Persons.birth_date, 
+                                 Persons.household_head, 
+                                 Persons.nb_of_dependents, 
+                                 Persons.nb_of_children, 
+                                 Persons.children_basic_education, 
+                                 Persons.livestock_number, 
+                                 Persons.livestock_type, 
+                                 Persons.landplot_size, 
+                                 Persons.home_time_living_in, 
+                                 Persons.home_size, 
+                                 Persons.capital_other_equipments, 
+                                 Persons.activity_id, 
+                                 Persons.experience, 
+                                 Persons.nb_of_people, 
+                                 Persons.monthly_income, 
+                                 Persons.monthly_expenditure, 
+                                 Persons.comments,
+                                 Persons.mother_name, 
+                                 Persons.image_path, 
+                                 Persons.father_name, 
+                                 Persons.birth_place, 
+                                 Persons.nationality,
+                                 Persons.unemployment_months,
+                                Persons.bank_situation,
+                                Persons.personalBank_id,
+                                Persons.businessBank_id, 
+                                Persons.study_level, 
+                                Persons.SS, 
+                                Persons.CAF, 
+                                Persons.housing_situation, 
+                                Persons.handicapped,
+                                Persons.professional_situation, 
+                                Persons.professional_experience,
+                                Persons.first_contact,
+                                Persons.first_appointment, 
+                                Persons.family_situation,
+                                Persons.povertylevel_childreneducation,
+                                Persons.povertylevel_economiceducation,
+                                Persons.povertylevel_socialparticipation,
+                                Persons.povertylevel_healthsituation,
+                                Persons.loan_officer_id      
+                            FROM Tiers 
+                            INNER JOIN Persons ON Tiers.id = Persons.id 
+                            WHERE Persons.id = @id";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pPersonId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    person = new Person
+                                 {
+                                     Id = DatabaseHelper.GetInt32("tiers_id", reader),
+                                     HomePhone = DatabaseHelper.GetString("home_phone", reader),
+                                     FirstContact = DatabaseHelper.GetNullAuthorizedDateTime("first_contact", reader),
+                                     FirstAppointment =
+                                         DatabaseHelper.GetNullAuthorizedDateTime("first_appointment", reader),
+                                     ProfessionalSituation = DatabaseHelper.GetString("professional_situation", reader),
+                                     ProfessionalExperience =
+                                         DatabaseHelper.GetString("professional_experience", reader),
+                                     FamilySituation = DatabaseHelper.GetString("family_situation", reader),
+                                     Handicapped = DatabaseHelper.GetBoolean("handicapped", reader),
+                                     Email = DatabaseHelper.GetString("e_mail", reader),
+                                     Status = (OClientStatus) DatabaseHelper.GetSmallInt("status", reader),
+                                     SecondaryEmail = DatabaseHelper.GetString("secondary_e_mail", reader),
+                                     HomeType = DatabaseHelper.GetString("home_type", reader),
+                                     SecondaryHomeType = DatabaseHelper.GetString("secondary_hometype", reader),
+                                     ZipCode = DatabaseHelper.GetString("zipCode", reader),
+                                     SecondaryZipCode = DatabaseHelper.GetString("secondary_zipCode", reader),
+                                     OtherOrgComment = DatabaseHelper.GetString("other_org_comment", reader),
+                                     PersonalPhone = DatabaseHelper.GetString("personal_phone", reader),
+                                     SecondaryHomePhone = DatabaseHelper.GetString("secondary_home_phone", reader),
+                                     SecondaryPersonalPhone =
+                                         DatabaseHelper.GetString("secondary_personal_phone", reader),
+                                     CashReceiptIn =
+                                         DatabaseHelper.GetNullAuthorizedInt32("cash_input_voucher_number", reader),
+                                     CashReceiptOut =
+                                         DatabaseHelper.GetNullAuthorizedInt32("cash_output_voucher_number", reader),
+                                     Type = DatabaseHelper.GetChar("client_type_code", reader) == 'I'
+                                                ? OClientTypes.Person
+                                                : DatabaseHelper.GetChar("client_type_code", reader) == 'G'
+                                                      ? OClientTypes.Group
+                                                      : OClientTypes.Corporate,
+                                     Scoring = DatabaseHelper.GetNullAuthorizedDouble("scoring", reader),
+                                     LoanCycle = DatabaseHelper.GetInt32("loan_cycle", reader),
+                                     Active = DatabaseHelper.GetBoolean("active", reader),
+                                     BadClient = DatabaseHelper.GetBoolean("bad_client", reader),
+                                     OtherOrgName = DatabaseHelper.GetString("other_org_name", reader),
+                                     OtherOrgAmount = DatabaseHelper.GetNullAuthorizedMoney("other_org_amount", reader),
+                                     OtherOrgDebts = DatabaseHelper.GetNullAuthorizedMoney("other_org_debts", reader),
+                                     City = DatabaseHelper.GetString("city", reader),
+                                     Address = DatabaseHelper.GetString("address", reader),
+                                     SecondaryCity = DatabaseHelper.GetString("secondary_city", reader),
+                                     SecondaryAddress = DatabaseHelper.GetString("secondary_address", reader),
+                                     FirstName = DatabaseHelper.GetString("first_name", reader),
+                                     Sex = DatabaseHelper.GetChar("sex", reader),
+                                     IdentificationData = DatabaseHelper.GetString("identification_data", reader),
+                                     DateOfBirth = DatabaseHelper.GetNullAuthorizedDateTime("birth_date", reader),
+                                     LastName = DatabaseHelper.GetString("last_name", reader),
+                                     HouseHoldHead = DatabaseHelper.GetBoolean("household_head", reader),
+                                     NbOfDependents = DatabaseHelper.GetNullAuthorizedInt32("nb_of_dependents", reader),
+                                     NbOfChildren = DatabaseHelper.GetNullAuthorizedInt32("nb_of_children", reader),
+                                     ChildrenBasicEducation =
+                                         DatabaseHelper.GetNullAuthorizedInt32("children_basic_education", reader),
+                                     LivestockNumber = DatabaseHelper.GetNullAuthorizedInt32("livestock_number", reader),
+                                     LivestockType = DatabaseHelper.GetString("livestock_type", reader),
+                                     LandplotSize = DatabaseHelper.GetNullAuthorizedDouble("landplot_size", reader),
+                                     HomeTimeLivingIn =
+                                         DatabaseHelper.GetNullAuthorizedInt32("home_time_living_in", reader),
+                                     HomeSize = DatabaseHelper.GetNullAuthorizedDouble("home_size", reader),
+                                     CapitalOthersEquipments =
+                                         DatabaseHelper.GetString("capital_other_equipments", reader),
+                                     Experience = DatabaseHelper.GetNullAuthorizedInt32("experience", reader),
+                                     NbOfPeople = DatabaseHelper.GetNullAuthorizedInt32("nb_of_people", reader),
+                                     MonthlyIncome = DatabaseHelper.GetNullAuthorizedMoney("monthly_income", reader),
+                                     MonthlyExpenditure =
+                                         DatabaseHelper.GetNullAuthorizedMoney("monthly_expenditure", reader),
+                                     Comments = DatabaseHelper.GetString("comments", reader),
+                                     FatherName = DatabaseHelper.GetString("father_name", reader),
+                                     MotherName = DatabaseHelper.GetString("mother_name", reader),
+                                     Image = DatabaseHelper.GetString("image_path", reader),
+                                     StudyLevel = DatabaseHelper.GetString("study_level", reader),
+                                     BirthPlace = DatabaseHelper.GetString("birth_place", reader),
+                                     Nationality = DatabaseHelper.GetString("nationality", reader),
+                                     UnemploymentMonths =
+                                         DatabaseHelper.GetNullAuthorizedInt32("unemployment_months", reader),
+                                     BankSituation = DatabaseHelper.GetString("bank_situation", reader),
+                                     SSNumber = DatabaseHelper.GetString("SS", reader),
+                                     CAFNumber = DatabaseHelper.GetString("CAF", reader),
+                                     HousingSituation = DatabaseHelper.GetString("housing_situation", reader),
+                                     FollowUpComment = DatabaseHelper.GetString("follow_up_comment", reader),
+                                     Sponsor1 = DatabaseHelper.GetString("sponsor1", reader),
+                                     Sponsor2 = DatabaseHelper.GetString("sponsor2", reader),
+                                     Sponsor1Comment = DatabaseHelper.GetString("sponsor1_comment", reader),
+                                     Sponsor2Comment = DatabaseHelper.GetString("sponsor2_comment", reader),
+                                     FavouriteLoanOfficerId = DatabaseHelper.GetNullAuthorizedInt32("loan_officer_id", reader),
+
+                             PovertyLevelIndicators =
+                                         {
+                                             ChildrenEducation = DatabaseHelper.GetInt32("povertylevel_childreneducation", reader),
+                                             EconomicEducation = DatabaseHelper.GetInt32("povertylevel_economiceducation", reader),
+                                             HealthSituation = DatabaseHelper.GetInt32("povertylevel_socialparticipation", reader),
+                                             SocialParticipation = DatabaseHelper.GetInt32("povertylevel_healthsituation", reader)
+                                         }
+                         };
+                    
+                    personalBankId = DatabaseHelper.GetNullAuthorizedInt32("personalBank_id", reader);
+                    businessBankId = DatabaseHelper.GetNullAuthorizedInt32("businessBank_id", reader);
+                    secondaryDistrictId = DatabaseHelper.GetNullAuthorizedInt32("secondary_district_id", reader);
+                    activityId = DatabaseHelper.GetNullAuthorizedInt32("activity_id", reader);
+                    districtId = DatabaseHelper.GetNullAuthorizedInt32("district_id", reader);
+                    reader.Close();
+                    UserManager userManager = new UserManager(User.CurrentUser);
+                    if (person.FavouriteLoanOfficerId.HasValue)
+                        person.FavouriteLoanOfficer = userManager.SelectUser((int)person.FavouriteLoanOfficerId, true);
+                }
+            }
+            if (activityId.HasValue)
+                person.Activity = _doam.SelectEconomicActivity(activityId.Value);
+
+            if (districtId.HasValue)
+                person.District = _locations.SelectDistrictById(districtId.Value);
+
+            if (secondaryDistrictId.HasValue)
+                person.SecondaryDistrict = _locations.SelectDistrictById(secondaryDistrictId.Value);
+
+            if (personalBankId.HasValue)
+                person.PersonalBank = _SelectBank(personalBankId.Value);
+
+            if (businessBankId.HasValue)
+                person.BusinessBank = _SelectBank(businessBankId.Value);
+
+            if (person != null)
+            {
+                person.CustomizableFields = SelectCustomizedFieds(person.Id);
+                if (_projectManager != null)
+                    person.AddProjects(_projectManager.SelectProjectsByClientId(person.Id));
+                if (_savingManager != null)
+                    person.AddSavings(_savingManager.SelectSavings(person.Id));
+            }
+            return person;
+        }
+
+        public Person SelectPersonByName(string name)
+        {
+            const string query = @"SELECT id FROM dbo.Persons WHERE first_name + ' ' + last_name = @name";
+            SqlCommand cmd = new SqlCommand(query, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", cmd, name);
+            int id;
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (!reader.HasRows) return null;
+                reader.Read();
+                id = DatabaseHelper.GetInt32("id", reader);
+            }
+            return SelectPersonById(id);
+        }
+
+        public void UpdatePerson(Person person, SqlTransaction sqlTransac)
+        {
+            UpdateTiers(person, sqlTransac);
+
+            if (person.PersonalBank != null)
+            {
+                if (person.PersonalBank.Id == 0)
+                    person.PersonalBank.Id = _AddBank(person.PersonalBank, sqlTransac);
+                else
+                    _UpdateBank(person.PersonalBank, sqlTransac);
+            }
+
+            if (person.BusinessBank != null)
+            {
+                if (person.BusinessBank.Id == 0)
+                    person.BusinessBank.Id = _AddBank(person.BusinessBank, sqlTransac);
+                else
+                    _UpdateBank(person.BusinessBank, sqlTransac);
+            }
+
+            const string sqlText = @"UPDATE [Persons] SET [first_name]=@firstName, [sex]=@sex,[identification_data]=@identificationData,
+                [last_name]=@lastName, [birth_date]=@birthDate, [household_head]=@householdHead, [nb_of_dependents]=@nbOfDependents, 
+                [nb_of_children]=@nbOfChildren, [children_basic_education]=@childrenBasicEducation, [livestock_number]=@livestockNumber, 
+                [livestock_type]=@livestockType, [landplot_size]=@landPlotSize, [home_size]=@homeSize, [home_time_living_in]=@homeTimeLivingIn, 
+                [capital_other_equipments]=@capitalOtherEquipments, [activity_id]=@activityId, [experience]=@experience, [nb_of_people]=@nbOfPeople, 
+                [monthly_income]=@monthlyIncome, [monthly_expenditure]=@monthlyExpenditure, [comments]=@comments,
+                [father_name]=@fathername,[mother_name]=@mothername, [image_path]=@image, [study_level] = @studyLevel, [birth_place] = @birthPlace, 
+                [nationality] = @nationality, 
+                [SS] = @SS,[CAF] = @CAF, [housing_situation] = @housing_situation,[unemployment_months] = @UnemploymentMonths,
+                [bank_situation] = @bankSituation, [handicapped] = @handicapped, [professional_situation] = @ProfessionalSituation, 
+                [professional_experience] = @ProfessionalExperience, [first_contact] = @firstContact, [first_appointment] = @firstAppointment,
+                [family_situation] = @family_situation,[personalBank_id] = @personalBankId,
+                [businessBank_id] = @businessBankId,[povertylevel_healthsituation]=@povertyLevelHealthSituation,
+                [povertylevel_childreneducation]=@povertyLevelChildrenEducation,
+                [povertylevel_socialparticipation]=@povertyLevelSocialParticipation,
+                [povertylevel_economiceducation]= @povertyLevelEconomicEducation   
+                WHERE id = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            var formatInfo = new NameFormatInfo();
+            var settings = ApplicationSettings.GetInstance("");
+            var fnFormat = @"{0:" + settings.FirstNameFormat + @"}";
+            var lnFormat = @"{0:" + settings.LastNameFormat + @"}";
+            person.FirstName = string.Format(formatInfo, fnFormat, person.FirstName);
+            person.LastName = string.Format(formatInfo, lnFormat, person.LastName);
+
+            DatabaseHelper.InsertBooleanParam("@handicapped", update, person.Handicapped);
+            DatabaseHelper.InsertStringNVarCharParam("@studyLevel", update, person.StudyLevel);
+            DatabaseHelper.InsertDateTimeParam("@firstContact", update, person.FirstContact);
+            DatabaseHelper.InsertDateTimeParam("@firstAppointment", update, person.FirstAppointment);
+            DatabaseHelper.InsertStringNVarCharParam("@ProfessionalSituation", update, person.ProfessionalSituation);
+            DatabaseHelper.InsertStringNVarCharParam("@ProfessionalExperience", update, person.ProfessionalExperience);
+            DatabaseHelper.InsertStringNVarCharParam("@birthPlace", update, person.BirthPlace);
+            DatabaseHelper.InsertStringNVarCharParam("@nationality", update, person.Nationality);
+            DatabaseHelper.InsertStringNVarCharParam("@bankSituation", update, person.BankSituation);
+            DatabaseHelper.InsertInt32Param("@UnemploymentMonths", update, person.UnemploymentMonths);
+            DatabaseHelper.InsertStringNVarCharParam("@SS", update, person.SSNumber);
+            DatabaseHelper.InsertStringNVarCharParam("@CAF", update, person.CAFNumber);
+            DatabaseHelper.InsertStringNVarCharParam("@housing_situation", update, person.HousingSituation);
+            DatabaseHelper.InsertInt32Param("@id", update, person.Id);
+            DatabaseHelper.InsertStringNVarCharParam("@firstName", update, person.FirstName);
+            DatabaseHelper.InsertCharParam("@sex", update, person.Sex);
+            DatabaseHelper.InsertStringNVarCharParam("@identificationData", update, person.IdentificationData);
+            DatabaseHelper.InsertStringNVarCharParam("@lastName", update, person.LastName);
+            DatabaseHelper.InsertDateTimeParam("@birthDate", update, person.DateOfBirth);
+            DatabaseHelper.InsertBooleanParam("@householdHead", update, person.HouseHoldHead);
+            DatabaseHelper.InsertInt32Param("@nbOfDependents", update, person.NbOfDependents);
+            DatabaseHelper.InsertInt32Param("@nbOfChildren", update, person.NbOfChildren);
+            DatabaseHelper.InsertInt32Param("@childrenBasicEducation", update, person.ChildrenBasicEducation);
+            DatabaseHelper.InsertInt32Param("@livestockNumber", update, person.LivestockNumber);
+            DatabaseHelper.InsertStringNVarCharParam("@livestockType", update, person.LivestockType);
+            DatabaseHelper.InsertDoubleParam("@landPlotSize", update, person.LandplotSize);
+            DatabaseHelper.InsertDoubleParam("@homeSize", update, person.HomeSize);
+            DatabaseHelper.InsertInt32Param("@homeTimeLivingIn", update, person.HomeTimeLivingIn);
+            DatabaseHelper.InsertStringNVarCharParam("@capitalOtherEquipments", update, person.CapitalOthersEquipments);
+            DatabaseHelper.InsertInt32Param("@experience", update, person.Experience);
+            DatabaseHelper.InsertInt32Param("@nbOfPeople", update, person.NbOfPeople);
+            DatabaseHelper.InsertMoneyParam("@monthlyIncome", update, person.MonthlyIncome);
+            DatabaseHelper.InsertMoneyParam("@monthlyExpenditure", update, person.MonthlyExpenditure);
+            DatabaseHelper.InsertStringNVarCharParam("@comments", update, person.Comments);
+            DatabaseHelper.InsertStringNVarCharParam("@fathername", update, person.FatherName);
+            DatabaseHelper.InsertStringNVarCharParam("@mothername", update, person.MotherName);
+            DatabaseHelper.InsertStringNVarCharParam("@image", update, person.Image);
+            DatabaseHelper.InsertStringNVarCharParam("@family_situation", update, person.FamilySituation);
+
+            DatabaseHelper.InsertInt32Param("@povertyLevelChildrenEducation", update, person.PovertyLevelIndicators.ChildrenEducation);
+            DatabaseHelper.InsertInt32Param("@povertyLevelHealthSituation", update, person.PovertyLevelIndicators.HealthSituation);
+            DatabaseHelper.InsertInt32Param("@povertyLevelSocialParticipation", update, person.PovertyLevelIndicators.SocialParticipation);
+            DatabaseHelper.InsertInt32Param("@povertyLevelEconomicEducation", update, person.PovertyLevelIndicators.EconomicEducation);
+
+            if (person.PersonalBank != null)
+                DatabaseHelper.InsertInt32Param("@personalBankId", update, person.PersonalBank.Id);
+            else
+                DatabaseHelper.InsertInt32Param("@personalBankId", update, null);
+
+            if (person.BusinessBank != null)
+                DatabaseHelper.InsertInt32Param("@businessBankId", update, person.BusinessBank.Id);
+            else
+                DatabaseHelper.InsertInt32Param("@businessBankId", update, null);
+
+            if (person.Activity != null)
+                DatabaseHelper.InsertInt32Param("@activityId", update, person.Activity.Id);
+            else
+                DatabaseHelper.InsertInt32Param("@activityId", update, null);
+
+            _UpdateCustomizableFields(person, sqlTransac);
+
+            update.ExecuteNonQuery();
+        }
+
+        private void _UpdateBank(Bank pBank, SqlTransaction pTransac)
+        {
+            const string sqlText = @"UPDATE [Banks] SET [name] = @name, [address] = @address, [BIC] = @BIC, [IBAN1] = @IBAN1, [IBAN2] = @IBAN2,
+                                     [customIBAN1] = @customIBAN1, [customIBAN2] = @customIBAN2
+                                     WHERE id = @id";
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pTransac);
+            DatabaseHelper.InsertInt32Param("@id", update, pBank.Id);
+
+            DatabaseHelper.InsertStringNVarCharParam("@name", update, pBank.Name);
+            DatabaseHelper.InsertStringNVarCharParam("@address", update, pBank.Address);
+            DatabaseHelper.InsertStringNVarCharParam("@BIC", update, pBank.BIC);
+            DatabaseHelper.InsertStringNVarCharParam("@IBAN1", update, pBank.IBAN1);
+            DatabaseHelper.InsertStringNVarCharParam("@IBAN2", update, pBank.IBAN2);
+            DatabaseHelper.InsertBooleanParam("@customIBAN1", update, pBank.UseCustomIBAN1);
+            DatabaseHelper.InsertBooleanParam("@customIBAN2", update, pBank.UseCustomIBAN2);
+            update.ExecuteScalar();
+        }
+
+        private void _UpdateCustomizableFields(Person person, SqlTransaction transac)
+        {
+            const string sqlText = "DELETE FROM [PersonCustomizableFields] WHERE person_id = @id";
+            var delete = new SqlCommand(sqlText, DefaultConnection, transac);
+            DatabaseHelper.InsertInt32Param("@id", delete, person.Id);
+            delete.ExecuteNonQuery();
+
+            AddCustomizedFields(person, transac);
+        }
+
+        private int? SelectCurrentlyGroupIdForAPersonId(int personId, SqlTransaction transac)
+        {
+            int? result = null;
+            string sqlText = @"SELECT 
+                                 [person_id], 
+                                 [group_id], 
+                                 [is_leader], 
+                                 [currently_in] 
+                               FROM [PersonGroupBelonging] 
+                               WHERE person_id = @id AND currently_in = 1";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection, transac);
+            DatabaseHelper.InsertInt32Param("@id", select, personId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                if (reader.HasRows)
+                {
+                    result = DatabaseHelper.GetNullAuthorizedInt32("group_id", reader);
+                }
+            }
+            return result;
+        }
+
+        public bool IsLeader(int personId)
+        {
+            bool status = false;
+            string sqlText = @"SELECT [is_leader] 
+                            FROM [PersonGroupBelonging] 
+                            INNER JOIN dbo.Groups ON dbo.PersonGroupBelonging.group_id = dbo.Groups.id 
+                            INNER JOIN dbo.Tiers ON dbo.Groups.id = dbo.Tiers.id 
+                            WHERE person_id = @id 
+                              AND currently_in = 1";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, personId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                if (reader.HasRows)
+                {
+                    status = DatabaseHelper.GetBoolean("is_leader", reader);
+                }
+            }
+            return status;
+        }
+
+        public bool IsLeaderIsActive(int personId)
+        {
+            bool status = false;
+            string sqlText = @"SELECT [is_leader] 
+                            FROM [PersonGroupBelonging] 
+                            INNER JOIN dbo.Groups ON dbo.PersonGroupBelonging.group_id = dbo.Groups.id 
+                            INNER JOIN dbo.Tiers ON dbo.Groups.id = dbo.Tiers.id 
+                            WHERE person_id = @id 
+                              AND currently_in = 1
+                              AND Tiers.active = 1";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, personId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                if (reader.HasRows)
+                {
+                    status = DatabaseHelper.GetBoolean("is_leader", reader);
+                }
+            }
+            return status;
+        }
+
+        public int AddNewGroup(Group group, SqlTransaction sqlTransac)
+        {
+            int tiersId = _AddTiers(group, sqlTransac);
+
+            string sqlText = @"INSERT INTO [Groups]([id], [name], [establishment_date], [comments], [meeting_day]) 
+                               VALUES (@id, @name, @establishmentDate, @comments, @meeting_day)";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@id", insert, tiersId);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, group.Name);
+            DatabaseHelper.InsertDateTimeParam("@establishmentDate", insert, group.EstablishmentDate);
+            DatabaseHelper.InsertStringNVarCharParam("@comments", insert, group.Comments);
+            if (group.MeetingDay.HasValue)
+            {
+                DatabaseHelper.InsertInt32Param("@meeting_day", insert, (int)group.MeetingDay);
+            }
+            else
+            {
+                DatabaseHelper.InsertInt32Param("@meeting_day", insert, null);
+            }
+            group.Id = tiersId;
+            insert.ExecuteNonQuery();
+            
+            foreach (Member member in group.Members)
+            {
+                int? groupId = SelectCurrentlyGroupIdForAPersonId(member.Tiers.Id, sqlTransac);
+                if (groupId.HasValue)
+                    UpdatePersonFromGroup(member.Tiers.Id, groupId.Value, sqlTransac);
+
+                bool leader = false;
+
+                if ((member).Equals(group.Leader))
+                    leader = true;
+
+                AddMemberToGroup(member, group, leader, sqlTransac);
+                UpdatePerson((Person)member.Tiers, sqlTransac);
+            }
+            return tiersId;
+        }
+
+        private void AddMemberToGroup(Member pMember, Group group, bool leader, SqlTransaction sqlTransac)
+        {
+            string sqlText = @"INSERT INTO [PersonGroupBelonging]
+                        ([person_id], [group_id], [is_leader],[currently_in],[joined_date],[left_date]) 
+                        VALUES
+                        (@personId, @groupId, @isLeader, @currentlyIn, @joinedDate,@leftDate)";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@personId", insert, pMember.Tiers.Id);
+            DatabaseHelper.InsertInt32Param("@groupId", insert, group.Id);
+            DatabaseHelper.InsertBooleanParam("@isLeader", insert, leader);
+            DatabaseHelper.InsertBooleanParam("@currentlyIn", insert, true);
+            DatabaseHelper.InsertDateTimeParam("@joinedDate", insert, TimeProvider.Today);
+            DatabaseHelper.InsertNullValue("@leftDate", insert);
+
+            insert.ExecuteNonQuery();
+        }
+
+        private void UpdatePersonToGroup(Member pMember, int groupId, bool leader, SqlTransaction sqlTransac)
+        {
+            string sqlText = @"UPDATE [PersonGroupBelonging] 
+                               SET [is_leader]= @isLeader,
+                                 [currently_in]= @currentlyIn,
+                                 [left_date] = @leftDate
+                               WHERE [person_id]= @personId
+                               AND [group_id]= @groupId";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@personId", update, pMember.Tiers.Id);
+            DatabaseHelper.InsertInt32Param("@groupId", update, groupId);
+            DatabaseHelper.InsertBooleanParam("@isLeader", update, leader);
+            DatabaseHelper.InsertNullValue("@leftDate", update);
+            DatabaseHelper.InsertBooleanParam("@currentlyIn", update, true);
+
+            update.ExecuteNonQuery();
+        }
+
+        public void UpdatePersonFromGroup(int personId, int groupId, SqlTransaction sqlTransac)
+        {
+            string sqlText = @"UPDATE [PersonGroupBelonging] 
+                               SET 
+                                 currently_in = 0, 
+                                 left_date = @leftDate 
+                               WHERE group_id = @groupId 
+                               AND person_id = @personId";
+
+            SqlCommand delete = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@groupId", delete, groupId);
+            DatabaseHelper.InsertInt32Param("@personId", delete, personId);
+            DatabaseHelper.InsertDateTimeParam("@leftDate", delete, TimeProvider.Today);
+
+            delete.ExecuteNonQuery();
+
+            sqlText = "UPDATE [Tiers] SET active = 0 WHERE id = @personId";
+
+            delete = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@personId", delete, personId);
+            
+            delete.ExecuteNonQuery();
+        }
+
+        private void DeleteVillageMember(int village_id, int person_id, SqlTransaction t)
+        {
+            const string sql = @"UPDATE VillagesPersons 
+                                SET left_date = @left_date 
+                                WHERE village_id = @village_id 
+                                AND person_id = @person_id";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection, t);
+            DatabaseHelper.InsertInt32Param("@village_id", cmd, village_id);
+            DatabaseHelper.InsertInt32Param("@person_id", cmd, person_id);
+            DatabaseHelper.InsertDateTimeParam("@left_date", cmd, TimeProvider.Now);
+            cmd.ExecuteNonQuery();
+        }
+
+        public List<Group> SelectAllGroupsWhereSelectedPersonIsAMember(int pPersonId)
+        {
+            List<Group> list = new List<Group>();
+            const string sqlQuery = @"SELECT Groups.id 
+                                    FROM Groups,PersonGroupBelonging 
+                                    WHERE Groups.id = PersonGroupBelonging.group_id
+                                    AND currently_in = 1 
+                                    AND PersonGroupBelonging.person_id = @personId";
+
+            using (SqlCommand select = new SqlCommand(sqlQuery, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@personId", select, pPersonId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            Group group = new Group();
+                            group.Id = DatabaseHelper.GetInt32("id", reader);
+                            list.Add(group);
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < list.Count; i++)
+            {
+                list[i] = SelectGroupById(list[i].Id);
+            }
+            return list;
+        }
+
+        private Group SelectGroup(int pGroupId)
+        {
+            Group group = null;
+            int? districtId = null;
+            int? secondaryDistrictId = null;
+            int? activityId = null;
+
+            const string quiry = @"SELECT 
+                Tiers.id AS tiers_id, 
+                Tiers.client_type_code, 
+                Tiers.scoring, 
+                Tiers.loan_cycle, 
+                Tiers.active,
+                Tiers.bad_client, 
+                Tiers.other_org_name, 
+                Tiers.other_org_amount, 
+                Tiers.other_org_debts, 
+                Tiers.district_id, 
+                Tiers.city, 
+                Tiers.address, 
+                Tiers.secondary_district_id, 
+                Tiers.secondary_city, 
+                Tiers.secondary_address,
+                Tiers.status, 
+                Tiers.home_phone,
+                Tiers.personal_phone,
+                Tiers.secondary_home_phone,
+                Tiers.secondary_personal_phone,
+                Tiers.cash_input_voucher_number, 
+                Tiers.cash_output_voucher_number,
+                Tiers.e_mail,
+                Tiers.secondary_e_mail,
+                Tiers.home_type,
+                Tiers.zipCode,
+                Tiers.secondary_zipCode,
+                Tiers.secondary_homeType, 
+                Tiers.other_org_comment,
+                Tiers.sponsor1,
+                Tiers.sponsor2,
+                Tiers.sponsor1_comment,
+                Tiers.sponsor2_comment,
+                Tiers.follow_up_comment,
+                Groups.name, 
+                Groups.establishment_date, 
+                Groups.comments,
+                Groups.meeting_day,
+                eah.economic_activity_id,
+                Groups.loan_officer_id 
+                FROM Tiers 
+                INNER JOIN Groups ON Tiers.id = Groups.id
+                LEFT JOIN EconomicActivityLoanHistory eah ON eah.group_id = Groups.id 
+                WHERE Groups.id = @id";
+
+            SqlCommand commandSelectGroup = new SqlCommand(quiry, DefaultConnection);
+
+            DatabaseHelper.InsertInt32Param("@id", commandSelectGroup, pGroupId);
+
+            using (SqlDataReader readerSelectGroup = commandSelectGroup.ExecuteReader())
+            {
+                if (readerSelectGroup != null)
+                {
+                    if (readerSelectGroup.HasRows)
+                    {
+                        readerSelectGroup.Read();
+
+                        group = new Group
+                                    {
+                                        Id = DatabaseHelper.GetInt32("tiers_id", readerSelectGroup),
+                                        HomeType = DatabaseHelper.GetString("home_type", readerSelectGroup),
+                                        SecondaryHomeType = DatabaseHelper.GetString("secondary_hometype", readerSelectGroup),
+                                        ZipCode = DatabaseHelper.GetString("zipCode", readerSelectGroup),
+                                        SecondaryZipCode = DatabaseHelper.GetString("secondary_zipCode", readerSelectGroup),
+
+                                        HomePhone = DatabaseHelper.GetString("home_phone", readerSelectGroup),
+                                        PersonalPhone = DatabaseHelper.GetString("personal_phone", readerSelectGroup),
+                                        SecondaryHomePhone = DatabaseHelper.GetString("secondary_home_phone", readerSelectGroup),
+                                        SecondaryPersonalPhone = DatabaseHelper.GetString("secondary_personal_phone", readerSelectGroup),
+                                        Status = ((OClientStatus)DatabaseHelper.GetSmallInt("status", readerSelectGroup)),
+                                        CashReceiptIn = DatabaseHelper.GetNullAuthorizedInt32("cash_input_voucher_number",
+                                                                                  readerSelectGroup),
+                                        CashReceiptOut = DatabaseHelper.GetNullAuthorizedInt32("cash_output_voucher_number",
+                                                                                  readerSelectGroup),
+                                        Type = DatabaseHelper.GetChar("client_type_code", readerSelectGroup) == 'I'
+                                            ? OClientTypes.Person
+                                            : DatabaseHelper.GetChar("client_type_code", readerSelectGroup) == 'G'
+                                                  ? OClientTypes.Group
+                                                  : OClientTypes.Corporate,
+                                        Scoring = DatabaseHelper.GetNullAuthorizedDouble("scoring", readerSelectGroup),
+                                        LoanCycle = DatabaseHelper.GetInt32("loan_cycle", readerSelectGroup),
+                                        Active = DatabaseHelper.GetBoolean("active", readerSelectGroup),
+                                        BadClient = DatabaseHelper.GetBoolean("bad_client", readerSelectGroup),
+                                        OtherOrgName = DatabaseHelper.GetString("other_org_name", readerSelectGroup),
+                                        OtherOrgAmount =
+                                            DatabaseHelper.GetNullAuthorizedMoney("other_org_amount", readerSelectGroup),
+                                        OtherOrgDebts =
+                                            DatabaseHelper.GetNullAuthorizedMoney("other_org_debts", readerSelectGroup),
+                                        OtherOrgComment =
+                                            DatabaseHelper.GetString("other_org_comment", readerSelectGroup),
+                                        Comments = DatabaseHelper.GetString("comments", readerSelectGroup),
+                                        Email = DatabaseHelper.GetString("e_mail", readerSelectGroup),
+                                        SecondaryEmail = DatabaseHelper.GetString("secondary_e_mail", readerSelectGroup),
+                                        MeetingDay = (DayOfWeek?) DatabaseHelper.GetNullAuthorizedInt32("meeting_day", readerSelectGroup),
+                                        FavouriteLoanOfficerId = DatabaseHelper.GetNullAuthorizedInt32("loan_officer_id", readerSelectGroup)
+                                    };
+                        districtId = DatabaseHelper.GetNullAuthorizedInt32("district_id", readerSelectGroup);
+
+                        group.City = DatabaseHelper.GetString("city", readerSelectGroup);
+                        group.Address = DatabaseHelper.GetString("address", readerSelectGroup);
+                        secondaryDistrictId = DatabaseHelper.GetNullAuthorizedInt32("secondary_district_id",
+                                                                                    readerSelectGroup);
+                        group.SecondaryCity = DatabaseHelper.GetString("secondary_city", readerSelectGroup);
+                        group.SecondaryAddress = DatabaseHelper.GetString("secondary_address", readerSelectGroup);
+                        group.Name = DatabaseHelper.GetString("name", readerSelectGroup);
+                        group.EstablishmentDate = DatabaseHelper.GetNullAuthorizedDateTime("establishment_date",
+                                                                                           readerSelectGroup);
+                        group.FollowUpComment = DatabaseHelper.GetString("follow_up_comment", readerSelectGroup);
+                        group.Sponsor1 = DatabaseHelper.GetString("sponsor1", readerSelectGroup);
+                        group.Sponsor2 = DatabaseHelper.GetString("sponsor2", readerSelectGroup);
+                        group.Sponsor1Comment = DatabaseHelper.GetString("sponsor1_comment", readerSelectGroup);
+                        group.Sponsor2Comment = DatabaseHelper.GetString("sponsor2_comment", readerSelectGroup);
+
+                        activityId = DatabaseHelper.GetNullAuthorizedInt32("economic_activity_id", readerSelectGroup);
+                        readerSelectGroup.Close();
+                        UserManager userManager = new UserManager(User.CurrentUser);
+                        if (group.FavouriteLoanOfficerId.HasValue)
+                            group.FavouriteLoanOfficer = userManager.SelectUser((int)group.FavouriteLoanOfficerId, true);
+                    }
+                }
+            }
+
+            if (districtId.HasValue)
+                group.District = _locations.SelectDistrictById(districtId.Value);
+
+            if (secondaryDistrictId.HasValue)
+                group.SecondaryDistrict = _locations.SelectDistrictById(secondaryDistrictId.Value);
+
+            if (group != null)
+            {
+                if (_projectManager != null)
+                    group.AddProjects(_projectManager.SelectProjectsByClientId(group.Id));
+                List<Member> idsList = SelectPersonIdsByGroupId(group.Id, null, true);
+
+                if (_savingManager != null)
+                    group.AddSavings(_savingManager.SelectSavings(group.Id));
+
+                foreach (Member member in idsList)
+                {
+                    member.Tiers = SelectPersonById(member.Tiers.Id);
+                    if (IsLeader(member.Tiers.Id))
+                        group.Leader = member;
+
+                    else
+                        group.AddMember(member);
+                }
+
+                if(activityId.HasValue)
+                    group.Activity = _doam.SelectEconomicActivity((int) activityId);
+            }
+            return group;
+        }
+
+        public Group SelectGroupById(int groupId)
+        {
+            return SelectGroup(groupId);
+        }
+
+        public Village SelectVillageById(int id)
+        {
+            Village village = null;
+            int? districtId = null;
+            int loanOfficerId = 0;
+
+            const string quiry = @"
+                SELECT Tiers.id AS tiers_id, 
+                        Tiers.client_type_code, 
+                        Tiers.scoring, 
+                        Tiers.loan_cycle, 
+                        Tiers.active,
+                        Tiers.bad_client, 
+                        Tiers.district_id, 
+                        Tiers.city, 
+                        Tiers.address, 
+                        Tiers.status, 
+                        Tiers.zipCode,
+                        Villages.name, 
+                        Villages.establishment_date, 
+                        Villages.loan_officer,
+                        Villages.meeting_day
+                FROM Tiers 
+                INNER JOIN Villages ON Tiers.id = Villages.id 
+                WHERE Villages.id = @id";
+
+            SqlCommand commandSelectGroup = new SqlCommand(quiry, DefaultConnection);
+
+            DatabaseHelper.InsertInt32Param("@id", commandSelectGroup, id);
+
+            using (SqlDataReader reader = commandSelectGroup.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+
+                        village = new Village
+                        {
+                            Id = DatabaseHelper.GetInt32("tiers_id", reader),
+
+                            ZipCode = DatabaseHelper.GetString("zipCode", reader),
+                            Status =
+                                ((OClientStatus)DatabaseHelper.GetSmallInt("status", reader)),
+                            Type = DatabaseHelper.GetChar("client_type_code", reader) == 'I'
+                                            ? OClientTypes.Person
+                                            : DatabaseHelper.GetChar("client_type_code", reader) == 'G'
+                                                  ? OClientTypes.Group
+                                                  : OClientTypes.Corporate,
+                            Scoring = DatabaseHelper.GetNullAuthorizedDouble("scoring", reader),
+                            LoanCycle = DatabaseHelper.GetInt32("loan_cycle", reader),
+                            Active = DatabaseHelper.GetBoolean("active", reader),
+                            BadClient = DatabaseHelper.GetBoolean("bad_client", reader)
+                        };
+                        districtId = DatabaseHelper.GetNullAuthorizedInt32("district_id", reader);
+                        loanOfficerId = DatabaseHelper.GetInt32("loan_officer", reader);
+
+                        village.MeetingDay = (DayOfWeek?) DatabaseHelper.GetNullAuthorizedInt32("meeting_day", reader);
+                        village.City = DatabaseHelper.GetString("city", reader);
+                        village.Address = DatabaseHelper.GetString("address", reader);
+                        village.Name = DatabaseHelper.GetString("name", reader);
+                        village.EstablishmentDate = DatabaseHelper.GetNullAuthorizedDateTime("establishment_date", reader);
+                    }
+                    reader.Close();
+                }
+            }
+
+            if (village != null)
+            {
+                village.LoanOfficer = _userManager.SelectUser(loanOfficerId, true);
+                if (districtId.HasValue)
+                    village.District = _locations.SelectDistrictById(districtId.Value);
+
+                List<VillageMember> members = SelectVillageMembersByVillageId(village.Id, null);
+
+                foreach (VillageMember member in members)
+                {
+                    member.Tiers = SelectPersonById(member.Tiers.Id);
+                    village.AddMember(member);
+                }
+            }
+
+            return village;
+        }
+
+        private List<Member> SelectPersonIdsByGroupId(int groupId, SqlTransaction transac, bool? currentlyIn)
+        {
+            List<Member> idsList = new List<Member>();
+
+            string selectPersonIdsText = @"SELECT person_id,
+                                             is_leader,
+                                             currently_in,
+                                             joined_date,
+                                             left_date 
+                                           FROM [PersonGroupBelonging] 
+                                           WHERE group_id = @id";
+
+            if (currentlyIn.HasValue)
+            {
+                if (currentlyIn.Value)
+                {
+                    selectPersonIdsText += " AND currently_in = 1";
+                }
+                else
+                {
+                    selectPersonIdsText += " AND currently_in = 0";
+                }
+            }
+
+            SqlCommand selectPersonIds = new SqlCommand(selectPersonIdsText, DefaultConnection, transac);
+            DatabaseHelper.InsertInt32Param("@id", selectPersonIds, groupId);
+
+            using (SqlDataReader personIdsReader = selectPersonIds.ExecuteReader())
+            {
+                if (personIdsReader != null)
+                {
+                    while (personIdsReader.Read())
+                    {
+                        Member member = new Member
+                        {
+                            Tiers = { Id = DatabaseHelper.GetInt32("person_id", personIdsReader) },
+                            CurrentlyIn = DatabaseHelper.GetBoolean("currently_in", personIdsReader),
+                            IsLeader = DatabaseHelper.GetBoolean("is_leader", personIdsReader),
+                            JoinedDate = DatabaseHelper.GetDateTime("joined_date", personIdsReader),
+                            LeftDate = DatabaseHelper.GetNullAuthorizedDateTime("left_date", personIdsReader),
+                        };
+                        idsList.Add(member);
+                    }
+                }
+            }
+            return idsList;
+        }
+
+        private List<VillageMember> SelectVillageMembersByVillageId(int id, SqlTransaction t)
+        {
+            List<VillageMember> retval = new List<VillageMember>();
+            const string sql = @"SELECT person_id
+                                , joined_date
+                                , left_date 
+                                FROM VillagesPersons 
+                                WHERE village_id = @id";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection, t);
+            DatabaseHelper.InsertInt32Param("@id", cmd, id);
+            SqlDataReader reader = cmd.ExecuteReader();
+            if (reader != null)
+            {
+                while (reader.Read())
+                {
+                    VillageMember member = new VillageMember
+                       {
+                           Tiers = { Id = DatabaseHelper.GetInt32("person_id", reader) },
+                           JoinedDate = DatabaseHelper.GetDateTime("joined_date", reader),
+                           LeftDate = DatabaseHelper.GetNullAuthorizedDateTime("left_date", reader)
+                       };
+                    retval.Add(member);
+                }
+                reader.Close();
+            }
+            return retval;
+        }
+
+        public List<Member> SelectHistoryPersonsInAGroup(int groupId)
+        {
+            List<Member> idList = SelectPersonIdsByGroupId(groupId, null, false);
+
+            foreach (Member entry in idList)
+            {
+                entry.Tiers = SelectPersonById(entry.Tiers.Id);
+            }
+            return idList;
+        }
+
+        public List<Member> SelectHistoryPersonsInAGroup(int pGroupId, int pContractId)
+        {
+            List<Member> members = new List<Member>();
+
+            string sqlText = @"SELECT 
+                                  p.person_id,
+                                  p.group_id, 
+                                  p.is_leader, 
+                                  p.currently_in,
+                                  p.joined_date,
+                                  p.left_date
+                                FROM LoanShareAmounts l
+                                INNER JOIN PersonGroupBelonging p
+                                  ON l.person_id = p.person_id 
+                                    AND l.group_id = p.group_id
+                                WHERE contract_id = @contract_id
+                                  AND l.group_id = @group_id";
+
+            SqlCommand selectPersonIds = new SqlCommand(sqlText, DefaultConnection, null);
+            DatabaseHelper.InsertInt32Param("@group_id", selectPersonIds, pGroupId);
+            DatabaseHelper.InsertInt32Param("@contract_id", selectPersonIds, pContractId);
+
+            using (SqlDataReader personIdsReader = selectPersonIds.ExecuteReader())
+            {
+                if (personIdsReader != null)
+                {
+                    while (personIdsReader.Read())
+                    {
+                        Member member = new Member
+                        {
+                            Tiers = { Id = DatabaseHelper.GetInt32("person_id", personIdsReader) },
+                            CurrentlyIn = DatabaseHelper.GetBoolean("currently_in", personIdsReader),
+                            IsLeader = DatabaseHelper.GetBoolean("is_leader", personIdsReader),
+                            JoinedDate = DatabaseHelper.GetDateTime("joined_date", personIdsReader),
+                            LeftDate = DatabaseHelper.GetNullAuthorizedDateTime("left_date", personIdsReader),
+                        };
+                        members.Add(member);
+                    }
+                }
+            }
+
+            foreach (Member entry in members)
+            {
+                entry.Tiers = SelectPersonById(entry.Tiers.Id);
+            }
+
+            return members;
+        }
+
+        public void UpdateGroup(Group group, SqlTransaction sqlTransac)
+        {
+            UpdateTiers(group, sqlTransac);
+
+            const string sqlText = @"UPDATE [Groups] 
+                                   SET [name]=@name, 
+                                     [establishment_date] = @establishmentDate, 
+                                     [comments]=@comments,
+                                     [meeting_day] = @meeting_day 
+                                   WHERE id = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@id", update, group.Id);
+            DatabaseHelper.InsertStringNVarCharParam("@name", update, group.Name);
+            DatabaseHelper.InsertDateTimeParam("@establishmentDate", update, group.EstablishmentDate);
+            DatabaseHelper.InsertStringNVarCharParam("@comments", update, group.Comments);
+            if (group.MeetingDay.HasValue)
+            {
+                DatabaseHelper.InsertInt32Param("@meeting_day", update, (int)group.MeetingDay);
+            }
+            else
+            {
+                DatabaseHelper.InsertInt32Param("@meeting_day", update, null);
+            }
+            update.ExecuteNonQuery();
+
+            List<Member> personIdsList = SelectPersonIdsByGroupId(group.Id, sqlTransac, null);
+
+            //loop to remove all persons
+            foreach (Member member in personIdsList)
+            {
+                UpdatePersonFromGroup(member.Tiers.Id, group.Id, sqlTransac);
+            }
+
+            foreach (Project project in group.Projects)
+            {
+                foreach (Loan _credit in project.Credits)
+                {
+                    if (!_credit.Closed)
+                    {
+                        //_UpdateLoanShares(group.Id, _credit.Id, sqlTransac);
+                    }
+                }
+            }
+
+            //loop to add members
+            foreach (Member person in group.Members)
+            {
+                bool isNewPerson = true;
+
+                foreach (Member member in personIdsList)
+                {
+                    if (person.Tiers.Id == member.Tiers.Id)
+                    {
+                        isNewPerson = false;
+                        break;
+                    }
+                }
+
+                if (isNewPerson)
+                    AddMemberToGroup(person, group, (person.Tiers.Id == group.Leader.Tiers.Id), sqlTransac);
+                else
+                    UpdatePersonToGroup(person, group.Id, (person.Tiers.Id == group.Leader.Tiers.Id), sqlTransac);
+
+                UpdatePerson((Person)person.Tiers, sqlTransac);
+            }
+        }
+
+        //method needed to find one or multiple Small credit group of a person
+        public ArrayList SelectGroupIdsByPersonId(int persId)
+        {
+            ArrayList idList = new ArrayList();
+
+            string sqlText = "SELECT group_id FROM PersonGroupBelonging WHERE person_id = @personId";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@personId", select, persId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    idList.Add(DatabaseHelper.GetInt32("group_id", reader));
+                }
+            }
+            return idList;
+        }
+
+        private static string BuildWhereConditionsForSearchClients(string pQuery, OClientTypes pClientType)
+        {
+            string whereConditions = string.Empty;
+
+            if (pQuery != null)
+            {
+                if (pClientType == OClientTypes.Person)
+                    whereConditions = @"AND (Persons.first_name LIKE @name 
+                                        OR Persons.last_name LIKE @name 
+                                        OR Persons.identification_data LIKE @passportNumber ";
+
+                if (pClientType == OClientTypes.Group)
+                    whereConditions = @"AND (Groups.name LIKE @name ";
+
+                if (pClientType == OClientTypes.Corporate)
+                    whereConditions = @"AND (Corporates.name LIKE @name 
+                                        OR Corporates.siret LIKE @siret ";
+
+                whereConditions += @"OR Districts.name LIKE @district 
+                                        OR Tiers.city LIKE @city) ";
+            }
+
+            return whereConditions;
+        }
+
+        public int GetNumberOfRecordsFoundForSearchPersons(string pQuery)
+        {
+            string sqlText = "SELECT COUNT(Persons.id) FROM Persons " +
+                "INNER JOIN Tiers ON Persons.id = Tiers.id " +
+                "INNER JOIN Districts ON Districts.id = Tiers.district_id " +
+                "WHERE 1 = 1" + BuildWhereConditionsForSearchClients(pQuery, OClientTypes.Person);
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@passportNumber", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@district", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@city", select, string.Format("%{0}%", pQuery));
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public List<ClientSearchResult> SearchPersonsInDatabase(int pageNumber, string pQuery)
+        {
+            string firstSqlText = @"SELECT TOP 20 Persons.id,Tiers.client_type_code AS type,Persons.first_name 
+                + SPACE(1) + Persons.last_name AS name,Tiers.active,Tiers.loan_cycle AS loan_cycle, 
+                Districts.name AS district, Tiers.city AS city,Tiers.bad_client AS bad_client, 
+                Persons.identification_data AS passport_number,ISNULL((SELECT TOP 1 Groups.name from Groups 
+                INNER JOIN PersonGroupBelonging on Groups.id=PersonGroupBelonging.group_id 
+                WHERE PersonGroupBelonging.person_id=Persons.id),'-') AS group_name FROM Persons 
+                INNER JOIN Tiers ON Persons.id = Tiers.id 
+                INNER JOIN Districts ON Districts.id = Tiers.district_id 
+                WHERE 1 = 1";
+
+            string secondSqlText = string.Format(@" AND Persons.id NOT IN (SELECT TOP {0} Persons.id FROM Persons 
+                INNER JOIN Tiers ON Persons.id = Tiers.id 
+                INNER JOIN Districts ON Districts.id = Tiers.district_id 
+                WHERE 1 = 1", (pageNumber - 1) * 20);
+
+            string whereConditions = BuildWhereConditionsForSearchClients(pQuery, OClientTypes.Person);
+
+            string lastPartOfSqlText = "ORDER BY Persons.id ) ORDER BY Persons.id";
+
+            string sqlText = firstSqlText + whereConditions + secondSqlText + whereConditions + lastPartOfSqlText;
+
+            return SetClientSearchResult(sqlText, pQuery, OClientTypes.Person);
+        }
+
+        public int GetNumberOfRecordsFoundForSearchGroups(string pQuery)
+        {
+            string sqlText = "SELECT COUNT(Groups.id) FROM Groups " +
+                "INNER JOIN Tiers ON Groups.id = Tiers.id " +
+                "INNER JOIN Districts ON Districts.id = Tiers.district_id " +
+                "WHERE 1 = 1" + BuildWhereConditionsForSearchClients(pQuery, OClientTypes.Group);
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@district", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@city", select, string.Format("%{0}%", pQuery));
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public int GetNumberOfRecordsFoundForSearchCorporates(string pQuery)
+        {
+            string sqlText = "SELECT COUNT(Corporates.id) FROM Corporates " +
+                "INNER JOIN Tiers ON Corporates.id = Tiers.id " +
+                "INNER JOIN Districts ON Districts.id = Tiers.district_id " +
+                "WHERE 1 = 1" + BuildWhereConditionsForSearchClients(pQuery, OClientTypes.Corporate);
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@district", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@city", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@siret", select, string.Format("%{0}%", pQuery));
+
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public bool IsThisIdentificationDataAlreadyUsed(string pIdentificationData, int pId)
+        {
+            string sql = pId == 0 ? "SELECT COUNT(*) FROM Persons WHERE identification_data = @data" : "SELECT COUNT(*) FROM Persons WHERE identification_data = @data AND id <> @id";
+
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@data", cmd, pIdentificationData);
+            if (pId != 0)
+                DatabaseHelper.InsertInt32Param("@id", cmd, pId);
+
+            int count = (int)cmd.ExecuteScalar();
+            return (count > 0);
+        }
+
+        public List<Person> IsThereSimilardentificationDataAlreadyUsed(string pIdentificationData, int pID)
+        {
+            string beginning = pIdentificationData;
+            string end = pIdentificationData;
+            string param = "identification_data LIKE '_" + beginning.Substring(1) + "'";
+            for(int i = 1; i< pIdentificationData.Length; i++)
+            {
+                beginning = end = pIdentificationData;
+                param += " OR identification_data LIKE '" + beginning.Substring(0, i) + "_" + end.Substring(i + 1, end.Length - i - 1) + "'";
+            }
+
+
+            string sql = "SELECT id, first_name, last_name, identification_data FROM Persons WHERE id!=@id AND (" + param + ")";
+            List<Person> _persons = new List<Person>();
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", cmd, pID);
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        Person p = new Person
+                                       {
+                                           Id = DatabaseHelper.GetInt32("id", reader),
+                                           FirstName = DatabaseHelper.GetString("first_name", reader),
+                                           LastName = DatabaseHelper.GetString("last_name", reader),
+                                           IdentificationData = DatabaseHelper.GetString("identification_data", reader)
+                                       };
+                        _persons.Add(p);
+                    }
+                }
+            }
+
+            return _persons;
+        }
+
+        public int IsUniqueCustomField(string pValue, int pKey, int pPersonId)
+        {
+            string sql = @"SELECT COUNT(value) AS value 
+                           FROM dbo.PersonCustomizableFields 
+                           WHERE [key] = @key AND value = @value AND person_id <> @person_id AND value IS NOT NULL AND value <> '' ";
+
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+
+            DatabaseHelper.InsertInt32Param("@key", cmd, pKey);
+            DatabaseHelper.InsertInt32Param("@person_id", cmd, pPersonId);
+            DatabaseHelper.InsertStringNVarCharParam("@value", cmd, pValue);
+
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    return DatabaseHelper.GetInt32("value", reader);
+                }
+            }
+
+            return 0;
+        }
+
+        public List<ClientSearchResult> SetClientSearchResult(string pSqlText, string pQuery, OClientTypes pClientType)
+        {
+            List<ClientSearchResult> list = new List<ClientSearchResult>();
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@district", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@city", select, string.Format("%{0}%", pQuery));
+
+            if (pClientType == OClientTypes.Person)
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@passportNumber", select, string.Format("%{0}%", pQuery));
+            }
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        ClientSearchResult result = new ClientSearchResult();
+                        result.Id = DatabaseHelper.GetInt32("id", reader);
+                        result.Type = DatabaseHelper.GetChar("type", reader) == 'I' ? OClientTypes.Person : OClientTypes.Group;
+                        result.Name = DatabaseHelper.GetString("name", reader);
+                        result.Active = DatabaseHelper.GetBoolean("active", reader);
+                        result.LoanCycle = pClientType == OClientTypes.Group ? 0 : DatabaseHelper.GetInt32("loan_cycle", reader);
+                        result.District = DatabaseHelper.GetString("district", reader);
+                        result.City = DatabaseHelper.GetString("city", reader);
+                        result.BadClient = DatabaseHelper.GetBoolean("bad_client", reader);
+                        result.PassportNumber = DatabaseHelper.GetString("passport_number", reader);
+                        result.MemberOf = DatabaseHelper.GetString("group_name", reader);
+                        list.Add(result);
+                    }
+                }
+            }
+            return list;
+        }
+
+        public List<ClientSearchResult> SetCorporatesSearchResult(string pSqlText, string pQuery, OClientTypes pClientType)
+        {
+            List<ClientSearchResult> list = new List<ClientSearchResult>();
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@district", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@city", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@siret", select, string.Format("%{0}%", pQuery));
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        ClientSearchResult result = new ClientSearchResult();
+                        result.Id = DatabaseHelper.GetInt32("id", reader);
+                        result.Name = DatabaseHelper.GetString("name", reader);
+                        result.Active = DatabaseHelper.GetBoolean("active", reader);
+                        result.District = DatabaseHelper.GetString("district", reader);
+                        result.City = DatabaseHelper.GetString("city", reader);
+                        result.Siret = DatabaseHelper.GetString("siret", reader);
+                        result.Type = OClientTypes.Corporate;
+                        list.Add(result);
+                    }
+                }
+            }
+            return list;
+        }
+
+        public List<ClientSearchResult> SearchAllPersonsInDatabase(string pQuery)
+        {
+            string firstSqlText = @"SELECT Persons.id,Tiers.client_type_code AS type,Persons.first_name 
+                + SPACE(1) +Persons.last_name AS name,Tiers.active,Tiers.loan_cycle AS loanCycle, 
+                Districts.name AS district, Tiers.city AS city, Tiers.bad_client AS bad_client, Persons.identification_data AS passport_number, 
+                ISNULL((SELECT TOP 1 Groups.name from Groups 
+                INNER JOIN PersonGroupBelonging on Groups.id=PersonGroupBelonging.group_id WHERE PersonGroupBelonging.person_id=Persons.id),'-') 
+                AS group_name FROM Persons 
+                INNER JOIN Tiers ON Persons.id = Tiers.id  
+                INNER JOIN Districts ON Districts.id = Tiers.district_id 
+                WHERE 1 = 1";
+
+            string whereConditions = BuildWhereConditionsForSearchClients(pQuery, OClientTypes.Person);
+            string sqlText = firstSqlText + whereConditions;
+
+            return SetClientSearchResult(sqlText, pQuery, OClientTypes.Group);
+        }
+
+        public List<ClientSearchResult> SearchAllGroupsInDatabase(string pQuery)
+        {
+            string firstSqlText = "SELECT Groups.id,Tiers.client_type_code AS type,Groups.name,Tiers.active,Tiers.loan_cycle AS loanCycle, " +
+                "Districts.name AS district, Tiers.city AS city,Tiers.bad_client AS bad_client, '-' AS passport_number, '-' AS group_name FROM Groups " +
+                "INNER JOIN Tiers ON Groups.id = Tiers.id " +
+                "INNER JOIN Districts ON Districts.id = Tiers.district_id " +
+                "WHERE 1 = 1 ";
+
+            string whereConditions = BuildWhereConditionsForSearchClients(pQuery, OClientTypes.Group);
+            string sqlText = firstSqlText + whereConditions;
+
+            return SetClientSearchResult(sqlText, pQuery, OClientTypes.Group);
+        }
+
+        public List<ClientSearchResult> SearchCorporate(int pageNumber, string pQuery)
+        {
+            string firstSqlText = @"SELECT TOP 20 Corporates.id,Corporates.name,Corporates.siret,Tiers.active,
+                Districts.name AS district, Tiers.city AS city FROM Corporates INNER JOIN Tiers ON Corporates.id = Tiers.id 
+                INNER JOIN Districts ON Districts.id = Tiers.district_id 
+                WHERE 1 = 1 ";
+            string secondSqlText = " AND Corporates.id NOT IN(SELECT TOP " + (pageNumber - 1) * 20 + @" Corporates.id FROM Corporates
+                INNER JOIN Tiers ON Corporates.id = Tiers.id 
+                INNER JOIN Districts ON Districts.id = Tiers.district_id
+                WHERE 1 = 1 ";
+            string whereConditions = BuildWhereConditionsForSearchClients(pQuery, OClientTypes.Corporate);
+            string lastPartOfSqlText = "ORDER BY Corporates.id) " + "ORDER BY Corporates.id";
+
+            string sqlText = firstSqlText + whereConditions + secondSqlText + whereConditions + lastPartOfSqlText;
+            return SetCorporatesSearchResult(sqlText, pQuery, OClientTypes.Corporate);
+        }
+
+        public List<ClientSearchResult> SearchGroups(int pageNumber, string pQuery)
+        {
+            string firstSqlText = "SELECT TOP 20 Groups.id,Tiers.client_type_code AS type,Groups.name,Tiers.active,Tiers.loan_cycle AS loanCycle, " +
+                "Districts.name AS district, Tiers.city AS city, Tiers.bad_client AS bad_client, '-' AS passport_number, '-' AS group_name FROM Groups " +
+                "INNER JOIN Tiers ON Groups.id = Tiers.id " +
+                "INNER JOIN Districts ON Districts.id = Tiers.district_id " +
+                "WHERE 1 = 1";
+
+            string secondSqlText = "AND Groups.id NOT IN (SELECT TOP " + (pageNumber - 1) * 20 + " Groups.id FROM Groups " +
+                "INNER JOIN Tiers ON Groups.id = Tiers.id " +
+                "INNER JOIN Districts ON Districts.id = Tiers.district_id " +
+                "WHERE 1 = 1";
+
+            string whereConditions = BuildWhereConditionsForSearchClients(pQuery, OClientTypes.Group);
+            string lastPartOfSqlText = "ORDER BY Groups.id) " + "ORDER BY Groups.id";
+
+            string sqlText = firstSqlText + whereConditions + secondSqlText + whereConditions + lastPartOfSqlText;
+            return SetClientSearchResult(sqlText, pQuery, OClientTypes.Group);
+        }
+
+        public List<ClientSearchResult> SearchPersonByCriteres(int pageNumber, string pQuery)
+        {
+            List<ClientSearchResult> list = new List<ClientSearchResult>();
+
+            string SELECT_FROM_PROJET_ = @"		SELECT  TOP 100 percent pers.id, Tiers.client_type_code AS type,pers.first_name 
+                + SPACE(1) + pers.last_name AS name,Tiers.active,Tiers.loan_cycle AS loan_cycle, 
+                dis.name AS district, Tiers.city AS city,Tiers.bad_client AS bad_client, 
+                pers.identification_data AS passport_number,ISNULL((SELECT TOP 1 Groups.name from Groups 
+                INNER JOIN PersonGroupBelonging on Groups.id=PersonGroupBelonging.group_id WHERE PersonGroupBelonging.person_id=pers.id),'-') AS group_name FROM Persons pers 
+                INNER JOIN Tiers ON pers.id = Tiers.id
+                INNER JOIN Districts dis ON dis.id = Tiers.district_id ORDER BY pers.id ) maTable";
+
+            string CloseWhere = @" WHERE ( passport_number LIKE @passeportNumber OR name LIKE @name OR district LIKE @district OR city LIKE @city )) maTable";
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+            string pSqlText = q.ConstructSQLEntityByCriteresProxy(20, (pageNumber - 1) * 20);
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+
+            OClientTypes pClientType = OClientTypes.Person;
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        ClientSearchResult result = new ClientSearchResult();
+                        result.Id = DatabaseHelper.GetInt32("id", reader);
+                        result.Type = DatabaseHelper.GetChar("type", reader) == 'I' ? OClientTypes.Person : OClientTypes.Group;
+                        result.Name = DatabaseHelper.GetString("name", reader);
+                        result.Active = DatabaseHelper.GetBoolean("active", reader);
+                        result.LoanCycle = pClientType == OClientTypes.Group ? 0 : DatabaseHelper.GetInt32("loan_cycle", reader);
+                        result.District = DatabaseHelper.GetString("district", reader);
+                        result.City = DatabaseHelper.GetString("city", reader);
+                        result.BadClient = DatabaseHelper.GetBoolean("bad_client", reader);
+                        result.PassportNumber = DatabaseHelper.GetString("passport_number", reader);
+                        result.MemberOf = DatabaseHelper.GetString("group_name", reader);
+                        list.Add(result);
+                    }
+                }
+            }
+            return list;
+        }
+
+        public List<ClientSearchResult> SearchInactivePersonsByCriteres(int pageNumber, string query)
+        {
+            List<ClientSearchResult> list = new List<ClientSearchResult>();
+            const string sql = @"SELECT TOP 100 PERCENT p.id, t.client_type_code AS type, 
+                p.first_name + SPACE(1) + p.last_name AS name, t.active, t.loan_cycle,
+                d.name AS district, t.city, t.bad_client, p.identification_data AS passport_number
+                FROM Persons AS p
+                LEFT JOIN Tiers AS t ON p.id = t.id
+                LEFT JOIN Districts AS d ON t.district_id = d.id WHERE active = 0 ) maTable";
+            const string where = @" WHERE active = 0 AND ( passport_number LIKE @passportNumber OR name LIKE @name OR
+                district LIKE @district OR city LIKE @city )) maTable";
+            QueryEntity q = new QueryEntity(query, sql, where);
+            string sqlText = q.ConstructSQLEntityByCriteresProxy(20, (pageNumber - 1) * 20);
+
+            SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection);
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, cmd, string.Format("%{0}%", item.Value));
+            }
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (null == reader || !reader.HasRows) return list;
+                while (reader.Read())
+                {
+                    ClientSearchResult result = new ClientSearchResult();
+                    result.Id = DatabaseHelper.GetInt32("id", reader);
+                    result.Type = OClientTypes.Person;
+                    result.Name = DatabaseHelper.GetString("name", reader);
+                    result.Active = DatabaseHelper.GetBoolean("active", reader);
+                    result.Active = DatabaseHelper.GetBoolean("active", reader);
+                    result.LoanCycle = DatabaseHelper.GetInt32("loan_cycle", reader);
+                    result.District = DatabaseHelper.GetString("district", reader);
+                    result.City = DatabaseHelper.GetString("city", reader);
+                    result.BadClient = DatabaseHelper.GetBoolean("bad_client", reader);
+                    result.PassportNumber = DatabaseHelper.GetString("passport_number", reader);
+                    result.MemberOf = "--";
+                    list.Add(result);
+                }
+            }
+            return list;
+        }
+
+        public List<ClientSearchResult> SearchCorporateByCriteres(int onlyActive, int pageNumber, string pQuery)
+        {
+            string sign;
+            if (onlyActive == 0 || onlyActive == 1) { sign = "="; } // active or not active clients
+            else if (onlyActive == 2) { sign = "<"; } // everyone
+            else { sign = ">"; } // no one
+            
+            List<ClientSearchResult> list = new List<ClientSearchResult>();
+            string SELECT_FROM_PROJET_ = String.Format(@"SELECT TOP 100 percent 
+                                           Corporates.id, 
+                                           Corporates.name,
+                                           Corporates.siret,
+                                           Tiers.active,
+                                           Districts.name AS district,
+                                           Tiers.city AS city 
+                                           FROM Corporates 
+                                           INNER JOIN Tiers ON Corporates.id = Tiers.id 
+                                           INNER JOIN Districts ON Districts.id = Tiers.district_id 
+                                           WHERE active {0} {1}
+                                           ORDER BY Corporates.id 
+                                           ) maTable", sign, onlyActive);
+
+            string CloseWhere = @" WHERE ( siret LIKE @siret OR name LIKE @name OR district LIKE @district OR city LIKE @city )) maTable";
+
+            var q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+            string pSqlText = q.ConstructSQLEntityByCriteresProxy(20, (pageNumber - 1) * 20);
+
+            var select = new SqlCommand(pSqlText, DefaultConnection);
+            foreach (var item in q.DynamiqParameters())
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        var result = new ClientSearchResult
+                             {
+                                 Id = DatabaseHelper.GetInt32("id", reader),
+                                 Name = DatabaseHelper.GetString("name", reader),
+                                 Active = DatabaseHelper.GetBoolean("active", reader),
+                                 District = DatabaseHelper.GetString("district", reader),
+                                 City = DatabaseHelper.GetString("city", reader),
+                                 Siret = DatabaseHelper.GetString("siret", reader),
+                                 Type = OClientTypes.Corporate
+                             };
+                        list.Add(result);
+                    }
+                }
+            }
+            return list;
+        }
+
+        public List<ClientSearchResult> SearchGroupByCriteres(int pageNumber, string pQuery)
+        {
+            List<ClientSearchResult> list = new List<ClientSearchResult>();
+            string SELECT_FROM_PROJET_ = @"		SELECT TOP 100 percent Groups.id,Tiers.client_type_code AS type,Groups.name,Tiers.active,Tiers.loan_cycle AS loan_cycle, 
+                Districts.name AS district, Tiers.city AS city, Tiers.bad_client AS bad_client, '-' AS passport_number, '-' AS group_name FROM Groups 
+                INNER JOIN Tiers ON Groups.id = Tiers.id 
+                INNER JOIN Districts ON Districts.id = Tiers.district_id ORDER BY Groups.id  ) maTable";
+
+            string CloseWhere = @" WHERE (name LIKE @name OR district LIKE @district OR city LIKE @city )) maTable";
+
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+            string pSqlText = q.ConstructSQLEntityByCriteresProxy(20, (pageNumber - 1) * 20);
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        ClientSearchResult result = new ClientSearchResult();
+                        result.Id = DatabaseHelper.GetInt32("id", reader);
+                        result.Type = DatabaseHelper.GetChar("type", reader) == 'I' ? OClientTypes.Person : OClientTypes.Group;
+                        result.Name = DatabaseHelper.GetString("name", reader);
+                        result.Active = DatabaseHelper.GetBoolean("active", reader);
+                        result.LoanCycle = DatabaseHelper.GetInt32("loan_cycle", reader);
+                        result.District = DatabaseHelper.GetString("district", reader);
+                        result.City = DatabaseHelper.GetString("city", reader);
+                        result.BadClient = DatabaseHelper.GetBoolean("bad_client", reader);
+                        result.PassportNumber = DatabaseHelper.GetString("passport_number", reader);
+                        result.MemberOf = DatabaseHelper.GetString("group_name", reader);
+                        list.Add(result);
+                    }
+                }
+            }
+            return list;
+        }
+
+        public List<ClientSearchResult> SearchVillagesByCriteres(int pageNumber, string pQuery, int isActive)
+        {
+            List<ClientSearchResult> list = new List<ClientSearchResult>();
+            string SELECT_FROM_PROJET_ = @"		SELECT TOP 100 percent Villages.id,Tiers.client_type_code AS type,Villages.name,Tiers.active,Tiers.loan_cycle AS loan_cycle, 
+                Districts.name AS district, Tiers.city AS city, Tiers.bad_client AS bad_client, '-' AS passport_number, '-' AS village_name FROM Villages 
+                INNER JOIN Tiers ON Villages.id = Tiers.id 
+                INNER JOIN Districts ON Districts.id = Tiers.district_id ORDER BY Villages.id  ) maTable";
+
+            string CloseWhere = @" WHERE (name LIKE @name OR district LIKE @district OR city LIKE @city ) and active = @isActive) maTable";
+
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+
+            string pSqlText = q.ConstructSQLEntityByCriteresProxy(20, (pageNumber - 1) * 20);
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        ClientSearchResult result = new ClientSearchResult();
+                        result.Id = DatabaseHelper.GetInt32("id", reader);
+                        result.Type = OClientTypes.Village;
+                        result.Name = DatabaseHelper.GetString("name", reader);
+                        result.Active = DatabaseHelper.GetBoolean("active", reader);
+                        result.LoanCycle = DatabaseHelper.GetInt32("loan_cycle", reader);
+                        result.District = DatabaseHelper.GetString("district", reader);
+                        result.City = DatabaseHelper.GetString("city", reader);
+                        result.BadClient = DatabaseHelper.GetBoolean("bad_client", reader);
+                        result.PassportNumber = DatabaseHelper.GetString("passport_number", reader);
+                        result.MemberOf = DatabaseHelper.GetString("village_name", reader);
+                        list.Add(result);
+                    }
+                }
+            }
+            return list;
+        }
+
+        public int GetNumberCorporate(string pQuery)
+        {
+            string SELECT_FROM_PROJET_ = @"SELECT TOP 100 percent 
+                                          Corporates.id,
+                                          Corporates.name,
+                                          Corporates.siret,
+                                          Tiers.active,
+                                          Districts.name AS district,
+                                          Tiers.city AS city 
+                                          FROM Corporates 
+                                          INNER JOIN Tiers ON Corporates.id = Tiers.id 
+                                          INNER JOIN Districts ON Districts.id = Tiers.district_id 
+                                          ORDER BY Corporates.id   ) maTable";
+
+            string CloseWhere = @" WHERE ( siret LIKE @siret  OR name LIKE @name OR district LIKE @district OR city LIKE  @city )) maTable";
+
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+
+            string pSqlText = q.ConstructSQLEntityNumberProxy();
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public int GetNumberPerson(string pQuery, int isActive)
+        {
+            string SELECT_FROM_PROJET_ = @"SELECT  TOP 100 percent pers.id,Tiers.client_type_code AS type,pers.first_name 
+                + SPACE(1) + pers.last_name AS name,Tiers.active,Tiers.loan_cycle AS loan_cycle, 
+                dis.name AS district, Tiers.city AS city,Tiers.bad_client AS bad_client, 
+                pers.identification_data AS passport_number,ISNULL((SELECT TOP 1 Groups.name from Groups 
+                INNER JOIN PersonGroupBelonging on Groups.id=PersonGroupBelonging.group_id WHERE PersonGroupBelonging.person_id=pers.id),'-') AS group_name FROM Persons pers 
+                INNER JOIN Tiers ON pers.id = Tiers.id
+                INNER JOIN Districts dis ON dis.id = Tiers.district_id ORDER BY pers.id ) maTable";
+
+            string CloseWhere = @" WHERE ( passport_number LIKE @passeportNumber OR name LIKE @name OR district LIKE @district OR city LIKE @city )) maTable";
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+            string pSqlText = q.ConstructSQLEntityNumberProxy();
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public int GetNumberGroup(string pQuery)
+        {
+            string SELECT_FROM_PROJET_ = @"SELECT TOP 100 percent Groups.id,Tiers.client_type_code AS type,Groups.name,Tiers.active,Tiers.loan_cycle AS loanCycle, 
+                Districts.name AS district, Tiers.city AS city, Tiers.bad_client AS bad_client, '-' AS passport_number, '-' AS group_name FROM Groups 
+                INNER JOIN Tiers ON Groups.id = Tiers.id 
+                INNER JOIN Districts ON Districts.id = Tiers.district_id ORDER BY Groups.id  ) maTable";
+
+            string CloseWhere = @" WHERE ( name LIKE @name OR district LIKE @district OR city LIKE @city )) maTable";
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+
+            string pSqlText = q.ConstructSQLEntityNumberProxy();
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public int GetNumberVillages(string pQuery)
+        {
+            string SELECT_FROM_PROJET_ = @"SELECT TOP 100 percent Villages.id,Tiers.client_type_code AS type,Villages.name,Tiers.active,Tiers.loan_cycle AS loanCycle, 
+                Districts.name AS district, Tiers.city AS city, Tiers.bad_client AS bad_client, '-' AS passport_number, '-' AS village_name FROM Villages 
+                INNER JOIN Tiers ON Villages.id = Tiers.id 
+                INNER JOIN Districts ON Districts.id = Tiers.district_id ORDER BY Villages.id  ) maTable";
+
+            string CloseWhere = @" WHERE ( name LIKE @name OR district LIKE @district OR city LIKE @city )) maTable";
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+
+            string pSqlText = q.ConstructSQLEntityNumberProxy();
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public int GetFoundRecordsNumber(string pQuery, int isActive, int includePersons, int includeGroups, int includeVillages)
+        {
+            SqlCommand select = FormSearchQuery(true, pQuery, isActive, 0, includePersons, includeGroups, includeVillages);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public List<ClientSearchResult> SearchAllByCriteres(string pQuery, int activeOnly, int currentPage, int includePersons, int includeGroups, int includeVillages)
+        {
+            List<ClientSearchResult> list = new List<ClientSearchResult>();
+
+            SqlCommand select = FormSearchQuery(false, pQuery, activeOnly, currentPage, includePersons, includeGroups, includeVillages);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        ClientSearchResult result = new ClientSearchResult();
+                        result.Id = DatabaseHelper.GetInt32("id", reader);
+                        switch (DatabaseHelper.GetChar("type", reader))
+                        {
+                            case 'I': result.Type = OClientTypes.Person; break;
+                            case 'G': result.Type = OClientTypes.Group; break;
+                            case 'V': result.Type = OClientTypes.Village; break;
+                            case 'C': result.Type = OClientTypes.Corporate; break;
+                            default: result.Type = OClientTypes.Person; break;
+                        }
+                        result.Name = DatabaseHelper.GetString("name", reader);
+                        result.Active = DatabaseHelper.GetBoolean("active", reader);
+                        result.LoanCycle = DatabaseHelper.GetInt32("loan_cycle", reader);
+                        result.District = DatabaseHelper.GetString("district", reader);
+                        result.City = DatabaseHelper.GetString("city", reader);
+                        result.BadClient = DatabaseHelper.GetBoolean("bad_client", reader);
+                        result.PassportNumber = DatabaseHelper.GetString("passport_number", reader);
+                        result.MemberOf = DatabaseHelper.GetString("group_name", reader);
+                        list.Add(result);
+                    }
+                }
+            }
+            return list;
+        }
+
+        private SqlCommand FormSearchQuery(bool count, String pQuery, int activeOnly, int currentPage,
+                                       int includePersons, int includeGroups, int includeVillages)
+        {
+            string sign;
+            if (activeOnly == 0 || activeOnly == 1) { sign = "="; } // active or not active clients
+            else if (activeOnly == 2) { sign = "<"; } // everyone
+            else { sign = ">"; } // no one
+
+            int startRow = 0 + (currentPage - 1) * 20 + 1;
+            int endRow = currentPage * 20;
+            string SELECT_FROM_PROJET_ = count ? @"	SELECT count(id) FROM " : @" SELECT * FROM (SELECT Row_Number() over (order by id) _rowNum, * from ";
+            SELECT_FROM_PROJET_ += string.Format(@"
+		         ( 
+			         SELECT pers.id as id, Tiers.client_type_code AS type, pers.first_name + SPACE(1) + pers.last_name AS name,
+						    Tiers.active, Tiers.loan_cycle AS loan_cycle, dis.name AS district, Tiers.city AS city,
+						    Tiers.bad_client AS bad_client, pers.identification_data AS passport_number,
+						    ISNULL (
+							         (
+								         SELECT TOP 1 Groups.name 
+								         FROM Groups
+									     INNER JOIN PersonGroupBelonging on Groups.id = PersonGroupBelonging.group_id 
+								         WHERE PersonGroupBelonging.person_id = pers.id
+							         ), '-'
+						         ) AS group_name 
+			         FROM Persons pers
+                          INNER JOIN Tiers ON pers.id = Tiers.id
+                          INNER JOIN Districts dis ON dis.id = Tiers.district_id 
+			         WHERE ( pers.identification_data LIKE @passport OR pers.first_name LIKE @name
+                          OR pers.last_name LIKE @name OR dis.name LIKE @district OR Tiers.city LIKE @city )  
+                          and active {0} @active and 1 = @includePersons AND Tiers.branch_id = @branchId
+
+			         union all
+
+			         SELECT Villages.id, Tiers.client_type_code AS type,Villages.name as name,Tiers.active,Tiers.loan_cycle AS loan_cycle, 
+							Districts.name AS district, Tiers.city AS city, Tiers.bad_client AS bad_client, '-' AS passport_number, '-' AS village_name 
+			         FROM Villages 
+				          INNER JOIN Tiers ON Villages.id = Tiers.id 
+				          INNER JOIN Districts ON Districts.id = Tiers.district_id 
+			         WHERE (Villages.name LIKE @name OR Districts.name  LIKE  @district OR Tiers.city  LIKE @city ) 
+                          and active {0} @active and 1 = @includeVillages AND Tiers.branch_id = @branchId
+
+			         union all
+
+			         SELECT Groups.id, Tiers.client_type_code AS type,Groups.name as name,Tiers.active,Tiers.loan_cycle AS loan_cycle,
+                            Districts.name AS district, Tiers.city AS city, Tiers.bad_client AS bad_client, '-' AS passport_number, '-' AS group_name 
+			         FROM Groups
+				          INNER JOIN Tiers ON Groups.id = Tiers.id 
+				          INNER JOIN Districts ON Districts.id = Tiers.district_id 
+			         WHERE (Groups.name LIKE @name OR Districts.name LIKE  @district OR Tiers.city LIKE @city ) 
+                          AND active {0} @active AND 1 = @includeGroups AND Tiers.branch_id = @branchId
+                          ) maTable ", sign);
+
+            if (!count) SELECT_FROM_PROJET_ += ") matable where matable._rowNum between @startRow and @endRow order by name";
+
+            var select = new SqlCommand(SELECT_FROM_PROJET_, DefaultConnection);
+
+            DatabaseHelper.InsertStringNVarCharParam("@district", select, "%" + pQuery + "%");
+            DatabaseHelper.InsertStringNVarCharParam("@city", select, "%" + pQuery + "%");
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, "%" + pQuery + "%");
+            DatabaseHelper.InsertStringNVarCharParam("@passport", select, "%" + pQuery + "%");
+            DatabaseHelper.InsertStringNVarCharParam("@siret", select, "%" + pQuery + "%");
+            
+            DatabaseHelper.InsertInt32Param("@active", select, activeOnly);
+            DatabaseHelper.InsertInt32Param("@startRow", select, startRow);
+            DatabaseHelper.InsertInt32Param("@endRow", select, endRow);
+
+            DatabaseHelper.InsertInt32Param("@includeVillages", select, includeVillages);
+            DatabaseHelper.InsertInt32Param("@includeGroups", select, includeGroups);
+            DatabaseHelper.InsertInt32Param("@includePersons", select, includePersons);
+            DatabaseHelper.InsertInt32Param("@branchId", select, TechnicalSettings.BranchId);
+
+            return select;
+        }
+
+        public int GetNumberInactivePersons(string query)
+        {
+            const string sql = @"SELECT TOP 100 PERCENT Persons.id,
+                                Persons.first_name + ' ' + Persons.last_name AS name,
+                                Districts.name AS district,
+                                Tiers.city,
+                                Tiers.active
+                                FROM Persons
+                                LEFT JOIN Tiers ON Persons.id = Tiers.id
+                                LEFT JOIN Districts ON Tiers.district_id = Districts.id WHERE active = 0 ) maTable";
+            const string where =
+                @" WHERE active = 0 AND ( name LIKE @name OR district LIKE @district OR city LIKE @city )) maTable";
+            QueryEntity q = new QueryEntity(query, sql, where);
+            string sqlText = q.ConstructSQLEntityNumberProxy();
+
+            SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection);
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, cmd, string.Format("%{0}%", item.Value));
+            }
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public bool IsGroupNameAlreadyUsedInDistrict(string pName, District pDistrict)
+        {
+            string sql = @"SELECT COUNT(*) FROM Tiers INNER JOIN Groups ON Tiers.id = Groups.id WHERE { fn UCASE(Groups.name) } = @name AND Tiers.district_id=@disctrictId";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", cmd, pName.ToUpper());
+            DatabaseHelper.InsertInt32Param("@disctrictId", cmd, pDistrict.Id);
+            int count = (int)cmd.ExecuteScalar();
+            return (count > 0);
+        }
+
+        //public Person SelectPersonByPassport(string customersPassport)
+        //{
+        //    int id = 0;
+
+        //    string sqlText = @"SELECT id FROM Persons WHERE identification_data = @id";
+        //    SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+        //    DatabaseHelper.InsertStringNVarCharParam("@id", select, customersPassport);
+        //    using (SqlDataReader reader = select.ExecuteReader())
+        //    {
+        //        if (reader.HasRows)
+        //        {
+        //            reader.Read();
+        //            id = DatabaseHelper.GetInt32("id", reader);
+        //        }
+        //    }
+        //    Person person = null;
+        //    if (id != 0)
+        //        person = SelectPersonById(id);
+
+        //    return person;
+        //}
+
+        //public List<Person> SelectAllPersons()
+        //{
+        //    List<Person> persons = new List<Person>();
+        //    List<int> personsId = new List<int>();
+
+        //    string sqlText = @"SELECT id FROM Persons";
+        //    SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+        //    using (SqlDataReader reader = select.ExecuteReader())
+        //    {
+        //        if (reader.HasRows)
+        //        {
+        //            while (reader.Read())
+        //            {
+        //                int id = DatabaseHelper.GetInt32("id", reader);
+        //                personsId.Add(id);
+        //            }
+        //        }
+        //    }
+
+        //    foreach (int i in personsId)
+        //    {
+        //        Person person = SelectPersonById(i);
+        //        persons.Add(person);
+        //    }
+        //    return persons;
+        //}
+
+        //public List<Group> SelectAllGroups()
+        //{
+        //    List<Group> groups = new List<Group>();
+        //    List<int> groupsId = new List<int>();
+
+        //    string sqlText = @"SELECT id FROM Groups";
+        //    SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+        //    using (SqlDataReader reader = select.ExecuteReader())
+        //    {
+        //        if (reader.HasRows)
+        //        {
+        //            while (reader.Read())
+        //            {
+        //                int id = DatabaseHelper.GetInt32("id", reader);
+        //                groupsId.Add(id);
+        //            }
+        //        }
+        //    }
+
+        //    foreach (int i in groupsId)
+        //    {
+        //        Group group = SelectGroupById(i);
+        //        groups.Add(group);
+        //    }
+        //    return groups;
+        //}
+
+        public void UpdateCustomizableFieldsSettings(List<PersonCustomizableField> pfields)
+        {
+            foreach (PersonCustomizableField field in pfields)
+            {
+                string sqltext = @"UPDATE [CustomizableFieldsSettings] 
+                                   SET [name]=@name, 
+                                     [use]=@use, 
+                                     [type]=@type, 
+                                     [mandatory]=@mandatory,
+                                     [unique]=@unique
+                                   WHERE [number]=@number";
+
+                SqlCommand update = new SqlCommand(sqltext, DefaultConnection);
+                DatabaseHelper.InsertStringNVarCharParam("@name", update, field.Name);
+                DatabaseHelper.InsertBooleanParam("@use", update, field.Use);
+                DatabaseHelper.InsertStringNVarCharParam("@type", update, field.Type);
+                DatabaseHelper.InsertBooleanParam("@mandatory", update, field.Mandatory);
+                DatabaseHelper.InsertBooleanParam("@unique", update, field.Unique);
+                DatabaseHelper.InsertInt32Param("@number", update, field.Number);
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public List<PersonCustomizableField> FillCustomizableFieldsSettings()
+        {
+            List<PersonCustomizableField> fields = new List<PersonCustomizableField>();
+            string sqlText = @"SELECT * FROM CustomizableFieldsSettings";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        PersonCustomizableField field = new PersonCustomizableField();
+                        field.Number = DatabaseHelper.GetInt32("number", reader);
+                        field.Name = DatabaseHelper.GetString("name", reader);
+                        field.Mandatory = DatabaseHelper.GetBoolean("mandatory", reader);
+                        field.Type = DatabaseHelper.GetString("type", reader);
+                        field.Use = DatabaseHelper.GetBoolean("use", reader);
+                        field.Unique = DatabaseHelper.GetBoolean("unique", reader);
+
+                        fields.Add(field);
+                    }
+                }
+            }
+            return fields;
+        }
+
+        public IClient SelectClientByContractId(int pId)
+        {
+            string sqlText = @"SELECT DISTINCT Tiers.id 
+                               FROM Contracts 
+                               INNER JOIN Projects ON Projects.id = Contracts.project_id
+                               INNER JOIN Tiers ON Tiers.id = Projects.tiers_id
+                               WHERE Contracts.id = @id";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pId);
+
+            int clientId = Convert.ToInt32(select.ExecuteScalar());
+
+            IClient client = SelectGroup(clientId);
+            if (client == null)
+                client = SelectPersonById(clientId);
+            if (client == null)
+                client = SelectBodyCorporateById(clientId);
+
+            return client;
+        }
+
+        public IClient SelectClientById(int id)
+        {
+            IClient client = SelectGroup(id);
+            if (client == null)
+                client = SelectPersonById(id);
+            if (client== null)
+            client = SelectBodyCorporateById(id);
+
+            return client;
+        }
+
+        public IClient SelectClientByProjectId(int pId)
+        {
+            string sqlText = @"SELECT DISTINCT Tiers.id 
+                               FROM Tiers 
+                               INNER JOIN Projects ON Tiers.id = Projects.tiers_id
+                               WHERE Projects.id = @id";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pId);
+
+            int clientId = Convert.ToInt32(select.ExecuteScalar());
+
+            IClient client = SelectGroup(clientId);
+            if (client == null)
+                client = SelectPersonById(clientId);
+            if (client == null)
+                client = SelectBodyCorporateById(clientId);
+
+            return client;
+        }
+
+        public List<IClient> SelectPersonsByContractId(int contractId)
+        {
+            var clients = new List<IClient>();
+            var clientIds = new List<int>();
+            string sqlText = @"SELECT DISTINCT Tiers.id 
+                               FROM Contracts 
+                               INNER JOIN Projects ON Projects.id = Contracts.project_id
+                               INNER JOIN Tiers ON Tiers.id = Projects.tiers_id
+                               WHERE Contracts.id = @id";
+
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", cmd, contractId);
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                        clientIds.Add((int)reader["id"]);
+                }
+
+                foreach (int id in clientIds)
+                {
+                    IClient client = SelectPersonById(id);
+                    clients.Add(client);
+                }
+            }
+            return  clients;
+        }
+
+        public IClient SelectClientBySavingsId(int pId)
+        {
+            string sqlText = @"SELECT SavingContracts.tiers_id
+                               FROM SavingContracts
+                               WHERE SavingContracts.id =@id";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pId);
+
+            int clientId = Convert.ToInt32(select.ExecuteScalar());
+
+            IClient client = SelectGroup(clientId);
+            if (client == null)
+                client = SelectPersonById(clientId);
+            if (client == null)
+                client = SelectBodyCorporateById(clientId);
+
+            return client;
+        }
+
+        public int AddBodyCorporate(Corporate body, FundingLine pFundingLine, SqlTransaction sqlTransac)
+        {
+            body.Id = _AddTiers(body, sqlTransac);
+
+            const string sqlText = @"INSERT INTO [Corporates] ([id],[name],[deleted],[sigle],[small_name],[volunteer_count],
+            [agrement_date],[agrement_solidarity],[insertionType],[employee_count],[siret],[activity_id],[legalForm],[fiscal_status],[registre]) 
+            VALUES(@id,@name,@deleted,@sigle,@small_name,@volunteer_count,@agrement_date,@agrement_solidarity,
+            @insertionType,@employee_count,@siret,@activity_id,@legalForm,@fiscalStatus,@registre)";
+
+            var insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertInt32Param("@id", insert, body.Id);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, body.Name);
+            DatabaseHelper.InsertBooleanParam("@deleted", insert, body.IsDeleted);
+            DatabaseHelper.InsertStringNVarCharParam("@sigle", insert, body.Sigle);
+            DatabaseHelper.InsertStringNVarCharParam("@small_name", insert, body.SmallName);
+            DatabaseHelper.InsertInt32Param("@volunteer_count", insert, body.VolunteerCount);
+
+            DatabaseHelper.InsertBooleanParam("@agrement_solidarity", insert, body.AgrementSolidarity);
+            DatabaseHelper.InsertInt32Param("@employee_count", insert, body.EmployeeCount);
+            DatabaseHelper.InsertStringNVarCharParam("@siret", insert, body.Siret);
+            DatabaseHelper.InsertStringNVarCharParam("@fiscalStatus", insert, body.FiscalStatus);
+            DatabaseHelper.InsertStringNVarCharParam("@registre", insert, body.Registre);
+
+            DatabaseHelper.InsertStringNVarCharParam("@insertionType", insert, body.InsertionType);
+            DatabaseHelper.InsertStringNVarCharParam("@legalForm", insert, body.LegalForm);
+
+            if (body.Activity != null)
+                DatabaseHelper.InsertInt32Param("@activity_id", insert, body.Activity.Id);
+            else
+                DatabaseHelper.InsertInt32Param("@activity_id", insert, null);
+
+            if (body.AgrementDate != DateTime.MinValue)
+                DatabaseHelper.InsertDateTimeParam("@agrement_date", insert, body.AgrementDate);
+            else
+                DatabaseHelper.InsertNullValue("@agrement_date", insert);
+
+            insert.ExecuteScalar();
+            return body.Id;
+        }
+
+        public void AddBodyCorporatePerson(int pCorporateId, Contact contact, SqlTransaction sqlTransac)
+        {
+            string sqlText = "INSERT INTO [CorporatePersonBelonging] (corporate_id, person_id, position) VALUES (@corporate_id, @person_id, @position)";
+            
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertInt32Param("@corporate_id", insert, pCorporateId);
+            DatabaseHelper.InsertInt32Param("@person_id", insert, contact.Tiers.Id);
+            DatabaseHelper.InsertStringNVarCharParam("@position", insert, contact.Position);
+            
+            insert.ExecuteScalar();
+        }
+
+        public void DeleteBodyPersonByCorporate(int pCorporateId, SqlTransaction sqlTransac)
+        {
+            string sqlText = "DELETE FROM [CorporatePersonBelonging] WHERE corporate_id=@corporate_id";
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertInt32Param("@corporate_id", insert, pCorporateId);
+
+            insert.ExecuteScalar();
+        }
+
+        public void UpdateBodyCorporate(Corporate body, SqlTransaction sqlTransac)
+        {
+            UpdateTiers(body, sqlTransac);
+
+            const string sqlText = @"UPDATE [Corporates] SET [name]=@name,[deleted]=@deleted,[sigle]=@sigle,[small_name]=@small_name,
+                [volunteer_count]=@volunteer_count,[agrement_solidarity]=@agrement_solidarity,[employee_count]=@employee_count,
+                [siret]=@siret,[insertionType]=@insertionType,[activity_id]=@activity_id,[fiscal_status]=@fiscalStatus,[registre]=@registre,
+                [legalForm]=@legalForm,[agrement_date]=@agrement_date WHERE [id] = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertInt32Param("@id", update, body.Id);
+            DatabaseHelper.InsertStringNVarCharParam("@name", update, body.Name);
+            DatabaseHelper.InsertBooleanParam("@deleted", update, body.IsDeleted);
+
+            DatabaseHelper.InsertStringNVarCharParam("@fiscalStatus", update, body.FiscalStatus);
+            DatabaseHelper.InsertStringNVarCharParam("@registre", update, body.Registre);
+
+            DatabaseHelper.InsertStringNVarCharParam("@sigle", update, body.Sigle);
+            DatabaseHelper.InsertStringNVarCharParam("@small_name", update, body.SmallName);
+            DatabaseHelper.InsertInt32Param("@volunteer_count", update, body.VolunteerCount);
+
+            DatabaseHelper.InsertBooleanParam("@agrement_solidarity", update, body.AgrementSolidarity);
+            DatabaseHelper.InsertInt32Param("@employee_count", update, body.EmployeeCount);
+            DatabaseHelper.InsertStringNVarCharParam("@siret", update, body.Siret);
+            DatabaseHelper.InsertStringNVarCharParam("@legalForm", update, body.LegalForm);
+            DatabaseHelper.InsertStringNVarCharParam("@insertionType", update, body.InsertionType);
+
+            if (body.Activity != null)
+                DatabaseHelper.InsertInt32Param("@activity_id", update, body.Activity.Id);
+            else
+                DatabaseHelper.InsertInt32Param("@activity_id", update, null);
+
+            if (body.AgrementDate != DateTime.MinValue)
+                DatabaseHelper.InsertDateTimeParam("@agrement_date", update, body.AgrementDate);
+            else
+                DatabaseHelper.InsertNullValue("@agrement_date", update);
+
+            update.ExecuteNonQuery();
+        }
+
+        public Corporate SelectBodyCorporateById(int id)
+        {
+            int? activityId = null;
+            int? districtId = null;
+            int? secondaryDistrictId = null;
+
+            Corporate body = null;
+            const string sqlText = @" SELECT * FROM Tiers 
+            INNER JOIN Corporates ON Tiers.id = Corporates.id
+            WHERE [deleted] = 0 AND Tiers.id=@id";
+
+            var select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, id);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        body = new Corporate
+                        {
+                            Id = DatabaseHelper.GetInt32("id", reader),
+                            Name = DatabaseHelper.GetString("name", reader),
+                            Status = (OClientStatus)DatabaseHelper.GetSmallInt("status", reader),
+                            IsDeleted = DatabaseHelper.GetBoolean("deleted", reader),
+                            CashReceiptIn = DatabaseHelper.GetNullAuthorizedInt32("cash_input_voucher_number", reader),
+                            CashReceiptOut = DatabaseHelper.GetNullAuthorizedInt32("cash_output_voucher_number", reader),
+                            Type = DatabaseHelper.GetChar("client_type_code", reader) == 'I'
+                                            ? OClientTypes.Person
+                                            : DatabaseHelper.GetChar("client_type_code", reader) == 'G'
+                                                  ? OClientTypes.Group
+                                                  : OClientTypes.Corporate,
+                            Scoring = DatabaseHelper.GetNullAuthorizedDouble("scoring", reader),
+                            LoanCycle = DatabaseHelper.GetInt32("loan_cycle", reader),
+                            Active = DatabaseHelper.GetBoolean("active", reader),
+                            BadClient = DatabaseHelper.GetBoolean("bad_client", reader),
+                            OtherOrgName = DatabaseHelper.GetString("other_org_name", reader),
+                            OtherOrgAmount = DatabaseHelper.GetNullAuthorizedMoney("other_org_amount", reader),
+                            OtherOrgDebts = DatabaseHelper.GetNullAuthorizedMoney("other_org_debts", reader),
+                            City = DatabaseHelper.GetString("city", reader),
+                            Address = DatabaseHelper.GetString("address", reader),
+                            SecondaryCity = DatabaseHelper.GetString("secondary_city", reader),
+                            SecondaryAddress = DatabaseHelper.GetString("secondary_address", reader),
+                            HomePhone = DatabaseHelper.GetString("home_phone", reader),
+                            PersonalPhone = DatabaseHelper.GetString("personal_phone", reader),
+                            SecondaryHomePhone = DatabaseHelper.GetString("secondary_home_phone", reader),
+                            SecondaryPersonalPhone = DatabaseHelper.GetString("secondary_personal_phone", reader),
+                            VolunteerCount = DatabaseHelper.GetNullAuthorizedInt32("volunteer_count", reader),
+                            EmployeeCount = DatabaseHelper.GetNullAuthorizedInt32("employee_count", reader),
+                            Sigle = DatabaseHelper.GetString("sigle", reader),
+                            Siret = DatabaseHelper.GetString("siret", reader),
+                            SmallName = DatabaseHelper.GetString("small_name", reader),
+                            CreationDate = DatabaseHelper.GetDateTime("creation_date", reader),
+                            AgrementDate = DatabaseHelper.GetNullAuthorizedDateTime("agrement_date", reader),
+                            FollowUpComment = DatabaseHelper.GetString("follow_up_comment", reader),
+                            HomeType = DatabaseHelper.GetString("home_type", reader),
+                            SecondaryHomeType = DatabaseHelper.GetString("secondary_hometype", reader),
+                            ZipCode = DatabaseHelper.GetString("zipCode", reader),
+                            SecondaryZipCode = DatabaseHelper.GetString("secondary_zipCode", reader),
+                            Sponsor1 = DatabaseHelper.GetString("sponsor1", reader),
+                            Sponsor2 = DatabaseHelper.GetString("sponsor2", reader),
+                            Sponsor1Comment = DatabaseHelper.GetString("sponsor1_Comment", reader),
+                            Sponsor2Comment = DatabaseHelper.GetString("sponsor2_comment", reader),
+                            FiscalStatus = DatabaseHelper.GetString("fiscal_status", reader),
+                            Registre = DatabaseHelper.GetString("registre", reader),
+                            LegalForm = DatabaseHelper.GetString("legalForm", reader),
+                            InsertionType = DatabaseHelper.GetString("insertionType", reader),
+                            Email = DatabaseHelper.GetString("e_mail", reader),
+                            FavouriteLoanOfficerId = DatabaseHelper.GetNullAuthorizedInt32("loan_officer_id", reader)
+                        };
+                        
+                        districtId = DatabaseHelper.GetNullAuthorizedInt32("district_id", reader);
+                        secondaryDistrictId = DatabaseHelper.GetNullAuthorizedInt32("secondary_district_id", reader);
+                        activityId = DatabaseHelper.GetNullAuthorizedInt32("activity_id", reader);
+                        reader.Close();
+                            
+                    }
+                }
+            }
+            if (body!=null)
+            {
+                if (body.FavouriteLoanOfficerId != null)
+                {
+                    UserManager userManager = new UserManager(User.CurrentUser);
+                    body.FavouriteLoanOfficer = userManager.SelectUser((int)body.FavouriteLoanOfficerId, true);
+                }
+            }
+                
+            if (districtId.HasValue) body.District = _locations.SelectDistrictById(districtId.Value);
+
+            if (secondaryDistrictId.HasValue) body.SecondaryDistrict = _locations.SelectDistrictById(secondaryDistrictId.Value);
+
+            if (activityId.HasValue) body.Activity = _doam.SelectEconomicActivity(activityId.Value);
+
+            if (body != null)
+            {
+                if (_projectManager != null)
+                    body.AddProjects(_projectManager.SelectProjectsByClientId(body.Id));
+                if (_savingManager != null)
+                    body.AddSavings(_savingManager.SelectSavings(body.Id));
+            }
+
+
+            // Selecting Corporate contacts - Not very logical, but asked by Julien M.
+            const string sqlContactText = @" 
+                                 SELECT Persons.id, 
+                                        Persons.first_name,
+                                        Persons.last_name,
+                                        Tiers.personal_phone,
+                                        CorporatePersonBelonging.position 
+                                 FROM Tiers
+                                 INNER JOIN CorporatePersonBelonging ON Tiers.id = CorporatePersonBelonging.person_id 
+                                 INNER JOIN Persons ON Tiers.id = Persons.id 
+                                 WHERE CorporatePersonBelonging.corporate_id = @id";
+
+            Person person = null;
+            Contact contact = null;
+            List<Contact> contacts = new List<Contact>();
+
+            var selectContact = new SqlCommand(sqlContactText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", selectContact, id);
+
+            using (SqlDataReader readerContact = selectContact.ExecuteReader())
+            {
+                if (readerContact != null)
+                {
+                    if (readerContact.HasRows)
+                    {
+                        while (readerContact.Read())
+                        {
+                            person = new Person()
+                                         {
+                                             Id = DatabaseHelper.GetInt32("id", readerContact),
+                                             FirstName = DatabaseHelper.GetString("first_name", readerContact),
+                                             LastName = DatabaseHelper.GetString("last_name", readerContact),
+                                             PersonalPhone = DatabaseHelper.GetString("personal_phone", readerContact)
+                                         };
+
+                            contact = new Contact()
+                                          {
+                                              Tiers = person,
+                                              Position = DatabaseHelper.GetString("position", readerContact)
+                                          };
+                            contacts.Add(contact);
+                        }
+                    }
+                }
+            }
+
+            body.Contacts = contacts;
+
+            return body;
+        }
+
+        public List<ContactRole> SelectRoleAll()
+        {
+            var liste = new List<ContactRole>();
+            var sqlText = @"SELECT * FROM Roles";
+            var select = new SqlCommand(sqlText, DefaultConnection);
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var role = new ContactRole
+                    {
+                        Id = DatabaseHelper.GetInt32("id", reader),
+                        Name = DatabaseHelper.GetString("code", reader)
+                    };
+
+                    liste.Add(role);
+                }
+            }
+            return liste;
+        }
+
+        //public List<Contact> SelectCorporatePerson(int pCorporateId)
+        //{
+        //    List<Contact> contactList = new List<Contact>();
+        //    List<int> listIds = new List<int>();
+        //    List<int> listRoleIds = new List<int>();
+
+        //    string sqlText = @"SELECT * FROM CorporatePersonBelonging WHERE corporate_id=@corporate_id";
+        //    SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+        //    DatabaseHelper.InsertInt32Param("@corporate_id", select, pCorporateId);
+        //    using (SqlDataReader reader = select.ExecuteReader())
+        //    {
+        //        if (reader.HasRows)
+        //        {
+        //            while (reader.Read())
+        //            {
+
+        //                int personId = DatabaseHelper.GetInt32("person_id", reader);
+        //                int roleId = DatabaseHelper.GetInt32("role_id", reader);
+        //                listIds.Add(personId);
+        //                listRoleIds.Add(roleId);
+        //            }
+        //        }
+        //    }
+
+        //    for (int i = 0; i < listIds.Count; i++)
+        //    {
+        //        Contact contact = new Contact();
+        //        contact.Tiers = SelectPersonById(listIds[i]);
+        //        contact.Role = SelectRoleAll().Find(delegate(ContactRole r)
+        //        { return ((r.Id == listRoleIds[i]) ? true : false); });
+        //        contactList.Add(contact);
+        //    }
+        //    return contactList;
+        //}
+
+        public void UpdateClientStatus(IClient pClient, SqlTransaction sqlTransaction)
+        {
+            const string sqlText = "UPDATE [Tiers] SET [status] = @status, [active] = @active WHERE id = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransaction))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pClient.Id);
+                DatabaseHelper.InsertSmalIntParam("@status", update, (int)pClient.Status);
+
+                if (pClient.Status == OClientStatus.Active || pClient.Status == OClientStatus.Bad)
+                    DatabaseHelper.InsertBooleanParam("@active", update, true);
+                else
+                    DatabaseHelper.InsertBooleanParam("@active", update, false);
+
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void SetFavourLoanOfficerForPerson(int clientId, int loanOfficerId)
+        {
+            const string query = @"UPDATE Persons
+                                 SET [loan_officer_id]=@loan_officer_id
+                                 WHERE Persons.id=@person_id";
+            using (SqlCommand cmd = new SqlCommand(query,DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@person_id", cmd, clientId);
+                DatabaseHelper.InsertInt32Param("@loan_officer_id", cmd, loanOfficerId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void SetFavourLoanOfficerForGroup(int groupId, int loanOfficerId)
+        {
+            const string query =
+                                  @"UPDATE Groups
+                                  SET loan_officer_id=@loan_officer_id
+                                  WHERE Groups.id=@group_id";
+            using (SqlCommand cmd = new SqlCommand(query, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@group_id", cmd, groupId);
+                DatabaseHelper.InsertInt32Param("@loan_officer_id", cmd, loanOfficerId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void SetFavourLoanOfficerForCorporate(int corporateId, int loanOfficerId)
+        {
+            const string query =
+                                  @"UPDATE Corporates
+                                  SET loan_officer_id=@loan_officer_id
+                                  WHERE Corporates.id=@corporate_id";
+            using (SqlCommand cmd = new SqlCommand(query, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@corporate_id", cmd, corporateId);
+                DatabaseHelper.InsertInt32Param("@loan_officer_id", cmd, loanOfficerId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void IncrementLoanCycleByContractId(int contractId, SqlTransaction t)
+        {
+            const string query = "UPDATE dbo.Tiers SET loan_cycle = loan_cycle + 1 " +
+                "WHERE id = (" +
+                "SELECT j.tiers_id FROM dbo.Projects AS j " +
+                "LEFT JOIN dbo.Contracts AS c ON c.project_id = j.id " +
+                "WHERE c.id = @contractId)";
+            using (SqlCommand cmd = new SqlCommand(query, DefaultConnection, t))
+            {
+                DatabaseHelper.InsertInt32Param("@contractId", cmd, contractId);
+                cmd.ExecuteNonQuery();
+            }
+
+            const string query2 = "UPDATE dbo.Tiers SET loan_cycle = loan_cycle + 1 " +
+                "WHERE id IN (" +
+                "SELECT person_id FROM dbo.LoanShareAmounts WHERE contract_id = @contractId)";
+            using (SqlCommand cmd = new SqlCommand(query2, DefaultConnection, t))
+            {
+                DatabaseHelper.InsertInt32Param("@contractId", cmd, contractId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void DecrementLoanCycleByContractId(int contractId, SqlTransaction t)
+        {
+            const string query = "UPDATE dbo.Tiers SET loan_cycle = loan_cycle - 1 " +
+                "WHERE id = (" +
+                "SELECT j.tiers_id FROM dbo.Projects AS j " +
+                "LEFT JOIN dbo.Contracts AS c ON c.project_id = j.id " +
+                "WHERE c.id = @contractId)";
+            using (SqlCommand cmd = new SqlCommand(query, DefaultConnection, t))
+            {
+                DatabaseHelper.InsertInt32Param("@contractId", cmd, contractId);
+                cmd.ExecuteNonQuery();
+            }
+
+            const string query2 = "UPDATE dbo.Tiers SET loan_cycle = loan_cycle - 1 " +
+                "WHERE id IN (" +
+                "SELECT person_id FROM dbo.LoanShareAmounts WHERE contract_id = @contractId)";
+            using (SqlCommand cmd = new SqlCommand(query2, DefaultConnection, t))
+            {
+                DatabaseHelper.InsertInt32Param("@contractId", cmd, contractId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public List<string> SelectAllSetUpFields(string pFieldsType)
+        {
+            List<string> list = new List<string>();
+            string sqlText = string.Format("SELECT * FROM {0}", pFieldsType);
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<string>();
+                    while (reader.Read())
+                    {
+                        list.Add(DatabaseHelper.GetString("value", reader));
+                    }
+                }
+            }
+            return list;
+        }
+
+        public int AddVillage(Village pVillage, SqlTransaction pSqlTransac)
+        {
+            int id = _AddTiers(pVillage, pSqlTransac);
+
+            const string sqlText = @"INSERT INTO [Villages]
+                                    (
+                                        [id],
+                                        [name],
+                                        [establishment_date],
+                                        [loan_officer], 
+                                        [meeting_day]
+                                    ) 
+                                     VALUES
+                                    (
+                                         @id,
+                                         @name,
+                                         @establishmentDate,
+                                         @loan_officer,
+                                         @meeting_day
+                                    )";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@id", insert, id);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, pVillage.Name);
+            DatabaseHelper.InsertDateTimeParam("@establishmentDate", insert, pVillage.EstablishmentDate);
+            DatabaseHelper.InsertInt32Param("@loan_officer", insert, pVillage.LoanOfficer.Id);
+            if(pVillage.MeetingDay.HasValue)
+                DatabaseHelper.InsertInt32Param("@meeting_day", insert, (int) pVillage.MeetingDay);
+            else
+                DatabaseHelper.InsertInt32Param("@meeting_day", insert, null);
+            
+            insert.ExecuteNonQuery();
+
+            return id;
+        }
+
+        public void UpdateVillage(Village pVillage, SqlTransaction pSqlTransac)
+        {
+            UpdateTiers(pVillage, pSqlTransac);
+
+            const string sqlText = @"UPDATE [Villages] 
+                                     SET [name]=@name, 
+                                         [establishment_date] = @establishmentDate, 
+                                         [loan_officer] = @loan_officer,
+                                         [meeting_day] = @meeting_day 
+                                     WHERE id = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@id", update, pVillage.Id);
+            DatabaseHelper.InsertStringNVarCharParam("@name", update, pVillage.Name);
+            DatabaseHelper.InsertDateTimeParam("@establishmentDate", update, pVillage.EstablishmentDate);
+            DatabaseHelper.InsertInt32Param("@loan_officer", update, pVillage.LoanOfficer.Id);
+            if (pVillage.MeetingDay.HasValue)
+                DatabaseHelper.InsertInt32Param("@meeting_day", update, (int)pVillage.MeetingDay);
+            else
+                DatabaseHelper.InsertInt32Param("@meeting_day", update, null);
+            update.ExecuteNonQuery();
+
+            List<VillageMember> members = SelectVillageMembersByVillageId(pVillage.Id, pSqlTransac);
+            foreach (VillageMember member in members)
+            {
+                DeleteVillageMember(pVillage.Id, member.Tiers.Id, pSqlTransac);
+            }
+
+            foreach (VillageMember member in pVillage.Members)
+            {
+                bool isNew = true;
+                foreach (VillageMember member2 in members)
+                {
+                    if (member.Tiers.Id == member2.Tiers.Id)
+                    {
+                        isNew = false;
+                        break;
+                    }
+                }
+
+                if (isNew)
+                    AddMemberToVillage(member, pVillage, pSqlTransac);
+                else
+                    UpdateMemberInVillage(member, pVillage, pSqlTransac);
+            }
+        }
+
+        private void AddMemberToVillage(VillageMember pMember, Village pVillage, SqlTransaction pSqlTransac)
+        {
+            const string sql = @"INSERT INTO VillagesPersons 
+                                (
+                                    village_id,
+                                    person_id,
+                                    joined_date,
+                                    left_date
+                                )
+                            VALUES 
+                                (
+                                    @village_id,
+                                    @person_id,
+                                    @joined_date,
+                                    @left_date
+                                )";
+
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection, pSqlTransac);
+            DatabaseHelper.InsertInt32Param("@village_id", cmd, pVillage.Id);
+            DatabaseHelper.InsertInt32Param("@person_id", cmd, pMember.Tiers.Id);
+            DatabaseHelper.InsertDateTimeParam("@joined_date", cmd, TimeProvider.Now);
+            DatabaseHelper.InsertNullValue("@left_date", cmd);
+            cmd.ExecuteNonQuery();
+        }
+
+        private void UpdateMemberInVillage(VillageMember pMember, Village pVillage, SqlTransaction pSqlTransac)
+        {
+            const string sql = @"UPDATE VillagesPersons SET left_date = NULL
+                                WHERE village_id = @village_id
+                                AND person_id = @person_id";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection, pSqlTransac);
+            DatabaseHelper.InsertInt32Param("@village_id", cmd, pVillage.Id);
+            DatabaseHelper.InsertInt32Param("@person_id", cmd, pMember.Tiers.Id);
+            cmd.ExecuteNonQuery();
+        }
+
+        private List<PersonCustomizableField> SelectCustomizedFieds(int pPersonId)
+        {
+            List<PersonCustomizableField> fields = new List<PersonCustomizableField>();
+
+            const string sqlText = @"SELECT * 
+                                    FROM [PersonCustomizableFields] 
+                                    WHERE person_id = @id";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pPersonId);
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        PersonCustomizableField field = new PersonCustomizableField();
+                        field.Number = DatabaseHelper.GetInt32("key", reader);
+                        field.Value = DatabaseHelper.GetString("value", reader);
+                        fields.Add(field);
+                    }
+                }
+            }
+            return fields;
+        }
+
+        private static char _GetClientChar(OClientTypes clientType)
+        {
+            char type = 'I';
+            switch (clientType)
+                {
+                    case OClientTypes.Person :
+                        type = 'I';
+                       break;
+
+                    case OClientTypes.Group:
+                       type = 'G';
+                       break;
+                    case OClientTypes.Corporate:
+                       type = 'C';
+                       break;
+                    case OClientTypes.Village:
+                       type = 'V';
+                       break;
+                }
+            return type;
+        }
+
+        private int _AddTiers(IClient pTiers, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [Tiers](
+                                       [creation_date], 
+                                       [client_type_code], 
+                                       [scoring], 
+                                       [loan_cycle], 
+                                       [active], 
+                                       [bad_client], 
+                                       [other_org_name], 
+                                       [other_org_amount], 
+                                       [other_org_debts], 
+                                       [district_id], 
+                                       [city], 
+                                       [address], 
+                                       [secondary_district_id], 
+                                       [secondary_city], 
+                                       [secondary_address], 
+                                       [cash_input_voucher_number], 
+                                       [cash_output_voucher_number],
+                                       [home_phone],
+                                       [personal_phone],
+                                       [secondary_home_phone],
+                                       [secondary_personal_phone],
+                                       [e_mail],
+                                       [home_type],
+                                       [secondary_e_mail],
+                                       [secondary_homeType],
+                                       [status],
+                                       [other_org_comment],
+                                       [sponsor1],
+                                       [sponsor2],
+                                       [sponsor1_comment],
+                                       [sponsor2_comment],
+                                       [follow_up_comment],
+                                       [zipCode],
+                                       [secondary_zipCode],
+                                       [branch_id]) 
+                                     VALUES(@creationDate, 
+                                       @clientTypeCode, 
+                                        @scoring, 
+                                        @loanCycle, 
+                                        @active, 
+                                        @badClient, 
+                                        @otherOrgName, 
+                                        @otherOrgAmount, 
+                                        @otherOrgDebts, 
+                                        @districtId, 
+                                        @city, 
+                                        @address, 
+                                        @secondaryDistrict, 
+                                        @secondaryCity, 
+                                        @secondaryAddress, 
+                                        @cashIn, 
+                                        @cashOut,
+                                        @homePhone,
+                                        @personalPhone,
+                                        @secondaryHomePhone,
+                                        @secondaryPersonalPhone,
+                                        @Email,
+                                        @HomeType,
+                                        @SecondaryEmail,
+                                        @SecondaryHometype,
+                                        @status,    
+                                        @OtherOrgComments, 
+                                        @sponsor1,
+                                        @sponsor2,
+                                        @sponsor1Comment,
+                                        @sponsor2Comment, 
+                                        @followUpComment,
+                                        @zipCode,
+                                        @secondaryZipCode,
+                                        @branchId) 
+                                      SELECT SCOPE_IDENTITY()";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertDateTimeParam("@creationDate", insert, TimeProvider.Today);
+                DatabaseHelper.InsertCharParam("@clientTypeCode", insert, _GetClientChar(pTiers.Type));
+                DatabaseHelper.InsertDoubleParam("@scoring", insert, pTiers.Scoring);
+                DatabaseHelper.InsertInt32Param("@loanCycle", insert, pTiers.LoanCycle);
+                DatabaseHelper.InsertBooleanParam("@active", insert, pTiers.Active);
+                DatabaseHelper.InsertBooleanParam("@badClient", insert, pTiers.BadClient);
+                DatabaseHelper.InsertStringNVarCharParam("@otherOrgName", insert, pTiers.OtherOrgName);
+                DatabaseHelper.InsertMoneyParam("@otherOrgAmount", insert, pTiers.OtherOrgAmount);
+                DatabaseHelper.InsertMoneyParam("@otherOrgDebts", insert, pTiers.OtherOrgDebts);
+                DatabaseHelper.InsertStringNVarCharParam("@city", insert, string.IsNullOrEmpty(pTiers.City) ? pTiers.City : pTiers.City.ToUpper());
+                DatabaseHelper.InsertStringNVarCharParam("@address", insert, pTiers.Address);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryCity", insert, string.IsNullOrEmpty(pTiers.SecondaryCity) ? pTiers.SecondaryCity : pTiers.SecondaryCity.ToUpper());
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryAddress", insert, pTiers.SecondaryAddress);
+                DatabaseHelper.InsertInt32Param("@cashIn", insert, pTiers.CashReceiptIn);
+                DatabaseHelper.InsertInt32Param("@cashOut", insert, pTiers.CashReceiptOut);
+                DatabaseHelper.InsertStringNVarCharParam("@homePhone", insert, pTiers.HomePhone);
+                DatabaseHelper.InsertStringNVarCharParam("@personalPhone", insert, pTiers.PersonalPhone);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryHomePhone", insert, pTiers.SecondaryHomePhone);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryPersonalPhone", insert, pTiers.SecondaryPersonalPhone);
+                DatabaseHelper.InsertStringNVarCharParam("@Email", insert, pTiers.Email);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryEmail", insert, pTiers.SecondaryEmail);
+                DatabaseHelper.InsertStringNVarCharParam("@HomeType", insert, pTiers.HomeType);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryHomeType", insert, pTiers.SecondaryHomeType);
+                DatabaseHelper.InsertStringNVarCharParam("@zipCode", insert, pTiers.ZipCode);
+                DatabaseHelper.InsertStringNVarCharParam("@secondaryZipCode", insert, pTiers.SecondaryZipCode);
+                DatabaseHelper.InsertSmalIntParam("@status", insert, (int)pTiers.Status);
+                DatabaseHelper.InsertStringNVarCharParam("@OtherOrgComments", insert, pTiers.OtherOrgComment);
+                DatabaseHelper.InsertStringNVarCharParam("@sponsor1", insert, pTiers.Sponsor1);
+                DatabaseHelper.InsertStringNVarCharParam("@sponsor2", insert, pTiers.Sponsor2);
+                DatabaseHelper.InsertStringNVarCharParam("@sponsor1Comment", insert, pTiers.Sponsor1Comment);
+                DatabaseHelper.InsertStringNVarCharParam("@sponsor2Comment", insert, pTiers.Sponsor2Comment);
+                DatabaseHelper.InsertStringNVarCharParam("@followUpComment", insert, pTiers.FollowUpComment);
+                DatabaseHelper.InsertInt32Param("@branchId", insert, TechnicalSettings.BranchId);
+
+                if (pTiers.District != null)
+                    DatabaseHelper.InsertInt32Param("@districtId", insert, pTiers.District.Id);
+                else
+                    DatabaseHelper.InsertInt32Param("@districtId", insert, null);
+
+                if (pTiers.SecondaryDistrict != null)
+                    DatabaseHelper.InsertInt32Param("@secondaryDistrict", insert, pTiers.SecondaryDistrict.Id);
+                else
+                    DatabaseHelper.InsertInt32Param("@secondaryDistrict", insert, null);
+
+                return int.Parse(insert.ExecuteScalar().ToString());
+            }
+        }
+
+        private int _AddBank(Bank pBank, SqlTransaction pTransac)
+        {
+            const string sqlText = @"INSERT INTO [Banks]([name],[address],[BIC],[IBAN1],[IBAN2],[customIBAN1],[customIBAN2])
+                        VALUES (@name,@address,@bic,@iban1,@iban2,@customIBAN1,@customIBAN2) SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pTransac);
+            DatabaseHelper.InsertStringNVarCharParam("@address", insert, pBank.Address);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, pBank.Name);
+            DatabaseHelper.InsertStringNVarCharParam("@bic", insert, pBank.BIC);
+            DatabaseHelper.InsertStringNVarCharParam("@iban1", insert, pBank.IBAN1);
+            DatabaseHelper.InsertStringNVarCharParam("@iban2", insert, pBank.IBAN2);
+            DatabaseHelper.InsertBooleanParam("@customIBAN1", insert, pBank.UseCustomIBAN1);
+            DatabaseHelper.InsertBooleanParam("@customIBAN2", insert, pBank.UseCustomIBAN2);
+            return int.Parse(insert.ExecuteScalar().ToString());
+        }
+
+        private void AddCustomizedFields(Person pPerson, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [PersonCustomizableFields]
+                                    ([person_id], [key], [value]) VALUES
+                                    (@id, @key, @value)";
+
+            foreach (PersonCustomizableField field in pPerson.CustomizableFields)
+            {
+                SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+                DatabaseHelper.InsertInt32Param("@id", insert, pPerson.Id);
+                DatabaseHelper.InsertInt32Param("@key", insert, field.Number);
+                DatabaseHelper.InsertStringNVarCharParam("@value", insert, field.Value);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void RestorMemberOfGroupByEventId(int pEventId, Loan pLoan, SqlTransaction pSqlTransac)
+        {
+            string sqlText = @"SELECT person_id 
+                              FROM LoanShareAmounts 
+                              WHERE event_id = @event_id
+                              AND contract_id = @contract_id";
+            int personId;
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@event_id", select, pEventId);
+                DatabaseHelper.InsertInt32Param("@contract_id", select, pLoan.Id);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    reader.Read();
+                    if (reader == null || !reader.HasRows)
+                        personId = 0;
+                    else
+                        personId = DatabaseHelper.GetInt32("person_id", reader);
+                }
+            }
+
+            sqlText = @"UPDATE PersonGroupBelonging
+                        SET currently_in = 1, 
+                          left_date = NULL 
+                        WHERE group_id  = @groupId 
+                        AND person_id = @personId";
+
+            using (var update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@groupId", update, pLoan.Project.Client.Id);
+                DatabaseHelper.InsertInt32Param("@personId", update, personId);
+                update.ExecuteNonQuery();
+            }
+
+            sqlText = @"UPDATE LoanShareAmounts 
+                           SET payment_date = null,
+                            event_id = null
+                           WHERE person_id = @person_id
+                             AND group_id = @group_id
+                             AND contract_id = @contract_id";
+
+            using (var update1 = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertDateTimeParam("@payment_date", update1, null);
+                DatabaseHelper.InsertInt32Param("@event_id", update1, null);
+
+                DatabaseHelper.InsertInt32Param("@person_id", update1, personId);
+                DatabaseHelper.InsertInt32Param("@group_id", update1, pLoan.Project.Client.Id);
+                DatabaseHelper.InsertInt32Param("@contract_id", update1, pLoan.Id);
+                update1.ExecuteNonQuery();
+            }
+        }
+
+        private Bank _SelectBank(int pValue)
+        {
+            const string sqlText = @"SELECT name,
+                                        address,
+                                        IBAN1,
+                                        BIC,
+                                        IBAN2,
+                                        customIBAN1,
+                                        customIBAN2
+                                     FROM Banks 
+                                     WHERE id = @id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pValue);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+                    Bank bank = new Bank
+                    {
+                        Id = pValue,
+                        Name = DatabaseHelper.GetString("name", reader), 
+                        Address = DatabaseHelper.GetString("address", reader),
+                        IBAN1 = DatabaseHelper.GetString("IBAN1", reader),
+                        BIC = DatabaseHelper.GetString("BIC", reader),
+                        IBAN2 = DatabaseHelper.GetString("IBAN2", reader),
+                        UseCustomIBAN1 = DatabaseHelper.GetNullAuthorizedBoolean("customIBAN1", reader) ?? false,
+                        UseCustomIBAN2 = DatabaseHelper.GetNullAuthorizedBoolean("customIBAN2", reader) ?? false
+                    };
+                    return bank;
+                }
+            }
+        }
+    }
+}

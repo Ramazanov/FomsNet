@@ -1,0 +1,379 @@
+﻿using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.CoreDomain.Clients;
+using Octopus.CoreDomain.FundingLines;
+using Octopus.DatabaseConnection;
+using Octopus.Manager.Events;
+using Octopus.Shared;
+using FundingLine = Octopus.CoreDomain.FundingLines.FundingLine;
+
+namespace Octopus.Manager
+{
+    public class FundingLineManager : Manager
+    {
+        #region Constructeur
+
+       private FundingLineEventManager _eventFundingLineManager;
+
+        public FundingLineManager(User pUser) : base(pUser)
+        {
+           _eventFundingLineManager = new FundingLineEventManager(pUser);
+        }
+        public FundingLineManager(string testDB) : base(testDB)
+        {
+           _eventFundingLineManager = new FundingLineEventManager(testDB);
+        }
+        #endregion
+
+        public FundingLine SelectFundingLineById(int id, SqlTransaction sqlTrans)
+        {
+            FundingLine fundingLine = null;
+
+            string sqlText = @"SELECT FundingLines.[id],FundingLines.[name], FundingLines.[deleted],FundingLines.[amount],FundingLines.[begin_date],FundingLines.[end_date],FundingLines.[purpose], FundingLines.[currency_id],
+                        Currencies.[name] as currency_name, Currencies.[code] as currency_code, Currencies.[is_pivot] as currency_is_pivot,
+                        Currencies.[is_swapped] as currency_is_swapped
+                        FROM [FundingLines] 
+                        LEFT JOIN Currencies on FundingLines.currency_id = Currencies.id
+                        WHERE FundingLines.[id]=@id and [deleted]=0";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection, sqlTrans);
+            DatabaseHelper.InsertInt32Param("@id", select, id);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        fundingLine = new FundingLine();
+                        fundingLine.Id = DatabaseHelper.GetInt32("id", reader);
+                        fundingLine.Name = DatabaseHelper.GetString("name", reader);
+                        fundingLine.Deleted = DatabaseHelper.GetBoolean("deleted", reader);
+                        fundingLine.StartDate = DatabaseHelper.GetDateTime("begin_date", reader);
+                        fundingLine.Purpose = DatabaseHelper.GetString("purpose", reader);
+                        fundingLine.EndDate = DatabaseHelper.GetDateTime("end_date", reader);
+                        fundingLine.Amount = DatabaseHelper.GetMoney("amount", reader);
+                        fundingLine.Currency = new Currency
+                        {
+                            Id = DatabaseHelper.GetInt32("currency_id", reader),
+                            Name = DatabaseHelper.GetString("currency_name", reader),
+                            Code = DatabaseHelper.GetString("currency_code", reader),
+                            IsPivot = DatabaseHelper.GetBoolean("currency_is_pivot", reader),
+                            IsSwapped = DatabaseHelper.GetBoolean("currency_is_swapped", reader)
+                        };
+
+                    }
+
+                }
+            }
+            if (fundingLine != null)
+               fundingLine.Events = _eventFundingLineManager.SelectFundingLineEvents(fundingLine.Id, sqlTrans);
+
+            return fundingLine;
+        }
+
+        public FundingLine SelectFundingLineByName(string name)
+        {
+            FundingLine fundingLine = null;
+
+            string sqlText =
+                @"SELECT FundingLines.[id],FundingLines.[name], FundingLines.[deleted],FundingLines.[amount],FundingLines.[begin_date],FundingLines.[end_date],FundingLines.[purpose], FundingLines.[currency_id],
+                        Currencies.[name] as currency_name, Currencies.[code] as currency_code, Currencies.[is_pivot] as currency_is_pivot,
+                        Currencies.[is_swapped] as currency_is_swapped
+                        FROM [FundingLines] LEFT JOIN Currencies on FundingLines.currency_id = Currencies.id
+                        WHERE FundingLines.[name]=@name and [deleted]=0";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, name);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        fundingLine = new FundingLine();
+                        fundingLine.Id = DatabaseHelper.GetInt32("id", reader);
+                        fundingLine.Name = DatabaseHelper.GetString("name", reader);
+                        fundingLine.Deleted = DatabaseHelper.GetBoolean("deleted", reader);
+                        fundingLine.StartDate = DatabaseHelper.GetDateTime("begin_date", reader);
+                        fundingLine.Purpose = DatabaseHelper.GetString("purpose", reader);
+                        fundingLine.EndDate = DatabaseHelper.GetDateTime("end_date", reader);
+                        fundingLine.Amount = DatabaseHelper.GetMoney("amount", reader);
+                        fundingLine.Currency = new Currency
+                                                   {
+                                                       Id = DatabaseHelper.GetInt32("currency_id", reader),
+                                                       Name = DatabaseHelper.GetString("currency_name", reader),
+                                                       Code = DatabaseHelper.GetString("currency_code", reader),
+                                                       IsPivot = DatabaseHelper.GetBoolean("currency_is_pivot", reader),
+                                                       IsSwapped =
+                                                           DatabaseHelper.GetBoolean("currency_is_swapped", reader)
+                                                   };
+                    }
+                }
+            }
+            if (fundingLine != null)
+                fundingLine.Events = _eventFundingLineManager.SelectFundingLineEvents(fundingLine);
+
+            return fundingLine;
+        }
+
+        public FundingLine SelectFundingLineById(int id, bool pAddOptionalEventInformations)
+        {
+           FundingLine fundingLine = null;
+
+           string sqlText = @"SELECT FundingLines.[id],FundingLines.[name], FundingLines.[deleted],FundingLines.[amount],FundingLines.[begin_date],FundingLines.[end_date],FundingLines.[purpose], FundingLines.[currency_id],
+                        Currencies.[name] as currency_name, Currencies.[code] as currency_code, Currencies.[is_pivot] as currency_is_pivot,
+                        Currencies.[is_swapped] as currency_is_swapped
+                        FROM [FundingLines] LEFT JOIN Currencies on FundingLines.currency_id = Currencies.id
+                        WHERE FundingLines.[id]=@id and [deleted]=0";
+           SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+           DatabaseHelper.InsertInt32Param("@id", select, id);
+
+           using (SqlDataReader reader = select.ExecuteReader())
+           {
+              if (reader != null)
+              {
+                 if (reader.HasRows)
+                 {
+                    reader.Read();
+                    fundingLine = new FundingLine();
+                    fundingLine.Id = DatabaseHelper.GetInt32("id", reader);
+                    fundingLine.Name = DatabaseHelper.GetString("name", reader);
+                    fundingLine.Deleted = DatabaseHelper.GetBoolean("deleted", reader);
+                    fundingLine.StartDate = DatabaseHelper.GetDateTime("begin_date", reader);
+                    fundingLine.Purpose = DatabaseHelper.GetString("purpose", reader);
+                    fundingLine.EndDate = DatabaseHelper.GetDateTime("end_date", reader);
+                    fundingLine.Amount = DatabaseHelper.GetMoney("amount", reader);
+                    fundingLine.Currency = new Currency
+                    {
+                        Id = DatabaseHelper.GetInt32("currency_id", reader),
+                        Name = DatabaseHelper.GetString("currency_name", reader),
+                        Code = DatabaseHelper.GetString("currency_code", reader),
+                        IsPivot = DatabaseHelper.GetBoolean("currency_is_pivot", reader),
+                        IsSwapped = DatabaseHelper.GetBoolean("currency_is_swapped", reader)
+                    };
+                 }
+
+              }
+           }
+           if (fundingLine != null && pAddOptionalEventInformations)
+              fundingLine.Events = _eventFundingLineManager.SelectFundingLineEvents(fundingLine);
+
+           return fundingLine;
+        }
+
+        public int SelectFundingLineId(FundingLine lookupFundingLine, bool includeAll)
+        {
+           int id = 0;
+
+           string sqlText =
+              @"SELECT [id] FROM [FundingLines] WHERE 
+               [begin_date]=@begindate and [end_date]=@enddate and [purpose] = @purpose and 
+               [amount] = @amount";
+           if(!includeAll) sqlText +="and [deleted]=@deleted";
+           //  string sqlText = "SELECT [id],[name], [deleted],[amount],[begin_date],[end_date],[purpose] FROM [FundingLines] WHERE [id]=@id";
+           SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+           DatabaseHelper.InsertDateTimeParam("@begindate", select, lookupFundingLine.StartDate);
+           DatabaseHelper.InsertDateTimeParam("@enddate", select, lookupFundingLine.EndDate);
+
+           DatabaseHelper.InsertMoneyParam("@amount", select, lookupFundingLine.Amount);
+           DatabaseHelper.InsertStringNVarCharParam("@purpose", select, lookupFundingLine.Purpose);
+           if (!includeAll) DatabaseHelper.InsertBooleanParam("@deleted", select, lookupFundingLine.Deleted);
+
+           using (SqlDataReader reader = select.ExecuteReader())
+           {
+              if (reader != null)
+              {
+                 if (reader.HasRows)
+                 {
+                    reader.Read();
+                    id = DatabaseHelper.GetInt32("id", reader);
+                 }
+
+              }
+           }
+           return id;
+        }
+        public FundingLine SelectFundingLineByNameAndPurpose(FundingLine lookupFundingLine, SqlTransaction sqlTransac, bool includeAll)
+        {
+           FundingLine newFL = new FundingLine();
+
+           string sqlText =
+              @"SELECT FundingLines.[id], [deleted], [currency_id],
+                        Currencies.[name] as currency_name, Currencies.[code] as currency_code, 
+                        Currencies.[is_pivot] as currency_pivot, Currencies.[is_swapped] as currency_is_swapped
+                FROM [FundingLines] 
+                LEFT JOIN Currencies on FundingLines.currency_id = Currencies.id
+                WHERE [purpose] = @purpose and 
+               FundingLines.[name] = @name";
+           if (!includeAll) sqlText += "and [deleted]=@deleted";
+           SqlCommand select = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+           DatabaseHelper.InsertStringNVarCharParam("@purpose", select, lookupFundingLine.Purpose);
+           DatabaseHelper.InsertStringNVarCharParam("@name", select, lookupFundingLine.Name);
+
+           if (!includeAll) DatabaseHelper.InsertBooleanParam("@deleted", select, lookupFundingLine.Deleted);
+
+           using (SqlDataReader reader = select.ExecuteReader())
+           {
+              if (reader != null)
+              {
+                 if (reader.HasRows)
+                 {
+                    reader.Read();
+
+                    newFL.Id = DatabaseHelper.GetInt32("id", reader);
+                    newFL.Deleted = DatabaseHelper.GetBoolean("deleted", reader);
+                     newFL.Currency = new Currency                                           
+                                               {
+                                                   Id = DatabaseHelper.GetInt32("currency_id", reader),
+                                                   Name = DatabaseHelper.GetString("currency_name", reader),
+                                                   Code = DatabaseHelper.GetString("currency_code", reader),
+                                                   IsPivot = DatabaseHelper.GetBoolean("currency_is_pivot", reader),
+                                                   IsSwapped = DatabaseHelper.GetBoolean("currency_is_swapped", reader)
+                                               };
+                 }
+
+              }
+           }
+
+           return newFL;
+        }
+
+       public int SelectFundingLineEventId(FundingLineEvent lookupFundingLineEvent, SqlTransaction sqlTransac)
+       {
+          return _eventFundingLineManager.SelectFundingLineEventId(lookupFundingLineEvent, sqlTransac, false);
+       }
+       public List<FundingLineEvent> SelectFundingLineEvents(FundingLine pFundingLine)
+       {
+           return _eventFundingLineManager.SelectFundingLineEvents(pFundingLine);
+       }
+       public List<FundingLine> SelectFundingLines()
+        {
+            List<FundingLine> list = new List<FundingLine>();
+            string sqlText =
+                @"SELECT FundingLines.[id],FundingLines.[name],[begin_date],[end_date],[amount],[purpose], [deleted], [currency_id],
+                        Currencies.[name] as currency_name, Currencies.[code] as currency_code, Currencies.[is_pivot] as currency_is_pivot,
+                        Currencies.[is_swapped] as currency_is_swapped      
+                FROM [FundingLines] 
+                LEFT JOIN Currencies on FundingLines.currency_id = Currencies.id
+                WHERE [deleted] = 0";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    FundingLine fundingLine = new FundingLine();
+                    fundingLine.Id = DatabaseHelper.GetInt32("id", reader);
+                    fundingLine.Name = DatabaseHelper.GetString("name", reader);
+                    fundingLine.StartDate = DatabaseHelper.GetDateTime("begin_date", reader);
+                    fundingLine.EndDate = DatabaseHelper.GetDateTime("end_date", reader);
+                    fundingLine.Amount = DatabaseHelper.GetMoney("amount", reader);
+                    fundingLine.Amount = DatabaseHelper.GetMoney("amount", reader);
+                    fundingLine.Purpose = DatabaseHelper.GetString("purpose", reader);
+                    fundingLine.Deleted = DatabaseHelper.GetBoolean("deleted", reader);
+                    fundingLine.Currency = new Currency
+                                               {
+                                                   Id = DatabaseHelper.GetInt32("currency_id", reader),
+                                                   Name = DatabaseHelper.GetString("currency_name", reader),
+                                                   Code = DatabaseHelper.GetString("currency_code", reader),
+                                                   IsPivot = DatabaseHelper.GetBoolean("currency_is_pivot", reader),
+                                                   IsSwapped = DatabaseHelper.GetBoolean("currency_is_swapped", reader)
+                                               };
+                    list.Add(fundingLine);
+                }
+            }
+          
+            foreach (FundingLine fundingLine in list)
+            {
+                fundingLine.Events = _eventFundingLineManager.SelectFundingLineEvents(fundingLine);
+            }
+            return list;
+        }
+
+
+        public int AddFundingLine(FundingLine pFund, SqlTransaction sqlTransac)
+        {
+            string sqlText = @"INSERT INTO [FundingLines]([name],[begin_date],[end_date],[amount],[purpose], [deleted], [currency_id]) 
+                    VALUES(@name,@beginDate,@endDate,@amount,@purpose,@deleted, @currency_id ) SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, pFund.Name);
+            DatabaseHelper.InsertDateTimeParam("@beginDate", insert, pFund.StartDate);
+            DatabaseHelper.InsertDateTimeParam("@endDate", insert, pFund.EndDate);
+            DatabaseHelper.InsertMoneyParam("@amount", insert, pFund.Amount);
+            DatabaseHelper.InsertStringNVarCharParam("@purpose", insert, pFund.Purpose);
+            DatabaseHelper.InsertBooleanParam("@deleted", insert, pFund.Deleted);
+            DatabaseHelper.InsertInt32Param("@currency_id", insert, pFund.Currency.Id);
+            pFund.Id = int.Parse(insert.ExecuteScalar().ToString());
+
+
+            foreach (FundingLineEvent eventFL in pFund.Events)
+            {
+               if (eventFL.Id == 0)
+                  _eventFundingLineManager.AddFundingLineEvent(eventFL, sqlTransac); //new event
+               else
+                  _eventFundingLineManager.UpdateFundingLineEvent(eventFL, sqlTransac); // delete event
+            }
+
+            return pFund.Id;
+        }
+
+       public void UpdateFundingLine(FundingLine fund, SqlTransaction pSqlTransac)
+        {
+            string sqlText = @"UPDATE [FundingLines] SET [name] = @name, [begin_date] = @beginDate, [end_date]=@endDate,
+                    [amount] = @amount,[purpose] = @purpose, [deleted]=@deleted, [currency_id] = @currency_id WHERE [id] = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+            DatabaseHelper.InsertInt32Param("@id", update, fund.Id);
+            DatabaseHelper.InsertStringNVarCharParam("@name", update, fund.Name);
+            DatabaseHelper.InsertDateTimeParam("@beginDate", update, fund.StartDate);
+            DatabaseHelper.InsertStringNVarCharParam("@purpose", update, fund.Purpose);
+            DatabaseHelper.InsertDateTimeParam("@endDate", update, fund.EndDate);
+            DatabaseHelper.InsertMoneyParam("@amount", update, fund.Amount);
+            DatabaseHelper.InsertBooleanParam("@deleted", update, fund.Deleted);
+            DatabaseHelper.InsertInt32Param("@currency_id", update, fund.Currency.Id); 
+           update.ExecuteNonQuery();
+
+
+          foreach (FundingLineEvent eventFL in fund.Events)
+           {
+              if (eventFL.Id == 0)
+                 _eventFundingLineManager.AddFundingLineEvent(eventFL, pSqlTransac); //new event
+              else
+                 _eventFundingLineManager.UpdateFundingLineEvent(eventFL, pSqlTransac); // delete event
+           }
+           
+
+
+        }
+        public int AddFundingLineEvent(FundingLineEvent newFundingLineEvent, SqlTransaction sqlTrans)
+        {
+           return _eventFundingLineManager.AddFundingLineEvent(newFundingLineEvent, sqlTrans); //new event
+
+        }
+
+       public void UpdateFundingLineEvent(FundingLineEvent newFundingLineEvent, SqlTransaction sqlTrans)
+       {
+          _eventFundingLineManager.UpdateFundingLineEvent(newFundingLineEvent, sqlTrans); //new event
+
+       }
+       public void DeleteFundingLineEvent(FundingLineEvent newFundingLineEvent, SqlTransaction sqlTrans)
+       {
+          _eventFundingLineManager.DeleteFundingLineEvent(newFundingLineEvent, sqlTrans); 
+
+       }
+
+       public void DeleteFundingLine(FundingLine fund)
+        {
+            string sqlText = "UPDATE [FundingLines] SET [deleted] = @deleted WHERE [id] = @id";
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", insert, fund.Id);
+            DatabaseHelper.InsertBooleanParam("@deleted", insert, true);
+            insert.ExecuteScalar();
+        }
+    }
+}

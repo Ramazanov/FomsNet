@@ -1,0 +1,14 @@
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\Log4net.xml
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\RemoteServerSettings.xml
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\Foms.Shared.dll.config
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\Foms.Shared.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\Foms.Shared.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\Foms.Enums.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\Foms.Extensions.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\ICSharpCode.SharpZipLib.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\System.ComponentModel.Composition.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\Foms.Enums.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\bin\Debug\Foms.Extensions.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\obj\Debug\ResolveAssemblyReference.cache
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\obj\Debug\Foms.Shared.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Shared\obj\Debug\Foms.Shared.pdb

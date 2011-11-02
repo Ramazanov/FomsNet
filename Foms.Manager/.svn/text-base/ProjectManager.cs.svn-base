@@ -1,0 +1,513 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Clients;
+using Octopus.CoreDomain.Contracts.Guarantees;
+using Octopus.CoreDomain.Contracts.Loans;
+using Octopus.Enums;
+using Octopus.Manager.Contracts;
+using Octopus.Shared;
+using Octopus.CoreDomain.SearchResult;
+using Octopus.Manager.QueryForObject;
+using Octopus.Manager.Clients;
+
+namespace Octopus.Manager
+{
+    public class ProjectManager : Manager
+    {
+        private readonly LoanManager _creditManager;
+        private readonly GuaranteeContractManager _guaranteeContratManager;
+        private readonly LocationsManager _locations;
+        private readonly ClientManager _clientManager;
+
+
+        public ProjectManager(string testDB)
+            : base(testDB)
+        {
+          
+            _creditManager = new LoanManager(testDB);
+            _guaranteeContratManager = new GuaranteeContractManager(testDB);
+            _locations = new LocationsManager(testDB);
+        }
+
+        public ProjectManager(string testDB, User pUser)
+            : base(testDB)
+        {
+            _creditManager = new LoanManager(testDB, pUser);
+            _guaranteeContratManager = new GuaranteeContractManager(testDB, pUser);
+            _locations = new LocationsManager(testDB);
+        }
+
+        public ProjectManager(User pUser, bool pInitializeAll): base(pUser)
+        {
+            if (pInitializeAll)
+            {
+                _creditManager = new LoanManager(pUser);
+                _guaranteeContratManager = new GuaranteeContractManager(pUser);
+                _locations = new LocationsManager(pUser);
+            }
+            else
+                _clientManager = new ClientManager(pUser, false, false);
+        }
+
+        public int Add(Project pProject, int pTiersId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO Projects([tiers_id],[status],[name],[code],[aim],[begin_date],
+                [abilities],[experience],[market],[concurrence],[purpose],[corporate_name],[corporate_juridicStatus]
+                ,[corporate_FiscalStatus],[corporate_siret],[corporate_CA],[corporate_nbOfJobs],[corporate_financialPlanType]
+                ,[corporateFinancialPlanAmount],[corporate_financialPlanTotalAmount],[address],[city],[zipCode],[district_id]
+                ,[home_phone],[personalPhone],[Email],[hometype],[corporate_registre]) 
+                VALUES(@tiersId,@status,@name,@code,@aim,@beginDate,@abilities,@experience,@market,@concurrence,@purpose,
+                @corporateName,@corporateJuridicStatus,@corporateFiscalStatus,@corporateSiret,@corporateCA,@corporateNbOfJobs,
+                @corporateFinancialPlanType, @corporateFinancialPlanAmount, @corporateFinancialPlanTotalAmount,
+                @address,@city, @zipCode, @districtId, @homePhone, @personalPhone,@Email,@hometype,@corporateRegistre) SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+
+            DatabaseHelper.InsertInt32Param("@tiersId", insert, pTiersId);
+            DatabaseHelper.InsertInt32Param("@status", insert, (int)pProject.ProjectStatus);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, pProject.Name);
+            DatabaseHelper.InsertStringNVarCharParam("@code", insert, pProject.Code);
+            DatabaseHelper.InsertStringNVarCharParam("@aim", insert, pProject.Aim);
+            DatabaseHelper.InsertDateTimeParam("@beginDate", insert, pProject.BeginDate);
+            DatabaseHelper.InsertStringNVarCharParam("@abilities", insert, pProject.Abilities);
+            DatabaseHelper.InsertStringNVarCharParam("@experience", insert, pProject.Experience);
+            DatabaseHelper.InsertStringNVarCharParam("@market", insert, pProject.Market);
+            DatabaseHelper.InsertStringNVarCharParam("@concurrence", insert, pProject.Concurrence);
+            DatabaseHelper.InsertStringNVarCharParam("@purpose", insert, pProject.Purpose);
+
+            DatabaseHelper.InsertStringNVarCharParam("@corporateName", insert, pProject.CorporateName);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateJuridicStatus", insert, pProject.CorporateJuridicStatus);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateFiscalStatus", insert, pProject.CorporateFiscalStatus);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateRegistre", insert, pProject.CorporateRegistre);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateSiret", insert, pProject.CorporateSIRET);
+            DatabaseHelper.InsertMoneyParam("@corporateCA", insert, pProject.CorporateCA);
+            DatabaseHelper.InsertInt32Param("@corporateNbOfJobs", insert, pProject.CorporateNbOfJobs);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateFinancialPlanType", insert, pProject.CorporateFinancialPlanType);
+            DatabaseHelper.InsertMoneyParam("@corporateFinancialPlanAmount", insert, pProject.CorporateFinancialPlanAmount);
+            DatabaseHelper.InsertMoneyParam("@corporateFinancialPlanTotalAmount", insert, pProject.CorporateFinancialPlanTotalAmount);
+            DatabaseHelper.InsertStringNVarCharParam("@address", insert, pProject.Address);
+            DatabaseHelper.InsertStringNVarCharParam("@city", insert, pProject.City);
+            DatabaseHelper.InsertStringNVarCharParam("@zipCode", insert, pProject.ZipCode);
+            if (pProject.District != null)
+                DatabaseHelper.InsertInt32Param("@districtId", insert, pProject.District.Id);
+            else
+                DatabaseHelper.InsertNullValue("@districtId", insert);
+            DatabaseHelper.InsertStringNVarCharParam("@homePhone", insert, pProject.HomePhone);
+            DatabaseHelper.InsertStringNVarCharParam("@personalPhone", insert, pProject.PersonalPhone);
+            DatabaseHelper.InsertStringNVarCharParam("@Email", insert, pProject.Email);
+            DatabaseHelper.InsertStringNVarCharParam("@hometype", insert, pProject.HomeType);
+
+            pProject.Id = Convert.ToInt32(insert.ExecuteScalar());
+            foreach (FollowUp followUp in pProject.FollowUps)
+            {
+                _AddFollowUp(followUp, pProject.Id, pSqlTransac);
+            }
+
+            foreach (Loan credit in pProject.Credits)
+            {
+                _creditManager.Add(credit, pProject.Id, pSqlTransac);
+            }
+            foreach (Guarantee guarantee in pProject.Guarantees)
+            {
+                _guaranteeContratManager.AddGuarantee(guarantee, pProject.Id, pSqlTransac);
+            }
+            return pProject.Id;
+        }
+
+        private void _AddFollowUp(FollowUp pUp, int pId, SqlTransaction pTransac)
+        {
+            const string sqlText = @"INSERT INTO [FollowUp] ([project_id],[year],[CA],[Jobs1],[Jobs2],[PersonalSituation],[activity]
+                ,[comment]) VALUES(@projectId,@year,@CA,@jobs1,@jobs2,@personalSituation,@activity,@comment)
+                SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pTransac);
+            DatabaseHelper.InsertInt32Param("@projectId", insert, pId);
+            DatabaseHelper.InsertInt32Param("@year", insert, pUp.Year);
+            DatabaseHelper.InsertMoneyParam("@CA", insert, pUp.CA);
+            DatabaseHelper.InsertInt32Param("@jobs1", insert, pUp.Jobs1);
+            DatabaseHelper.InsertInt32Param("@jobs2", insert, pUp.Jobs2);
+            DatabaseHelper.InsertStringNVarCharParam("@personalSituation", insert, pUp.PersonalSituation);
+            DatabaseHelper.InsertStringNVarCharParam("@activity", insert, pUp.Activity);
+            DatabaseHelper.InsertStringNVarCharParam("@comment", insert, pUp.Comment);
+            pUp.Id = Convert.ToInt32(insert.ExecuteScalar());
+        }
+
+        private Project SelectProject(int pId)
+        {
+            Project project = null;
+
+            string sqlText = "SELECT * FROM Projects WHERE id = @id";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    project = GetProject(reader);
+                }
+                else
+                    return project;
+            }
+
+            if (project.District != null)
+            {
+                project.District = _locations.SelectDistrictById(project.District.Id);
+            }
+
+            if (project.Id != 0)
+            {
+                project.FollowUps.AddRange(SelectFollowUps(project.Id));
+            }
+
+            if (project.Id != 0)
+            {
+                project.AddCredits(_creditManager.SelectLoansByProject(project.Id));
+                project.AddGuarantees(_guaranteeContratManager.SelectGuaranteesByProjectId(project.Id));
+            }
+
+            return project;
+        }
+
+        private Project GetProject(SqlDataReader reader)
+        {
+            Project project = new Project();
+            project.Id = DatabaseHelper.GetInt32("id", reader);
+            project.ProjectStatus = (OProjectStatus)DatabaseHelper.GetSmallInt("status", reader);
+            project.Code = DatabaseHelper.GetString("code", reader);
+            project.Name = DatabaseHelper.GetString("name", reader);
+            project.Aim = DatabaseHelper.GetString("aim", reader);
+            project.BeginDate = DatabaseHelper.GetDateTime("begin_date", reader);
+            project.Abilities = DatabaseHelper.GetString("abilities", reader);
+            project.Experience = DatabaseHelper.GetString("experience", reader);
+            project.Market = DatabaseHelper.GetString("market", reader);
+            project.Concurrence = DatabaseHelper.GetString("concurrence", reader);
+            project.Purpose = DatabaseHelper.GetString("purpose", reader);
+
+            project.CorporateName = DatabaseHelper.GetString("corporate_name", reader);
+            project.CorporateJuridicStatus = DatabaseHelper.GetString("corporate_juridicStatus", reader);
+            project.CorporateFiscalStatus = DatabaseHelper.GetString("corporate_FiscalStatus", reader);
+            project.CorporateSIRET = DatabaseHelper.GetString("corporate_siret", reader);
+            project.CorporateRegistre = DatabaseHelper.GetString("corporate_registre", reader);
+            project.CorporateCA = DatabaseHelper.GetNullAuthorizedMoney("corporate_CA", reader);
+
+            project.CorporateNbOfJobs = DatabaseHelper.GetNullAuthorizedInt32("corporate_nbOfJobs", reader);
+            project.CorporateFinancialPlanType = DatabaseHelper.GetString("corporate_financialPlanType", reader);
+            project.CorporateFinancialPlanAmount = DatabaseHelper.GetNullAuthorizedMoney("corporateFinancialPlanAmount", reader);
+            project.CorporateFinancialPlanTotalAmount = DatabaseHelper.GetNullAuthorizedMoney("corporate_financialPlanTotalAmount", reader);
+            project.Address = DatabaseHelper.GetString("address", reader);
+            project.City = DatabaseHelper.GetString("city", reader);
+            project.ZipCode = DatabaseHelper.GetString("zipCode", reader);
+            int? districtId = DatabaseHelper.GetNullAuthorizedInt32("district_id", reader);
+            if (districtId.HasValue)
+                project.District = new District { Id = districtId.Value };
+
+            project.HomePhone = DatabaseHelper.GetString("home_phone", reader);
+            project.PersonalPhone = DatabaseHelper.GetString("personalPhone", reader);
+            project.Email = DatabaseHelper.GetString("Email", reader);
+            project.HomeType = DatabaseHelper.GetString("hometype", reader);
+
+            return project;
+        }
+
+        private IEnumerable<FollowUp> SelectFollowUps(int pProjectId)
+        {
+            List<FollowUp> list = new List<FollowUp>();
+            const string sqlText = "SELECT * FROM FollowUp WHERE project_id = @pId";
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@pId", select, pProjectId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<FollowUp>();
+                    while (reader.Read())
+                    {
+                        FollowUp followUp = new FollowUp();
+                        followUp.Id = DatabaseHelper.GetInt32("id", reader);
+                        followUp.Year = DatabaseHelper.GetInt32("year", reader);
+                        followUp.Jobs1 = DatabaseHelper.GetInt32("Jobs1", reader);
+                        followUp.Jobs2 = DatabaseHelper.GetInt32("Jobs2", reader);
+                        followUp.CA = DatabaseHelper.GetMoney("CA", reader);
+                        followUp.PersonalSituation = DatabaseHelper.GetString("PersonalSituation", reader);
+                        followUp.Activity = DatabaseHelper.GetString("activity", reader);
+                        followUp.Comment = DatabaseHelper.GetString("comment", reader);
+                        list.Add(followUp);
+                    }
+                    return list;
+                }
+            }
+        }
+
+        public Project Select(int pProjectId)
+        {
+            return SelectProject(pProjectId);
+        }
+
+        public void UpdateProject(Project pProject, SqlTransaction pSqlTransaction)
+        {
+            const string sqlText = @"UPDATE Projects SET status = @status,name = @name,code = @code,aim = @aim,
+                begin_date = @beginDate, abilities = @abilities, experience = @experience, market = @market, concurrence = @concurrence,
+                purpose = @purpose ,[corporate_name] = @corporateName, [corporate_juridicStatus] = @corporateJuridicStatus, 
+                [corporate_FiscalStatus] = @corporateFiscalStatus,[corporate_siret] = @corporateSiret,[corporate_CA] = @corporateCA,
+                [corporate_nbOfJobs] = @corporateNbOfJobs,[corporate_financialPlanType] = @corporateFinancialPlanType,
+                [corporateFinancialPlanAmount] = @corporateFinancialPlanAmount,[corporate_financialPlanTotalAmount] = @corporateFinancialPlanTotalAmount,
+                [address] = @address,[city] = @city, [zipCode] = @zipCode, [district_id] = @districtId, [home_phone] = @homePhone, 
+                [personalPhone] = @personalPhone, [Email] = @Email, [hometype] = @hometype,
+                [corporate_registre] = @corporateRegistre WHERE id = @id";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransaction);
+            DatabaseHelper.InsertSmalIntParam("@status", select, (int)pProject.ProjectStatus);
+            DatabaseHelper.InsertInt32Param("@id", select, pProject.Id);
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, pProject.Name);
+            DatabaseHelper.InsertStringNVarCharParam("@code", select, pProject.Code);
+            DatabaseHelper.InsertStringNVarCharParam("@aim", select, pProject.Aim);
+            DatabaseHelper.InsertDateTimeParam("@beginDate", select, pProject.BeginDate);
+            DatabaseHelper.InsertStringNVarCharParam("@abilities", select, pProject.Abilities);
+            DatabaseHelper.InsertStringNVarCharParam("@experience", select, pProject.Experience);
+            DatabaseHelper.InsertStringNVarCharParam("@market", select, pProject.Market);
+            DatabaseHelper.InsertStringNVarCharParam("@concurrence", select, pProject.Concurrence);
+            DatabaseHelper.InsertStringNVarCharParam("@purpose", select, pProject.Purpose);
+
+            DatabaseHelper.InsertStringNVarCharParam("@corporateName", select, pProject.CorporateName);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateJuridicStatus", select, pProject.CorporateJuridicStatus);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateFiscalStatus", select, pProject.CorporateFiscalStatus);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateRegistre", select, pProject.CorporateRegistre);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateSiret", select, pProject.CorporateSIRET);
+            DatabaseHelper.InsertMoneyParam("@corporateCA", select, pProject.CorporateCA);
+            DatabaseHelper.InsertInt32Param("@corporateNbOfJobs", select, pProject.CorporateNbOfJobs);
+            DatabaseHelper.InsertStringNVarCharParam("@corporateFinancialPlanType", select, pProject.CorporateFinancialPlanType);
+            DatabaseHelper.InsertMoneyParam("@corporateFinancialPlanAmount", select, pProject.CorporateFinancialPlanAmount);
+            DatabaseHelper.InsertMoneyParam("@corporateFinancialPlanTotalAmount", select, pProject.CorporateFinancialPlanTotalAmount);
+            DatabaseHelper.InsertStringNVarCharParam("@address", select, pProject.Address);
+            DatabaseHelper.InsertStringNVarCharParam("@city", select, pProject.City);
+            DatabaseHelper.InsertStringNVarCharParam("@zipCode", select, pProject.ZipCode);
+            if (pProject.District != null)
+            {
+                DatabaseHelper.InsertInt32Param("@districtId", select, pProject.District.Id);
+            }
+            else
+            {
+                DatabaseHelper.InsertNullValue("@districtId", select);
+            }
+            DatabaseHelper.InsertStringNVarCharParam("@homePhone", select, pProject.HomePhone);
+            DatabaseHelper.InsertStringNVarCharParam("@personalPhone", select, pProject.PersonalPhone);
+            DatabaseHelper.InsertStringNVarCharParam("@Email", select, pProject.Email);
+            DatabaseHelper.InsertStringNVarCharParam("@hometype", select, pProject.HomeType);
+
+            select.ExecuteNonQuery();
+
+            foreach (FollowUp up in pProject.FollowUps)
+            {
+                if (up.Id == 0)
+                    _AddFollowUp(up, pProject.Id, pSqlTransaction);
+                else
+                    _UpdateFollowUp(up, pSqlTransaction);
+            }
+        }
+
+        private void _UpdateFollowUp(FollowUp pUp, SqlTransaction pTransaction)
+        {
+            const string sqlText = @"UPDATE [FollowUp] SET [year] = @year,[CA] = @CA,[Jobs1] = @Jobs1 ,[Jobs2] = @Jobs2
+                ,[PersonalSituation] = @PersonalSituation ,[activity] = @activity ,[comment] = @comment WHERE id = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pTransaction);
+            DatabaseHelper.InsertInt32Param("@id", update, pUp.Id);
+            DatabaseHelper.InsertInt32Param("@year", update, pUp.Year);
+            DatabaseHelper.InsertMoneyParam("@CA", update, pUp.CA);
+            DatabaseHelper.InsertInt32Param("@jobs1", update, pUp.Jobs1);
+            DatabaseHelper.InsertInt32Param("@jobs2", update, pUp.Jobs2);
+            DatabaseHelper.InsertStringNVarCharParam("@personalSituation", update, pUp.PersonalSituation);
+            DatabaseHelper.InsertStringNVarCharParam("@activity", update, pUp.Activity);
+            DatabaseHelper.InsertStringNVarCharParam("@comment", update, pUp.Comment);
+            update.ExecuteNonQuery();
+        }
+
+        public List<Project> SelectProjectsByClientId(int pClientId)
+        {
+            List<Project> list = new List<Project>();
+            List<int> listIds = new List<int>();
+
+            const string sqlText = "SELECT id FROM Projects WHERE tiers_id = @tiersId";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@tiersId", select, pClientId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        listIds.Add(DatabaseHelper.GetInt32("id", reader));
+                    }
+                }
+            }
+
+            foreach (int id in listIds)
+            {
+                list.Add(SelectProject(id));
+            }
+
+            return list;
+        }
+
+        public Project SelectProjectByContractId(int pContractId)
+        {
+            string sqlText = @"SELECT Projects.*
+                               FROM Projects
+                               INNER JOIN Contracts ON Projects.id = Contracts.project_id
+                               WHERE Contracts.id = @contractId";
+
+            Project project = null;
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@contractId", select, pContractId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        project = GetProject(reader);
+
+                    }
+                }
+            }
+
+            if (_clientManager != null)
+                project.Client = _clientManager.SelectClientByProjectId(project.Id);
+
+            return project;
+        }
+
+        public List<ProjetSearchResult> SelectProjectByCriteres(int pageNumber, string pQuery)
+        {
+            List<ProjetSearchResult> list = new List<ProjetSearchResult>();
+
+
+            string SELECT_FROM_PROJET_ = @" SELECT DISTINCT pro.id,pro.code,pro.name as name_project,pro.aim,pers.first_name,
+                        pers.last_name,tie.client_type_code,tie.id as tiers_id,corp.name as companyName
+						FROM (Projects as pro
+						INNER JOIN Tiers tie on pro.tiers_id=tie.id )
+						LEFT JOIN Corporates corp on corp.id=tie.id
+						LEFT JOIN Persons pers on pers.id=tie.id ) maTable";
+
+            string CloseWhere = @" WHERE ( companyName LIKE @companyName OR code LIKE @code OR name_project LIKE @nameProject OR aim LIKE @aim OR last_name LIKE @lastName OR first_name LIKE @firtName )) maTable";
+
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+            string pSqlText = q.ConstructSQLEntityByCriteresProxy(20, (pageNumber - 1) * 20);
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    ProjetSearchResult resultat = new ProjetSearchResult();
+                    resultat.Id = DatabaseHelper.GetInt32("id", reader);
+                    resultat.Code = DatabaseHelper.GetString("code", reader);
+                    resultat.ProjectName = DatabaseHelper.GetString("name_project", reader);
+                    resultat.CompanyName = DatabaseHelper.GetString("companyName", reader);
+                    resultat.Aim = DatabaseHelper.GetString("aim", reader);
+                    resultat.TiersId = DatabaseHelper.GetInt32("tiers_id", reader);
+                    resultat.Status = DatabaseHelper.GetChar("client_type_code", reader);
+                    resultat.LastName = DatabaseHelper.GetString("last_name", reader);
+                    resultat.FirstName = DatabaseHelper.GetString("first_name", reader);
+                    //resultat.ContractCode = DatabaseHelper.GetString("contract_code", reader);
+                    list.Add(resultat);
+                }
+            }
+
+            return list;
+
+        }
+
+        public int GetNumberProject(string pQuery)
+        {
+            string SELECT_FROM_PROJET_ = @" SELECT DISTINCT  pro.id,pro.code,pro.name as name_project,pro.aim,pers.first_name,
+                        pers.last_name,tie.client_type_code,tie.id as tiers_id,corp.name as companyName
+						FROM (Projects as pro 
+						INNER JOIN Tiers tie on pro.tiers_id=tie.id )
+						LEFT JOIN Corporates corp on corp.id=tie.id
+						LEFT JOIN Persons pers on pers.id=tie.id ) maTable";
+
+            string CloseWhere = @" WHERE ( companyName LIKE @companyName OR code LIKE @code OR name_project LIKE @nameProject OR aim LIKE @aim OR last_name LIKE @lastName OR first_name LIKE @firtName )) maTable ";
+
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_PROJET_, CloseWhere);
+            string pSqlText = q.ConstructSQLEntityNumberProxy();
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+
+        }
+
+        public List<string> SelectProjectPurposes()
+        {
+            List<string> list = new List<string>();
+            const string sqlText = "SELECT * FROM ProjectPurposes";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        list.Add(DatabaseHelper.GetString("name", reader));
+                    }
+                }
+            }
+            return list;
+        }
+
+        public void UpdateProjectStatut(Project pProject, SqlTransaction pTransaction)
+        {
+            const string sqlText = "UPDATE [Projects] SET [status] = @status WHERE id = @id";
+
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pTransaction);
+
+            DatabaseHelper.InsertInt32Param("@id", update, pProject.Id);
+            DatabaseHelper.InsertSmalIntParam("@status", update, (int) pProject.ProjectStatus);
+
+            update.ExecuteNonQuery();
+        }
+    }
+}

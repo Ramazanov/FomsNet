@@ -1,0 +1,74 @@
+﻿
+
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.Shared;
+
+namespace Octopus.Manager.Accounting
+{
+    public class LoanScaleManager : Manager
+    {
+        private readonly User _user = new User();
+        public LoanScaleManager(string pTestDB) : base(pTestDB){}
+
+        public LoanScaleManager(User pUser) : base(pUser)
+        {
+            _user = pUser;
+        }
+
+        public void InsertLoanScale(LoanScaleRate pLoanScaleRate, SqlTransaction pSqlTransaction)
+        {
+            const string sqlText = @"INSERT INTO LoanScale(id,ScaleMin, ScaleMax) VALUES(@number,@Min, @Max)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransaction))
+            {
+                _SetLoanScale(insert, pLoanScaleRate);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        private static void _SetLoanScale(SqlCommand pSqlCommand, LoanScaleRate pLoanScaleRate)
+        {
+            DatabaseHelper.InsertInt32Param("@number", pSqlCommand, pLoanScaleRate.Number);
+            DatabaseHelper.InsertInt32Param("@Min", pSqlCommand, pLoanScaleRate.ScaleMin);
+            DatabaseHelper.InsertInt32Param("@Max", pSqlCommand, pLoanScaleRate.ScaleMax);
+        }
+
+        public void SelectLoanScales()
+        {
+            LoanScaleTable loanscaleTable = LoanScaleTable.GetInstance(_user);
+            const string sqlText = "Select id, ScaleMin, ScaleMax FROM LoanScale";
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return;
+                    while (reader.Read())
+                    {
+                        loanscaleTable.AddLoanScaleRate(_GetLoanScale(reader));
+                    }
+                }
+            }
+        }
+
+        private static LoanScaleRate _GetLoanScale(SqlDataReader pReader)
+        {
+            return new LoanScaleRate
+                       {
+                           Number = DatabaseHelper.GetInt32("id", pReader),
+                           ScaleMin = DatabaseHelper.GetInt32("ScaleMin", pReader),
+                           ScaleMax = DatabaseHelper.GetInt32("ScaleMax", pReader)
+                       };
+        }
+
+        public void Delete(SqlTransaction pSqlTransaction)
+        {
+            const string sqltext = "DeleteAccount FROM LoanScale";
+            using (SqlCommand delete = new SqlCommand(sqltext, DefaultConnection, pSqlTransaction))
+            {
+                delete.ExecuteNonQuery();
+            }
+        }
+    }
+}

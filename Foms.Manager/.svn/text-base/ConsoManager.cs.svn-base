@@ -1,0 +1,497 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright ?2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Xml;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Consolidation;
+using Octopus.Shared;
+
+namespace Octopus.Manager
+{
+    public class ConsoManager : Manager
+    {
+        private User _user;
+
+        public ConsoManager(User pUser)
+            : base(pUser)
+        {
+            _user = pUser;
+        }
+
+        public bool hasSameStructure = true;
+        public bool isConform = true;
+
+        public ConsoManager(string pDatabaseConnectionString) : base(pDatabaseConnectionString) { }
+
+//----------------------------------------------------EXPORT---------------------------------------------------
+
+        /// <summary>
+        /// Using SQL command, return the last consolidation did by reading the first row of the temporary table
+        /// </summary>
+        /// <param name="pTemporaryTableName"></param>
+        /// <returns></returns>
+        public Consolidation GetLastConsolidation(string pTemporaryTableName)
+        {
+            string sqlLastConsolidation = @"IF EXISTS(SELECT name FROM sysobjects 
+                    WHERE name = @TemporaryTableName AND xtype='U')
+                    select top 1 period_number,period_type, date from " + pTemporaryTableName;
+
+            using (SqlCommand lastConsolidation = new SqlCommand(sqlLastConsolidation, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@TemporaryTableName", lastConsolidation, pTemporaryTableName);
+                using (SqlDataReader reader = lastConsolidation.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new Consolidation { IsExist = false };
+
+                    reader.Read();
+                    return new Consolidation
+                    {
+                        PeriodNumber = DatabaseHelper.GetInt32("period_number", reader),
+                        PeriodType = DatabaseHelper.GetChar("period_type", reader),
+                        Date = DatabaseHelper.GetDateTime("date", reader)
+                    };
+                }
+            }
+        }
+
+        public List<DictionaryEntry> ProcedureSelected()
+        {
+            const string sqlGetProcedureName = @"SELECT name FROM sysobjects WHERE name LIKE 'SP_Octopus_Consolidation%' AND xtype='P'";
+            List<DictionaryEntry> procedureName = new List<DictionaryEntry>();
+            using (SqlCommand getProcedureName = new SqlCommand(sqlGetProcedureName, DefaultConnection))
+            {
+                using (SqlDataReader reader = getProcedureName.ExecuteReader())
+                {
+                    int i = 0;
+                    while (reader.Read())
+                    {
+                        procedureName.Add(new DictionaryEntry(i, DatabaseHelper.GetString("name", reader)));
+                        i++;
+                    }
+                }
+            }
+            return procedureName;
+        }
+
+        /// <summary>
+        /// DeleteAccount the temporary table in using sql drop
+        /// </summary>
+        /// <param name="pTemporaryTableName"></param>
+        public void DeleteTemporaryTable(string pTemporaryTableName)
+        {
+            string sqldropTemporaryTable = @"IF EXISTS(SELECT name FROM sysobjects 
+                    WHERE name = @TemporaryTableName AND xtype='U')DROP TABLE " + pTemporaryTableName;
+
+            using (SqlCommand delete = new SqlCommand(sqldropTemporaryTable, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@TemporaryTableName", delete, pTemporaryTableName);
+                delete.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Proceed this consolidation.
+        /// </summary>
+        /// <param name="pSPName">Procedure's name</param>
+        /// <param name="pTemporaryTableName">Table's name</param>
+        /// <param name="pPeriod">Period</param>
+        /// <param name="pNumberOfPeriod">Number of period</param>
+        /// <param name="pReferencyDate">Referency date</param>
+        public bool Consolidate(string pSPName, string pTemporaryTableName, char pPeriod, int pNumberOfPeriod, DateTime pReferencyDate)
+        {
+            DeleteTemporaryTable(pTemporaryTableName);
+            while (pNumberOfPeriod != 0)
+            {
+                using (SqlCommand procedure = new SqlCommand(pSPName, DefaultConnection))
+                {
+                    procedure.CommandType = CommandType.StoredProcedure;
+                    DatabaseHelper.InsertStringNVarCharParam("@tableName", procedure, pTemporaryTableName);
+                    DatabaseHelper.InsertDateTimeParam("@endDate", procedure, pReferencyDate);
+                    DatabaseHelper.InsertInt32Param("@period", procedure, pNumberOfPeriod);
+                    DatabaseHelper.InsertCharParam("@periodType", procedure, pPeriod);
+                    procedure.ExecuteNonQuery();
+                    if (pPeriod == 'D')
+                        pReferencyDate = pReferencyDate.AddDays(-1);
+                    if (pPeriod == 'W')
+                        pReferencyDate = pReferencyDate.AddDays(-7);
+                    if (pPeriod == 'M')
+                        pReferencyDate = pReferencyDate.AddMonths(-1);
+                    pNumberOfPeriod = pNumberOfPeriod - 1;
+                }
+            }
+            return true;
+        }
+
+        
+
+        /// <summary>
+        /// Saves the consolidation data in a XML file
+        /// </summary>
+        /// <param name="pPath">Path to export the xml file</param>
+        /// <param name="pSPName">Name of the procedure</param>
+        /// <param name="pTemporaryTableName">Name of the temporary table</param>
+        /// <param name="pPeriod">Consolidation period (D, W or M)</param>
+        /// <param name="pNumberOfPeriod">Number of period</param>
+        /// <param name="pReferencyDate">Referency date</param>
+        /// <returns></returns>
+        public XmlDocument DumpConsolidationInXMLzipped(string pPath, string pSPName, string pTemporaryTableName, char pPeriod, int pNumberOfPeriod, DateTime pReferencyDate)
+        {
+            Stream streamConso = new MemoryStream();
+            XmlTextWriter myXmlTextWriter = new XmlTextWriter(streamConso, Encoding.Unicode) { Formatting = Formatting.Indented };
+            const string sqlGetBranchCode = "SELECT [value] FROM GeneralParameters where [key]='BRANCH_CODE'";
+            const string sqlGetCountry = "SELECT [value] FROM GeneralParameters where [key]='COUNTRY'";
+            myXmlTextWriter.WriteStartDocument();
+            myXmlTextWriter.WriteStartElement("Consolidation");
+            using (SqlCommand getBranchCode = new SqlCommand(sqlGetBranchCode, DefaultConnection))
+            {
+                using (SqlDataReader reader = getBranchCode.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        myXmlTextWriter.WriteAttributeString("BranchCode", _ConvertDataFromDatabase(reader,0));
+                    }
+                }
+            }
+            using (SqlCommand getCountry = new SqlCommand(sqlGetCountry, DefaultConnection))
+            {
+                using (SqlDataReader reader = getCountry.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        myXmlTextWriter.WriteAttributeString("Country", _ConvertDataFromDatabase(reader, 0));
+                    }
+                }
+            }
+            myXmlTextWriter.WriteAttributeString("Period", pPeriod.ToString());
+            myXmlTextWriter.WriteAttributeString("NumberOfPeriod", pNumberOfPeriod.ToString());
+            myXmlTextWriter.WriteAttributeString("ReferencyDate", pReferencyDate.ToString("dd/MM/yyyy"));
+            _GetStructureTable(pTemporaryTableName, myXmlTextWriter);  //fill the structure part of the xml
+            _GetData(pTemporaryTableName, myXmlTextWriter); //fill the data part of the xml
+            myXmlTextWriter.WriteEndElement();// end of consolidation element
+            myXmlTextWriter.Flush();
+            myXmlTextWriter.WriteEndDocument();
+
+            XmlDocument doc = new XmlDocument();
+            streamConso.Position = 0;
+            doc.Load(streamConso);
+            myXmlTextWriter.Close();
+            doc.Save(pPath);
+            ZipHelper CompressFiles = new ZipHelper(pPath);
+            CompressFiles.Compress(".zip");
+            File.Delete(pPath);
+            return doc;
+        }
+
+        /// <summary>
+        /// Load all the data from the temporary table and insert it in the format (Data/Row/colum id="" value="")
+        /// </summary>
+        /// <param name="pTemporaryTableName"></param>
+        /// <param name="pMyXmlTextWriter"></param>
+        private void _GetData(string pTemporaryTableName, XmlWriter pMyXmlTextWriter)
+        {
+            string sqlGetData = @"SELECT * FROM " + pTemporaryTableName;
+            pMyXmlTextWriter.WriteStartElement("Data");
+            using (SqlCommand getData = new SqlCommand(sqlGetData, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@TemporaryTableName", getData, pTemporaryTableName);
+                using (SqlDataReader reader = getData.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) { goto finish; }
+                    int j = 1;
+                    while (reader.Read())
+                    {
+                        pMyXmlTextWriter.WriteStartElement("Row");
+                        pMyXmlTextWriter.WriteAttributeString("id", (j).ToString());
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            pMyXmlTextWriter.WriteStartElement("column");
+                            pMyXmlTextWriter.WriteAttributeString("id", (i + 1).ToString());
+                            pMyXmlTextWriter.WriteAttributeString("value", _ConvertDataFromDatabase(reader, i));
+                            pMyXmlTextWriter.WriteEndElement(); //end of column element
+                        }
+                        pMyXmlTextWriter.WriteEndElement();// end of row element
+                        j++;
+                    }
+                }
+            }
+        finish:
+            pMyXmlTextWriter.WriteEndElement();// end of data element
+        }
+
+        /// <summary>
+        /// Load the structure of the temporary table in the format (Table name=""/column id="" name="" type="")
+        /// </summary>
+        /// <param name="pTemporaryTableName"></param>
+        /// <param name="pMyXmlTextWriter"></param>
+        private void _GetStructureTable(string pTemporaryTableName, XmlWriter pMyXmlTextWriter)
+        {
+            const string sqlGetStructure = @"SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                        WHERE  TABLE_NAME = @TemporaryTableName ORDER BY ORDINAL_POSITION";
+
+            pMyXmlTextWriter.WriteStartElement("Table");
+            pMyXmlTextWriter.WriteAttributeString("name", pTemporaryTableName);
+
+            using (SqlCommand getStructure = new SqlCommand(sqlGetStructure, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@TemporaryTableName", getStructure, pTemporaryTableName);
+                using (SqlDataReader reader = getStructure.ExecuteReader())
+                {
+                    int i = 1;
+                    while (reader.Read())
+                    {
+                        pMyXmlTextWriter.WriteStartElement("column");
+                        pMyXmlTextWriter.WriteAttributeString("id", i.ToString());
+                        pMyXmlTextWriter.WriteAttributeString("name", DatabaseHelper.GetString("column_name", reader));
+                        pMyXmlTextWriter.WriteAttributeString("type", DatabaseHelper.GetString("data_type", reader));
+                        pMyXmlTextWriter.WriteEndElement(); //end of column element
+                        i++;
+                    }
+                }
+            }
+            pMyXmlTextWriter.WriteEndElement();// end of table element
+        }
+
+        /// <summary>
+        /// Convert the data of the temporary table in string if they are not (datetime, decimal, double ...)
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        private static string _ConvertDataFromDatabase(IDataRecord reader, int i)
+        {
+            if (reader[i] != DBNull.Value)
+            {
+                if (reader.GetFieldType(i) == typeof(DateTime))
+                {
+                    DateTime date = (DateTime)reader[i];
+                    return date.ToString("dd/MM/yyyy");
+                }
+                if (reader.GetFieldType(i) == typeof(Decimal))
+                {
+                    Decimal dec = (Decimal)reader[i];
+                    return dec.ToString("#0.00", CultureInfo.InvariantCulture);
+                }
+                if (reader.GetFieldType(i) == typeof(Double))
+                {
+                    Double dec = (Double)reader[i];
+                    return dec.ToString("#0.00", CultureInfo.InvariantCulture);
+                }
+                return reader[i].ToString();
+            }
+            return null;
+        }
+
+//----------------------------------------------IMPORT---------------------------------------------------------
+
+        
+        public bool CompareGeneralStructure(string pFileToUpload)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(pFileToUpload);
+            XmlNode consolidationNode = doc.SelectSingleNode("Consolidation");
+            XmlNode tableNode = doc.SelectSingleNode("Consolidation/Table");
+            XmlNode dataNode = doc.SelectSingleNode("Consolidation/Data");
+            if (consolidationNode == null || tableNode == null || dataNode == null)
+            {
+                isConform = false;
+            }
+            return isConform;
+        }
+
+        public string GetTableName(string pFileToUpload)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(pFileToUpload);
+            XmlNode tableNode = doc.SelectSingleNode("Consolidation/Table");
+            return tableNode.Attributes["name"].Value;
+
+        }
+
+        public bool CompareXmlToDatabase(string pFileToUpload)
+        {
+            string tableName = GetTableName(pFileToUpload);
+            const string sqlGetDatabaseStructure = @"IF EXISTS(SELECT name FROM sysobjects 
+                    WHERE name = @TemporaryTableName AND xtype='U') SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                        WHERE  TABLE_NAME = @TemporaryTableName ORDER BY ORDINAL_POSITION";
+
+            const string sqlGetNumberOfColumn = @"IF EXISTS(SELECT name FROM sysobjects 
+                    WHERE name = @TemporaryTableName AND xtype='U') SELECT MAX(ORDINAL_POSITION) as NumberOfColumn FROM INFORMATION_SCHEMA.COLUMNS WHERE  TABLE_NAME = @TemporaryTableName";
+
+            int numberOfColumn = 0;
+            bool emptyFile = false;
+            using (SqlCommand getNumberOfColumn = new SqlCommand(sqlGetNumberOfColumn, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@TemporaryTableName", getNumberOfColumn, tableName);
+                getNumberOfColumn.ExecuteNonQuery();
+                using (SqlDataReader reader = getNumberOfColumn.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        numberOfColumn = DatabaseHelper.GetInt32("NumberOfColumn", reader);
+                    }
+                    else
+                    {
+                        emptyFile = true;
+                        hasSameStructure = false;
+                    }
+                }
+            }
+            if (emptyFile == false)
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(pFileToUpload);
+                XmlNodeList columnRowNodesList = doc.SelectNodes("Consolidation/Table/column");
+                if (columnRowNodesList.Count != numberOfColumn)
+                    hasSameStructure = false;
+                else
+                {
+                    using (SqlCommand getDatabaseStructure = new SqlCommand(sqlGetDatabaseStructure, DefaultConnection))
+                    {
+                        DatabaseHelper.InsertStringNVarCharParam("@TemporaryTableName", getDatabaseStructure,
+                                                                 tableName);
+                        getDatabaseStructure.ExecuteNonQuery();
+                        int i = 0;
+                        using (SqlDataReader reader = getDatabaseStructure.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                i++;
+                                string columnName = DatabaseHelper.GetString("COLUMN_NAME", reader);
+                                string columnType = DatabaseHelper.GetString("DATA_TYPE", reader);
+                                XmlNode elem = doc.SelectSingleNode("Consolidation/Table/column[@id=" + i + "]");
+                                string columnXmlName = elem.Attributes["name"].Value;
+                                string columnXmlType = elem.Attributes["type"].Value;
+                                if (columnXmlName == columnName && columnXmlType == columnType)
+                                    hasSameStructure = true;
+                                else
+                                {
+                                    hasSameStructure = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return hasSameStructure;
+        }
+
+        public void CreateTheTemporaryTableInTheDatabase(string pFileToUpload)
+        {
+            string tableName = GetTableName(pFileToUpload);
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(pFileToUpload);;
+            DeleteTemporaryTable(tableName);
+            string sqlCreateTable = "create table " + tableName + "(id int)";
+            SqlCommand createTable = new SqlCommand(sqlCreateTable, DefaultConnection);
+            createTable.ExecuteNonQuery();
+            XmlNodeList columnNodesList = doc.SelectNodes("Consolidation/Table/column");
+            foreach (XmlNode elem in columnNodesList)
+            {
+                string name = elem.Attributes["name"].Value;
+                string type = elem.Attributes["type"].Value;
+                string _attributesName = name;
+                string _attributesType = type;
+                if (type == "nvarchar") _attributesType = "nvarchar(50)";
+                string sqlAddColumn = @"ALTER TABLE " + tableName + " ADD " + _attributesName + " "
+                                        + _attributesType + " NULL";
+                SqlCommand addColumn = new SqlCommand(sqlAddColumn, DefaultConnection);
+                addColumn.ExecuteNonQuery();
+            }
+            string slqDropIdColumn = @"ALTER TABLE " + tableName + " DROP COLUMN id";
+            SqlCommand dropColumn = new SqlCommand(slqDropIdColumn, DefaultConnection);
+            dropColumn.ExecuteNonQuery();
+        }
+
+        public void FillTheTemporaryTable(string pFileToUpload)
+        {
+            string tableName = GetTableName(pFileToUpload);
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(pFileToUpload);
+            XmlNodeList rowDataNodesList = doc.SelectNodes("Consolidation/Data/Row");
+            int nbOfRow = rowDataNodesList.Count;
+            for (int i = 1; i < nbOfRow + 1; i++)
+            {
+                XmlNodeList column = doc.SelectNodes(@"Consolidation/Data/Row[@id=" + i + "]/column");
+                string sqlInsertData = @"INSERT INTO " + tableName + " VALUES (";
+                for (int j = 1; j <= column.Count; j++)
+                {
+                    sqlInsertData += string.Format("@parameter{0},", j);
+                }
+                sqlInsertData = sqlInsertData.Substring(0, sqlInsertData.Length - 1) + ")";
+                SqlCommand insertData = new SqlCommand(sqlInsertData, DefaultConnection);
+                foreach (XmlNode elem in column)
+                {
+                    int id = Convert.ToInt16(elem.Attributes["id"].Value);
+                    string type = doc.SelectSingleNode(string.Format("Consolidation/Table/column[@id={0}]", id)).Attributes["type"].Value;
+                    object value = _GetTheTypeForTheValue(type, elem.Attributes["value"].Value);
+                    DatabaseHelper.InsertObjectParam(string.Format("@parameter{0}", id), insertData, value);
+                }
+                insertData.ExecuteNonQuery();
+            }
+        }
+
+        private static object _GetTheTypeForTheValue(string pType, string pValue)
+        {
+            DateTimeFormatInfo providerDate = new DateTimeFormatInfo {ShortDatePattern = "dd/MM/yyyy"};
+            NumberFormatInfo providerNumber = new NumberFormatInfo {CurrencyDecimalSeparator = ".", NumberDecimalDigits = '2'};
+            if (pType == "int")
+                return Convert.ToInt32(pValue);
+
+            if (pType == "double")
+                return Convert.ToDouble(pValue, providerNumber);
+
+            if (pType == "bool")
+                return Convert.ToBoolean(pValue);
+
+            if (pType == "decimal")
+                return Convert.ToDecimal(pValue, providerNumber);
+
+            if (pType == "money")
+                return new OCurrency(Convert.ToDecimal(pValue, providerNumber));
+
+            if (pType == "char")
+                return Convert.ToChar(pValue);
+
+            if (pType == "datetime")
+                return Convert.ToDateTime(pValue, providerDate);
+
+            return pValue;
+        }
+
+        
+    }
+}
+     
+    
+

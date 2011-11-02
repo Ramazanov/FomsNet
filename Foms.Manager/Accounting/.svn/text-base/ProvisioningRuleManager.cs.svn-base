@@ -1,0 +1,107 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.Shared;
+
+namespace Octopus.Manager.Accounting
+{
+    public class ProvisioningRuleManager : Manager
+    {
+        public ProvisioningRuleManager(string pTestDB) : base(pTestDB){}
+        public ProvisioningRuleManager(User pUser) : base(pUser){}
+
+
+        public void AddProvisioningRate(ProvisioningRate pR, SqlTransaction sqlTransac)
+        {
+            const string sqlText = @"INSERT INTO ProvisioningRules(id,number_of_days_min, number_of_days_max, provisioning_value)
+                    VALUES(@number,@numberOfDaysMin, @numberOfDaysMax, @provisioningPercentage) SELECT SCOPE_IDENTITY()";
+
+            using(SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                _SetProvisioningRate(insert, pR);
+                insert.ExecuteScalar();
+            }
+        }
+
+        private static void _SetProvisioningRate(SqlCommand pSqlCommand, ProvisioningRate pProvisionningRate)
+        {
+            DatabaseHelper.InsertInt32Param("@number", pSqlCommand, pProvisionningRate.Number);
+            DatabaseHelper.InsertInt32Param("@numberOfDaysMin", pSqlCommand, pProvisionningRate.NbOfDaysMin);
+            DatabaseHelper.InsertInt32Param("@numberOfDaysMax", pSqlCommand, pProvisionningRate.NbOfDaysMax);
+            DatabaseHelper.InsertDoubleParam("@provisioningPercentage", pSqlCommand, pProvisionningRate.Rate);
+        }
+
+        ///// <summary>
+        ///// This method Fill the instance of the ProvisioningTable object accessed by singleton
+        ///// </summary>
+        public List<ProvisioningRate> SelectAllProvisioningRates()
+        {
+            List<ProvisioningRate> list = new List<ProvisioningRate>();
+
+            const string sqlText = @"SELECT 
+                                       id,
+                                       number_of_days_min, 
+                                       number_of_days_max, 
+                                       provisioning_value 
+                                     FROM ProvisioningRules";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return list;
+                    while (reader.Read())
+                    {
+                        list.Add(_GetProvisionningRate(reader));
+                    }
+                    return list;
+                }
+            }
+        }
+
+        private static ProvisioningRate _GetProvisionningRate(SqlDataReader reader)
+        {
+            return new ProvisioningRate
+                       {
+                           Number = DatabaseHelper.GetInt32("id", reader),
+                           NbOfDaysMin = DatabaseHelper.GetInt32("number_of_days_min", reader),
+                           NbOfDaysMax = DatabaseHelper.GetInt32("number_of_days_max", reader),
+                           Rate = DatabaseHelper.GetDouble("provisioning_value", reader)
+                       };
+        }
+
+        public void DeleteAllProvisioningRules(SqlTransaction sqlTransac)
+        {
+            const string sqlText = "DELETE FROM ProvisioningRules";
+            using(SqlCommand delete = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                delete.ExecuteNonQuery();    
+            }
+        }
+    }
+}

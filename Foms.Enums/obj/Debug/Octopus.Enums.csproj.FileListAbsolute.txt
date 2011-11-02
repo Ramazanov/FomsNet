@@ -1,0 +1,5 @@
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.Enums\bin\Debug\Octopus.Enums.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.Enums\bin\Debug\Octopus.Enums.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.Enums\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.Enums\obj\Debug\Octopus.Enums.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.Enums\obj\Debug\Octopus.Enums.pdb

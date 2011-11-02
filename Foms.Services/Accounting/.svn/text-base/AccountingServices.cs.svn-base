@@ -1,0 +1,237 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Data;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain.Accounting.Datasets;
+using Octopus.DatabaseConnection;
+using Octopus.Manager.Accounting;
+using Octopus.CoreDomain;
+using Octopus.ExceptionsHandler;
+using Octopus.Shared;
+using Octopus.CoreDomain.Accounting;
+using Octopus.Shared.Settings;
+using Octopus.Services.Currencies;
+using Octopus.Enums;
+
+namespace Octopus.Services.Accounting
+{
+    public class AccountingServices : ContextBoundObject
+	{
+		private readonly AccountingTransactionManager _movementSetManagement;
+        private ExchangeRateServices _exchangeRateServices;
+        private readonly ChartOfAccountsServices _gAps;
+        private User _user;
+
+		#region constructors
+
+        public AccountingServices(User pUser)
+        {
+            _user = pUser;
+            _exchangeRateServices = new ExchangeRateServices(_user);
+            _movementSetManagement = new AccountingTransactionManager(pUser);
+            _gAps = new ChartOfAccountsServices(pUser);
+        }
+
+ 		public AccountingServices(string testDb)
+		{
+            //_user = new User();
+            _exchangeRateServices = new ExchangeRateServices(testDb);
+			_gAps = new ChartOfAccountsServices(testDb);
+			_movementSetManagement = new AccountingTransactionManager(testDb);
+			ConnectionManager.GetInstance(testDb);
+		}
+
+		public AccountingServices(AccountManager accountManagement)
+		{
+			_gAps = new ChartOfAccountsServices(accountManagement);
+		}
+
+		public AccountingServices(AccountManager accountManagement, AccountingTransactionManager movementSetManagement)
+		{
+			_movementSetManagement = movementSetManagement;
+		}
+
+		public AccountingServices(ApplicationSettings databaseParameters, AccountingTransactionManager movementSetManagement)
+		{
+			_movementSetManagement = movementSetManagement;
+		}
+        #endregion
+
+		public bool DoLoanMovement(ContractAccountingRule accountingRule, int eventId)
+        {
+            return _movementSetManagement.DoLoanMovment(accountingRule, eventId, null);
+        }
+
+        public bool DoSavingsMovement(ContractAccountingRule accountingRule, int eventId)
+        {
+            return _movementSetManagement.DoSavingMovment(accountingRule, eventId, null);
+        }
+
+        public OCurrency GetAccountBalance(int accountId, int currencyId, int contractId, int? mode, int toSumParent)
+        {
+            return _movementSetManagement.GetAccountBalance(accountId, currencyId, contractId, mode, toSumParent);
+        }
+
+        public OCurrency GetAccountCategoryBalance(int categoryId, int currencyId, int contractId, int? mode)
+        {
+            return _movementSetManagement.GetAccountCategoryBalance(categoryId, currencyId, contractId, mode);
+        }
+
+	    public void BookManualEntry(Booking booking, User currentUser)
+		{
+            SqlTransaction sqlTransac = ConnectionManager.GetInstance().GetSqlTransaction(currentUser.Md5);
+            try
+			{
+				if (booking.Amount <= 0)
+				        throw new OctopusAccountException(OctopusAccountExceptionsEnum.IncorrectAmountFormat);
+
+                if (booking.DebitAccount.Id == booking.CreditAccount.Id)
+                {
+                    throw new OctopusAccountException(OctopusAccountExceptionsEnum.EqualAccounts);
+                }
+
+                _movementSetManagement.DoManualMovment(booking, sqlTransac);
+				sqlTransac.Commit();
+			}
+			catch (Exception ex)
+			{
+				sqlTransac.Rollback();
+				throw ex;
+			}
+		}
+
+		public AccountingTransaction FindMovementSet(int movementSetId, SqlTransaction pSqlTransaction)
+		{
+            return null;//_movementSetManagement.SelectTransaction(movementSetId, pSqlTransaction);
+		}
+
+        public List<Booking> SelectMovements()
+        {
+            return _movementSetManagement.SelectMovements(null);
+        }
+        
+        public Booking SelectBookingByEventId(int eventId)
+        {
+            return _movementSetManagement.SelectBookingByEventId(eventId, null);
+        }
+
+        public ExchangeRate FindExchangeRate(DateTime pDate, Currency pCurrency)
+        {
+            ExchangeRate exchangeRate = null;
+            Currency pivot = new CurrencyServices(_user).GetPivot();
+
+            if (!pivot.Equals(pCurrency))
+            {
+                if (new CurrencyServices(_user).FindAllCurrencies().Count > 1)
+                {
+                    exchangeRate = _exchangeRateServices.SelectExchangeRate(pDate, pCurrency);
+                    if (exchangeRate == null)
+                        throw new OctopusExchangeRateException(OctopusExchangeRateExceptionEnum.ExchangeRateIsNull);
+                }
+            }
+            else
+            {
+                //throw new OctopusExchangeRateException(OctopusExchangeRateExceptionEnum.ThisCurrencyIsPivot);
+                exchangeRate = new ExchangeRate
+                                   {
+                                       Currency = pCurrency,
+                                       Date = pDate,
+                                       Rate = 1
+                                   };
+            }
+            return exchangeRate;
+        }
+
+        public ExchangeRate FindLatestExchangeRate(DateTime pDate,Currency pCurrency)
+        {
+
+            ExchangeRate exchangeRate = null;
+             Currency pivot = new CurrencyServices(_user).GetPivot();
+            if (!pivot.Equals(pCurrency))
+            {
+                if (new CurrencyServices(_user).FindAllCurrencies().Count > 1)
+                {
+                    double rate = _exchangeRateServices.GetMostRecentlyRate(pDate,pCurrency);
+                    
+                    exchangeRate = new ExchangeRate
+                                       {
+                                           Currency = pCurrency,
+                                           Date = pDate,
+                                           Rate = rate
+                                       };
+                }
+            }
+            else
+            {
+                exchangeRate = new ExchangeRate
+                {
+                    Currency = pCurrency,
+                    Date = pDate,
+                    Rate = 1
+                };
+            }
+            return exchangeRate;
+        }
+
+        public OCurrency ConvertAmountToExternalCurrency(OCurrency amount, ExchangeRate exchangeRate)
+		{
+			return amount * 1 / exchangeRate.Rate;
+		}
+
+        public DataTable FindElementaryMvtsToExport()
+        {
+            return _movementSetManagement.SelectBookingsToExport();
+        }
+
+		public void UpdateElementaryMvtExportedValue(string pBuffer)
+        {
+            _movementSetManagement.UpdateSelectedBooking(pBuffer, true);
+        }
+
+		public DataSetElementaryMvts CreateDataSetRowWithAllElementaryMvtsToExport(DataSetElementaryMvts elementaryMvtList,
+			BookingToExport elementaryMvt)
+		{
+				elementaryMvtList.ElementaryMvts.AddElementaryMvtsRow(elementaryMvt.Date.ToShortDateString(),
+				                                                      elementaryMvt.DebitLocalAccountNumber, 
+                                                                      elementaryMvt.CreditLocalAccountNumber,
+                                                                      elementaryMvt.ExternalAmount.Value,
+                                                                      elementaryMvt.BookingCurrency.Name, 
+                                                                      elementaryMvt.UserName,
+				                                                      elementaryMvt.Purpose,
+                                                                      elementaryMvt.FundingLine ?? "-",
+				                                                      elementaryMvt.Number, 
+                                                                      elementaryMvt.MovmentSetId);
+		
+			return elementaryMvtList;
+		}
+
+        public BookingToViewStock FindAllBookings(Account pAccount, DateTime pBeginDate, DateTime pEndDate, int currencyId ,OBookingTypes pBookingType)
+        {
+            return _movementSetManagement.SelectBookings(pAccount, pBeginDate, pEndDate, currencyId, pBookingType);
+        }
+	}
+}

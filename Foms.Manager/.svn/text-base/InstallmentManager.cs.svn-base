@@ -1,0 +1,480 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Contracts.Loans;
+using Octopus.CoreDomain.Contracts.Loans.Installments;
+using Octopus.CoreDomain.Events;
+using Octopus.Shared;
+using Octopus.Enums;
+
+namespace Octopus.Manager
+{
+	/// <summary>
+	/// Description résumée de InstallmentManagement.
+	/// </summary>
+	public class InstallmentManager : Manager
+	{
+        public InstallmentManager(User pUser) : base(pUser) { }
+
+		public InstallmentManager(string pTestDb) : base(pTestDb) {}
+
+
+        public void AddInstallments(List<Installment> pInstallments, int pLoanId, SqlTransaction pSqlTransac)
+		{
+            const string sqlText = @"INSERT INTO Installments(expected_date, interest_repayment, capital_repayment, contract_id, 
+                    number, paid_interest, paid_capital,fees_unpaid, paid_date, paid_fees, payment_method, comment, pending)
+                    VALUES (@expectedDate,@interestsRepayment,@capitalRepayment,@contractId,@number,@paidInterests,
+                    @paidCapital,@feesUnpaid,@paidDate, @paid_fees, @payment_method, @comment, @pending)";
+
+            using(SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                foreach(Installment installment in pInstallments)
+                {
+                    _SetInstallment(installment,pLoanId, insert);
+                    insert.ExecuteNonQuery();
+                    insert.Parameters.Clear();
+                }
+            }
+        }
+
+        public void DeleteInstallments(int pLoanId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"DELETE FROM Installments WHERE contract_id = @contractId";
+
+            using (SqlCommand delete = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@contractId", delete, pLoanId);
+                delete.ExecuteNonQuery();
+            }
+        }
+
+        public List<Installment> SelectInstallments(int pLoanId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"SELECT expected_date, interest_repayment, capital_repayment, number, paid_interest, 
+                                         paid_capital, fees_unpaid, paid_date, paid_fees, payment_method, comment, pending
+                                    FROM Installments WHERE contract_id = @id";
+
+            using (SqlCommand selectInstallments = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectInstallments, pLoanId);
+                using (SqlDataReader reader = selectInstallments.ExecuteReader())
+                {
+                    List<Installment> installmentList = new List<Installment>();
+
+                    if (reader == null || !reader.HasRows) return installmentList;
+                    while (reader.Read())
+                    {
+                        installmentList.Add(_GetInstallment(reader));
+                    }
+                    return installmentList;
+                }
+            }
+        }
+
+
+
+        public List<KeyValuePair<int, Installment>> SelectInstalments()
+        {
+            const string sqlText = @"SELECT contract_id, expected_date, interest_repayment, capital_repayment, number, paid_interest, 
+                       paid_capital, fees_unpaid, paid_date, paid_fees, payment_method, comment, pending FROM Installments
+                        WHERE paid_capital=0 AND paid_interest=0"; //select only those Installments that have not had any repayments
+
+            using (SqlCommand selectInstallments = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = selectInstallments.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<KeyValuePair<int, Installment>>();
+
+                    List<KeyValuePair<int, Installment>> installmentList = new List<KeyValuePair<int, Installment>>();
+                    while (reader.Read())
+                    {
+                        KeyValuePair<int,Installment> result = new KeyValuePair<int, Installment>(DatabaseHelper.GetInt32("contract_id",reader),_GetInstallment(reader));
+                        installmentList.Add(result);
+                    }
+                    return installmentList;
+                }
+            }
+        }
+
+        public List<Installment> GetArchivedInstallments(int event_id, SqlTransaction t)
+        {
+            const string query = @"SELECT number, expected_date, capital_repayment, interest_repayment, 
+                paid_interest, paid_capital, paid_fees, fees_unpaid, paid_date, payment_method, comment, pending
+                FROM InstallmentHistory WHERE event_id = @event_id AND delete_date IS NULL";
+            using (SqlCommand cmd = new SqlCommand(query, DefaultConnection, t))
+            {
+                DatabaseHelper.InsertInt32Param("@event_id", cmd, event_id);
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    List<Installment> retval = new List<Installment>();
+                    if (null == reader || !reader.HasRows) return retval;
+                    while (reader.Read())
+                    {
+                        Installment i = new Installment();
+                        i.Number = DatabaseHelper.GetInt32("number", reader);
+                        i.ExpectedDate = DatabaseHelper.GetDateTime("expected_date", reader);
+                        i.CapitalRepayment = DatabaseHelper.GetMoney("capital_repayment", reader);
+                        i.InterestsRepayment = DatabaseHelper.GetMoney("interest_repayment", reader);
+                        i.PaidInterests = DatabaseHelper.GetMoney("paid_interest", reader);
+                        i.PaidCapital = DatabaseHelper.GetMoney("paid_capital", reader);
+                        i.PaidFees = DatabaseHelper.GetMoney("paid_fees", reader);
+                        i.FeesUnpaid = DatabaseHelper.GetMoney("fees_unpaid", reader);
+                        i.PaidDate = DatabaseHelper.GetNullAuthorizedDateTime("paid_date", reader);
+                        if (DatabaseHelper.GetNullAuthorizedSmallInt("payment_method", reader).HasValue)
+                            i.PaymentMethod = (OPaymentMethods)DatabaseHelper.GetNullAuthorizedSmallInt("payment_method", reader).Value;
+                        i.Comment = DatabaseHelper.GetString("comment", reader);
+                        i.IsPending = DatabaseHelper.GetBoolean("pending", reader);
+                        retval.Add(i);
+                    }
+                    return retval;
+                }
+            }
+        }
+
+
+        private static HistoricInstallment _GetHistoricInstallment(int pLoanId, SqlDataReader pReader)
+        {
+            var installment = new HistoricInstallment
+                       {
+                           ContractId = pLoanId,
+                           ExpectedDate = DatabaseHelper.GetDateTime("expected_date", pReader),
+                           EventId = DatabaseHelper.GetInt32("event_id", pReader),
+                           InterestsRepayment = DatabaseHelper.GetMoney("interest_repayment", pReader),
+                           CapitalRepayment = DatabaseHelper.GetMoney("capital_repayment", pReader),
+                           Number = DatabaseHelper.GetInt32("number", pReader),
+                           PaidCapital = DatabaseHelper.GetMoney("paid_capital", pReader),
+                           PaidInterests = DatabaseHelper.GetMoney("paid_interest", pReader),
+                           ReschedulingDate = DatabaseHelper.GetNullAuthorizedDateTime("rescheduling_date", pReader),
+                           PaidDate = DatabaseHelper.GetNullAuthorizedDateTime("paid_date", pReader),
+                           Comment = DatabaseHelper.GetString("comment", pReader),
+                           IsPending = DatabaseHelper.GetBoolean("pending", pReader)
+                       };
+
+            if (DatabaseHelper.GetNullAuthorizedSmallInt("payment_method", pReader).HasValue)
+                installment.PaymentMethod = (OPaymentMethods)DatabaseHelper.GetNullAuthorizedSmallInt("payment_method", pReader).Value;
+
+            return installment;
+        }
+
+
+        /// <summary>
+        /// this method allows us to update an installment
+        /// </summary>
+        /// <param name="installment">the installment modified</param>
+        /// <param name="contractId"></param>
+        /// <param name="sqlTransac"></param>
+        /// <param name="eventId">Event linked to this installment update</param>
+        public void UpdateInstallment(IInstallment installment, int contractId, int? eventId, SqlTransaction sqlTransac)
+        {
+            UpdateInstallment(installment, contractId, eventId, sqlTransac, false);
+        }
+
+	    private static void _SetInstallment(Installment pInstallment, int pLoanId, SqlCommand pSqlCommand)
+	    {
+            //primary key = loanId + number
+            DatabaseHelper.InsertInt32Param("@contractId", pSqlCommand, pLoanId);
+            DatabaseHelper.InsertInt32Param("@number", pSqlCommand, pInstallment.Number);
+
+            DatabaseHelper.InsertDateTimeParam("@expectedDate", pSqlCommand, pInstallment.ExpectedDate);
+            DatabaseHelper.InsertMoneyParam("@interestsRepayment", pSqlCommand, pInstallment.InterestsRepayment.Value);
+            DatabaseHelper.InsertMoneyParam("@capitalRepayment", pSqlCommand, pInstallment.CapitalRepayment.Value);
+            DatabaseHelper.InsertMoneyParam("@paidInterests", pSqlCommand, pInstallment.PaidInterests.Value);
+            DatabaseHelper.InsertMoneyParam("@paidCapital", pSqlCommand, pInstallment.PaidCapital.Value);
+            DatabaseHelper.InsertDateTimeParam("@paidDate", pSqlCommand, pInstallment.PaidDate);
+            DatabaseHelper.InsertMoneyParam("@feesUnpaid", pSqlCommand, pInstallment.FeesUnpaid.Value);
+            DatabaseHelper.InsertMoneyParam("@paid_fees", pSqlCommand, pInstallment.PaidFees.Value);
+            if (pInstallment.PaymentMethod.HasValue)
+                DatabaseHelper.InsertSmalIntParam("@payment_method", pSqlCommand, (int)pInstallment.PaymentMethod.Value);
+            else
+                DatabaseHelper.InsertNullValue("@payment_method", pSqlCommand);
+            DatabaseHelper.InsertStringNVarCharParam("@comment", pSqlCommand, pInstallment.Comment);
+            DatabaseHelper.InsertBooleanParam("@pending", pSqlCommand, pInstallment.IsPending);
+	    }
+
+        private static Installment _GetInstallment(SqlDataReader pReader)
+        {
+            var installment = new Installment
+            {
+                Number = DatabaseHelper.GetInt32("number", pReader),
+                ExpectedDate = DatabaseHelper.GetDateTime("expected_date", pReader),
+                InterestsRepayment = DatabaseHelper.GetMoney("interest_repayment", pReader),
+                CapitalRepayment = DatabaseHelper.GetMoney("capital_repayment", pReader),
+                PaidDate = DatabaseHelper.GetNullAuthorizedDateTime("paid_date", pReader),
+                PaidCapital = DatabaseHelper.GetMoney("paid_capital", pReader),
+                FeesUnpaid = DatabaseHelper.GetMoney("fees_unpaid", pReader),
+                PaidInterests = DatabaseHelper.GetMoney("paid_interest", pReader),
+                PaidFees = DatabaseHelper.GetMoney("paid_fees", pReader),
+                Comment = DatabaseHelper.GetString("comment", pReader),
+                IsPending = DatabaseHelper.GetBoolean("pending", pReader)
+            };
+
+            if (DatabaseHelper.GetNullAuthorizedSmallInt("payment_method", pReader).HasValue)
+                installment.PaymentMethod = (OPaymentMethods)DatabaseHelper.GetNullAuthorizedSmallInt("payment_method", pReader).Value;
+
+            return installment;
+        }
+
+        /// <summary>
+		/// this method allows us to update an installment
+		/// </summary>
+        /// <param name="pInstallment">the installment modified</param>
+        /// <param name="pContractId"></param>
+        /// <param name="pEventId">Event linked to this installment update</param>
+        /// <param name="pSqlTransac"></param>
+        /// <param name="pRescheduling">Is it a rescheduled installment</param>
+		public void UpdateInstallment(IInstallment pInstallment,int pContractId, int? pEventId,SqlTransaction pSqlTransac, bool pRescheduling)
+		{
+            // Update installement in database
+			const string sqlText = @"UPDATE Installments 
+                                    SET expected_date = @expectedDate, 
+                                        interest_repayment = @interestRepayment, 
+				                        capital_repayment = @capitalRepayment, 
+                                        contract_id = @contractId, 
+                                        number = @number, 
+                                        paid_interest = @paidInterest, 
+				                        paid_capital = @paidCapital,
+                                        fees_unpaid = @feesUnpaid, 
+                                        paid_date = @paidDate,
+                                        paid_fees = @paidFees,
+                                        payment_method = @paymentMethod,
+                                        comment = @comment,
+                                        pending = @pending
+                                     WHERE contract_id = @contractId 
+                                       AND number = @number";
+
+			SqlCommand updateInstallment = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+
+			//primary key = contractId + number
+			DatabaseHelper.InsertInt32Param("@contractId",updateInstallment,pContractId);
+			DatabaseHelper.InsertInt32Param("@number",updateInstallment,pInstallment.Number);
+			DatabaseHelper.InsertDateTimeParam("@expectedDate",updateInstallment,pInstallment.ExpectedDate);
+			DatabaseHelper.InsertMoneyParam("@interestRepayment",updateInstallment,pInstallment.InterestsRepayment.Value);
+			DatabaseHelper.InsertMoneyParam("@capitalRepayment",updateInstallment,pInstallment.CapitalRepayment.Value);
+			DatabaseHelper.InsertMoneyParam("@paidInterest",updateInstallment,pInstallment.PaidInterests.Value);
+			DatabaseHelper.InsertMoneyParam("@paidCapital",updateInstallment,pInstallment.PaidCapital.Value);
+			DatabaseHelper.InsertDateTimeParam("@paidDate",updateInstallment,pInstallment.PaidDate);
+            DatabaseHelper.InsertMoneyParam("@paidFees", updateInstallment, pInstallment.PaidFees.Value);
+            DatabaseHelper.InsertStringNVarCharParam("@comment", updateInstallment, pInstallment.Comment);
+            DatabaseHelper.InsertBooleanParam("@pending", updateInstallment, pInstallment.IsPending);
+            
+            if (pInstallment is Installment)
+            {
+                Installment installment = (Installment) pInstallment;
+                DatabaseHelper.InsertMoneyParam("@feesUnpaid", updateInstallment, installment.FeesUnpaid);
+            }
+            else
+            {
+                DatabaseHelper.InsertMoneyParam("@feesUnpaid", updateInstallment, 0);                
+            }
+
+            if (pInstallment.PaymentMethod.HasValue)
+                DatabaseHelper.InsertSmalIntParam("paymentMethod", updateInstallment, (int)pInstallment.PaymentMethod.Value);
+            else
+                DatabaseHelper.InsertNullValue("paymentMethod", updateInstallment);
+
+            updateInstallment.ExecuteNonQuery();
+		}
+
+        public void UpdateInstallment(DateTime date, int id, int number, SqlTransaction pSqlTransac)
+        {
+            // Update installement in database
+            const string sqlText = @"UPDATE Installments 
+                                    SET expected_date = @expectedDate
+                                     WHERE contract_id = @contractId 
+                                       AND number = @number";
+
+            SqlCommand updateInstallment = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+
+            //primary key = contractId + number
+            DatabaseHelper.InsertInt32Param("@contractId", updateInstallment, id);
+            DatabaseHelper.InsertInt32Param("@number", updateInstallment, number);
+            DatabaseHelper.InsertDateTimeParam("@expectedDate", updateInstallment, date);
+          
+            updateInstallment.ExecuteNonQuery();
+        }
+
+        public void UpdateInstallmentComment(string pComment, int pContractId, int pNumber, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"UPDATE Installments
+                                     SET comment = @comment
+                                     WHERE contract_id = @contractId 
+                                     AND number = @number";
+
+            SqlCommand updateInstallment = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+
+            //primary key = contractId + number
+            DatabaseHelper.InsertInt32Param("@contractId", updateInstallment, pContractId);
+            DatabaseHelper.InsertInt32Param("@number", updateInstallment, pNumber);
+            DatabaseHelper.InsertStringNVarCharParam("@comment", updateInstallment, pComment);
+
+            updateInstallment.ExecuteNonQuery();
+        }
+
+        public void SaveInstallmentToHistory(int contractId, Installment installment, Event e, SqlTransaction t)
+        {
+            const string sql = @"INSERT INTO InstallmentHistory (contract_id, event_id, event_date, number, 
+                expected_date, principal, interest)
+                VALUES (@contract_id, @event_id, @event_date, @number, @expected_date, @principal, @interest)";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection, t);
+            DatabaseHelper.InsertInt32Param("@contract_id", cmd, contractId);
+            DatabaseHelper.InsertInt32Param("@event_id", cmd, e.Id);
+            DatabaseHelper.InsertDateTimeParam("@event_date", cmd, e.Date);
+            DatabaseHelper.InsertInt32Param("@number", cmd, installment.Number);
+            DatabaseHelper.InsertDateTimeParam("@expected_date", cmd, installment.ExpectedDate);
+            DatabaseHelper.InsertMoneyParam("@principal", cmd, installment.CapitalRepayment);
+            DatabaseHelper.InsertMoneyParam("@interest", cmd, installment.InterestsRepayment);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void ArchiveInstallment(Installment i, int contract_id, Event e, SqlTransaction t)
+        {
+            const string query = @"INSERT INTO dbo.InstallmentHistory (contract_id, event_id, number, expected_date,
+                capital_repayment, interest_repayment, paid_interest, paid_capital, paid_fees, fees_unpaid,
+                paid_date, payment_method, comment, pending) VALUES (@contract_id, @event_id, @number, @expected_date, @capital_repayment, @interest_repayment,
+                @paid_interest, @paid_capital, @paid_fees, @fees_unpaid, @paid_date, @payment_method, @comment, @pending)";
+            SqlCommand cmd = new SqlCommand(query, DefaultConnection, t);
+            DatabaseHelper.InsertInt32Param("@contract_id", cmd, contract_id);
+            DatabaseHelper.InsertInt32Param("@event_id", cmd, e.Id);
+            DatabaseHelper.InsertInt32Param("@number", cmd, i.Number);
+            DatabaseHelper.InsertDateTimeParam("@expected_date", cmd, i.ExpectedDate);
+            DatabaseHelper.InsertMoneyParam("@capital_repayment", cmd, i.CapitalRepayment.Value);
+            DatabaseHelper.InsertMoneyParam("@interest_repayment", cmd, i.InterestsRepayment.Value);
+            DatabaseHelper.InsertMoneyParam("@paid_interest", cmd, i.PaidInterests.Value);
+            DatabaseHelper.InsertMoneyParam("@paid_capital", cmd, i.PaidCapital.Value);
+            DatabaseHelper.InsertMoneyParam("@paid_fees", cmd, i.PaidFees.Value);
+            DatabaseHelper.InsertMoneyParam("@fees_unpaid", cmd, i.FeesUnpaid.Value);
+            DatabaseHelper.InsertDateTimeParam("@paid_date", cmd, i.PaidDate);
+            DatabaseHelper.InsertStringNVarCharParam("@comment", cmd, i.Comment);
+            DatabaseHelper.InsertBooleanParam("@pending", cmd, i.IsPending);
+            if (i.PaymentMethod.HasValue)
+                DatabaseHelper.InsertSmalIntParam("@payment_method", cmd, (int)i.PaymentMethod.Value);
+            else
+                DatabaseHelper.InsertNullValue("@payment_method", cmd);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void UnarchiveInstallments(Loan loan, Event e, SqlTransaction t)
+        {
+            List<Installment> installments = GetArchivedInstallments(e.Id, t);
+            if (0 == installments.Count) return;
+
+            // DeleteAccount existing installments
+            const string queryDelete = "DELETE FROM dbo.Installments WHERE contract_id = @contract_id";
+            SqlCommand cmdDelete = new SqlCommand(queryDelete, DefaultConnection, t);
+            DatabaseHelper.InsertInt32Param("@contract_id", cmdDelete, loan.Id);
+            cmdDelete.ExecuteNonQuery();
+
+            // Copy installments from archive to Installments table
+            foreach (Installment i in installments)
+            {
+                const string queryInsert = @"INSERT INTO dbo.Installments (expected_date, interest_repayment,
+                        capital_repayment, contract_id, number, paid_interest, paid_capital, fees_unpaid,
+                        paid_date, paid_fees, payment_method, comment, pending) VALUES (@expected_date, @interest_repayment, @capital_repayment,
+                        @contract_id, @number, @paid_interest, @paid_capital, @fees_unpaid, @paid_date, @paid_fees, @payment_method, @comment, @pending)";
+                SqlCommand cmdInsert = new SqlCommand(queryInsert, DefaultConnection, t);
+                DatabaseHelper.InsertDateTimeParam("@expected_date", cmdInsert, i.ExpectedDate);
+                DatabaseHelper.InsertMoneyParam("@interest_repayment", cmdInsert, i.InterestsRepayment.Value);
+                DatabaseHelper.InsertMoneyParam("@capital_repayment", cmdInsert, i.CapitalRepayment.Value);
+                DatabaseHelper.InsertInt32Param("@contract_id", cmdInsert, loan.Id);
+                DatabaseHelper.InsertInt32Param("@number", cmdInsert, i.Number);
+                DatabaseHelper.InsertMoneyParam("@paid_interest", cmdInsert, i.PaidInterests.Value);
+                DatabaseHelper.InsertMoneyParam("@paid_capital", cmdInsert, i.PaidCapital.Value);
+                DatabaseHelper.InsertMoneyParam("@paid_fees", cmdInsert, i.PaidFees.Value);
+                DatabaseHelper.InsertMoneyParam("@fees_unpaid", cmdInsert, i.FeesUnpaid.Value);
+                DatabaseHelper.InsertDateTimeParam("@paid_date", cmdInsert, i.PaidDate);
+                DatabaseHelper.InsertStringNVarCharParam("@comment", cmdInsert, i.Comment);
+                if (i.PaymentMethod.HasValue)
+                    DatabaseHelper.InsertSmalIntParam("@payment_method", cmdInsert, (int)i.PaymentMethod.Value);
+                else
+                    DatabaseHelper.InsertNullValue("@payment_method", cmdInsert);
+                DatabaseHelper.InsertBooleanParam("@pending", cmdInsert, i.IsPending);
+                cmdInsert.ExecuteNonQuery();
+            }
+
+            // Mark archived installments as deleted (set delete_date)
+            const string queryUpdate = "UPDATE dbo.InstallmentHistory SET delete_date = @delete_date WHERE event_id = @event_id";
+            SqlCommand cmdUpdate = new SqlCommand(queryUpdate, DefaultConnection, t);
+            DatabaseHelper.InsertDateTimeParam("@delete_date", cmdUpdate, TimeProvider.Today);
+            DatabaseHelper.InsertInt32Param("@event_id", cmdUpdate, e.Id);
+            cmdUpdate.ExecuteNonQuery();
+        }
+
+        public void InsertRescheduledInstallment(IInstallment pInstallment, int pContractId, int? pEventId, SqlTransaction pSqlTransac, bool pRescheduling)
+        {
+            const string sqlText = @"UPDATE Installments 
+                                    SET expected_date = @expectedDate, 
+                                        interest_repayment = @interestRepayment, 
+				                        capital_repayment = @capitalRepayment, 
+                                        contract_id = @contractId, 
+                                        number = @number, 
+                                        paid_interest = @paidInterest, 
+				                        paid_capital = @paidCapital,
+                                        fees_unpaid = @feesUnpaid, 
+                                        paid_date = @paidDate,
+                                        paid_fees = @paidFees,
+                                        payment_method = @paymentMethod,
+                                        comment = @comment,
+                                        pending = @pending
+                                     WHERE contract_id = @contractId 
+                                       AND number = @number";
+
+			SqlCommand updateInstallment = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+
+			//primary key = contractId + number
+			DatabaseHelper.InsertInt32Param("@contractId",updateInstallment,pContractId);
+			DatabaseHelper.InsertInt32Param("@number",updateInstallment,pInstallment.Number);
+			DatabaseHelper.InsertDateTimeParam("@expectedDate",updateInstallment,pInstallment.ExpectedDate);
+			DatabaseHelper.InsertMoneyParam("@interestRepayment",updateInstallment,pInstallment.InterestsRepayment.Value);
+			DatabaseHelper.InsertMoneyParam("@capitalRepayment",updateInstallment,pInstallment.CapitalRepayment.Value);
+			DatabaseHelper.InsertMoneyParam("@paidInterest",updateInstallment,pInstallment.PaidInterests.Value);
+			DatabaseHelper.InsertMoneyParam("@paidCapital",updateInstallment,pInstallment.PaidCapital.Value);
+			DatabaseHelper.InsertDateTimeParam("@paidDate",updateInstallment,pInstallment.PaidDate);
+            DatabaseHelper.InsertMoneyParam("@paidFees", updateInstallment, pInstallment.PaidFees.Value);
+            DatabaseHelper.InsertStringNVarCharParam("@comment", updateInstallment, pInstallment.Comment);
+            DatabaseHelper.InsertBooleanParam("@pending", updateInstallment, pInstallment.IsPending);
+
+            if (pInstallment is Installment)
+            {
+                Installment installment = (Installment) pInstallment;
+                DatabaseHelper.InsertMoneyParam("@feesUnpaid", updateInstallment, installment.FeesUnpaid);
+            }
+            else
+            {
+                DatabaseHelper.InsertMoneyParam("@feesUnpaid", updateInstallment, 0);                
+            }
+
+            if (pInstallment.PaymentMethod.HasValue)
+                DatabaseHelper.InsertSmalIntParam("@paymentMethod", updateInstallment, (int)pInstallment.PaymentMethod.Value);
+            else
+                DatabaseHelper.InsertNullValue("@paymentMethod", updateInstallment);
+
+            updateInstallment.ExecuteNonQuery();
+		
+        }
+    }
+}

@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Currencies
+END
+CurrencyServices.cs
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Currencies/CurrencyServices.cs
+END
+ExchangeRateServices.cs
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/Currencies/ExchangeRateServices.cs
+END

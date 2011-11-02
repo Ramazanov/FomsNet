@@ -1,0 +1,342 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Drawing;
+using Octopus.CoreDomain;
+using Octopus.Shared;
+
+namespace Octopus.Manager
+{
+    public class PicturesManager : Manager
+    {
+        public PicturesManager(User pUser) : base(pUser){}
+
+        public PicturesManager(string pDbConnectionString) : base(pDbConnectionString) {}
+
+        /// <summary>
+        /// Class storing picture informations.
+        /// </summary>
+        public sealed class PictureInfo
+        {
+            /// <summary>
+            /// Picture group
+            /// </summary>
+            public string Group;
+            /// <summary>
+            /// Picture name
+            /// </summary>
+            public string Name;
+            /// <summary>
+            /// Picture binary data (PNG format)
+            /// </summary>
+            public byte[] Binary;
+            /// <summary>
+            /// Picture Id
+            /// </summary>
+            public int Id;
+            /// <summary>
+            /// Picture sub Id
+            /// </summary>
+            public int SubId;
+        }
+       
+        /// <summary>
+        /// Returns requested picture.
+        /// </summary>
+        /// <param name="pGroup">Picture group</param>
+        /// <param name="pId">Picture Id</param>
+        /// <param name="pSubID">Picture sub Id</param>
+        /// <param name="pThumbnail">Do you want the thumbnail or the actual picture?</param>
+        /// <returns>Found picture informations</returns>
+        public PictureInfo GetPicture(string pGroup, int pId, int pSubID,bool pThumbnail)
+        {
+            string sql = pThumbnail 
+                ? "SELECT thumbnail,name FROM Pictures WHERE [group]=@group AND id=@id AND subid=@subid" 
+                : "SELECT picture,name FROM Pictures WHERE [group]=@group AND id=@id AND subid=@subid";
+            
+            using(SqlCommand cmd = new SqlCommand(sql, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringVarCharParam("@group",cmd,pGroup);
+                DatabaseHelper.InsertInt32Param("@id", cmd, pId);
+                DatabaseHelper.InsertInt32Param("@subid", cmd, pSubID);
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    PictureInfo pi = new PictureInfo
+                                         {
+                                             Binary = ((byte[]) reader[0]),
+                                             Name = ((string) reader[1]),
+                                             Id = pId,
+                                             SubId = pSubID,
+                                             Group = pGroup
+                                         };
+                    return pi;
+                }
+            }
+
+            
+        }
+
+        /// <summary>
+        /// Returns all associated pictures
+        /// </summary>
+        /// <param name="pGroup">Picture group</param>
+        /// <param name="pId">Picture Id</param>
+        /// <param name="pThumbnail">Do you want the thumbnail or the actual picture?</param>
+        /// <returns>List of found pictures informations</returns>
+        public List<PictureInfo> GetPictures(string pGroup, int pId, bool pThumbnail)
+        {
+            List<PictureInfo> pictures = new List<PictureInfo>();
+            List<int> subids = GetPictureSubIds(pGroup, pId);
+            foreach (int subid in subids)
+            {
+                pictures.Add(GetPicture(pGroup, pId, subid, pThumbnail));
+            }
+            return pictures;
+        }
+
+        /// <summary>
+        /// Returns the first (smallest subid) associated picture.
+        /// </summary>
+        /// <param name="pGroup">Picture group</param>
+        /// <param name="pId">Picture Id</param>
+        /// <param name="pThumbnail">Do you want the thumbnail or the actual picture?</param>
+        /// <returns></returns>
+        public PictureInfo GetFirstPicture(string pGroup, int pId, bool pThumbnail)
+        {
+            List<int> subids = GetPictureSubIds(pGroup, pId);
+            if (subids.Count > 0)
+            {
+                return GetPicture(pGroup, pId, subids[0], pThumbnail);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// DeleteAccount a picture from database.
+        /// </summary>
+        /// <param name="pGroup">Picture group</param>
+        /// <param name="pId">Picture Id</param>
+        /// <param name="pSubID">Picture sub Id</param>
+        /// <returns>Number of rows affected by deletion</returns>
+        public int DeletePicture(string pGroup, int pId, int pSubID)
+        {
+            string sql = @"DELETE FROM Pictures 
+            WHERE [Pictures].[group]=@group AND [Pictures].[id]=@id AND [Pictures].[subid]=@subid";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+            cmd.Parameters.AddWithValue("group", pGroup);
+            cmd.Parameters.AddWithValue("id", pId);
+            cmd.Parameters.AddWithValue("subid", pSubID);
+            return cmd.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Add a new picture in the database.<br/>
+        /// If pName is null or empty, an automatic name will be generated.
+        /// </summary>
+        /// <param name="pGroup">Picture group</param>
+        /// <param name="pId">Picture Id</param>
+        /// <param name="pictureSubId">Picture subId</param>
+        /// <param name="pPicture">PNG picture binary data</param>
+        /// <param name="pThumbnail">PNG thumbnail picture binary data</param>
+        /// <param name="pName">Picture name</param>
+        /// <returns></returns>
+        public int AddPicture(string pGroup, int pId, int pictureSubId, byte[] pPicture, byte[] pThumbnail, string pName)
+        {
+            // Find the first available subid
+            List<int> subIds = GetPictureSubIds(pGroup, pId);
+            int foundPlace = subIds.Count;
+            for (int i=0; i<subIds.Count; i++)
+            {
+                if (subIds[i] != i)
+                {
+                    foundPlace = i;
+                    break;
+                }
+            }
+            // Add row
+            string sql =
+                @"INSERT INTO Pictures ([group], [id] ,[subid] ,[picture] ,[thumbnail] ,[name]) 
+                VALUES (@group ,@id ,@subid ,@picture ,@thumbnail ,@name)";
+            SqlCommand cmdSubIds = new SqlCommand(sql, DefaultConnection);
+            cmdSubIds.Parameters.AddWithValue("group", pGroup);
+            cmdSubIds.Parameters.AddWithValue("id", pId);
+            cmdSubIds.Parameters.AddWithValue("subid", pictureSubId);
+            cmdSubIds.Parameters.AddWithValue("picture", pPicture);
+            cmdSubIds.Parameters.AddWithValue("thumbnail", pThumbnail);
+            if (pName.Length < 50)
+                cmdSubIds.Parameters.AddWithValue("name", pName);
+            else
+               cmdSubIds.Parameters.AddWithValue("name", pName.Substring(0, 49));
+            cmdSubIds.ExecuteNonQuery();
+            return foundPlace;
+        }
+
+        private List<int> GetPictureSubIds(string pGroup, int pId)
+        {
+            string sql = @"SELECT subid 
+                           FROM Pictures 
+                           WHERE [group]=@group AND id=@id 
+                           ORDER BY subid ASC";
+            SqlCommand cmdSubIds = new SqlCommand(sql, DefaultConnection);
+            cmdSubIds.Parameters.AddWithValue("group", pGroup);
+            cmdSubIds.Parameters.AddWithValue("id", pId);
+            List<int> subIds = new List<int>();
+            using (SqlDataReader readerSubIds = cmdSubIds.ExecuteReader())
+            {
+                while (readerSubIds.Read())
+                {
+                    subIds.Add((int) readerSubIds[0]);
+                }
+            }
+            return subIds;
+        }
+
+        public void SavePicture(byte[] picture, byte[] thumbnail, int person_id, string filename, int subId)
+        {
+            int pictureId;
+            string sqlText = string.Format(@"INSERT INTO [dbo].[Pictures] 
+                ([group], [id] ,[subid] ,[picture] ,[thumbnail] ,[name]) 
+                VALUES (@group ,@person_id ,@subid ,@picture ,@thumbnail ,@name)
+                SELECT CONVERT(int, SCOPE_IDENTITY())");
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                sqlCommand.Parameters.AddWithValue("group", "SECOND_PICTURE");
+                sqlCommand.Parameters.AddWithValue("picture", picture);
+                sqlCommand.Parameters.AddWithValue("subid", subId);
+                sqlCommand.Parameters.AddWithValue("name", filename);
+                sqlCommand.Parameters.AddWithValue("thumbnail", thumbnail);
+                sqlCommand.Parameters.AddWithValue("person_id", person_id);
+                pictureId = int.Parse(sqlCommand.ExecuteScalar().ToString());
+            }
+            sqlText =
+                string.Format(
+                    @"INSERT INTO PersonsPhotos ([person_id], [picture_id]) 
+                     VALUES (@person_id, @picture_id)");
+            using (SqlCommand sqlCommand=new SqlCommand(sqlText, DefaultConnection))
+            {
+                sqlCommand.Parameters.AddWithValue("person_id", person_id);
+                sqlCommand.Parameters.AddWithValue("picture_id", pictureId);
+                sqlCommand.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdatePicture(string group, int personId, int pictureSubId, string fileName, byte[] picture, 
+            byte[] thumbnail)
+        {
+            string sqlText = string.Format(@"
+                    UPDATE Pictures 
+                    SET picture=@picture, thumbnail=@thumbnail, name=@file_name
+                    WHERE [Pictures].[group]=@group 
+                    AND id=@person_id 
+                    AND [Pictures].[subid]=@photo_sub_id");
+            SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection);
+            cmd.Parameters.AddWithValue("group", group);
+            cmd.Parameters.AddWithValue("person_id", personId);
+            cmd.Parameters.AddWithValue("picture", picture);
+            cmd.Parameters.AddWithValue("thumbnail", thumbnail);
+            cmd.Parameters.AddWithValue("file_name", fileName);
+            cmd.Parameters.AddWithValue("photo_sub_id", pictureSubId);
+            cmd.ExecuteNonQuery();
+        }
+
+        public byte[] GetPicture(int personId, int photoSubId, bool thumbnail)
+        {
+            string sqlText;
+            if (thumbnail)
+                sqlText=string.Format(@"SELECT TOP(1) [Pictures].[thumbnail]
+                        FROM [Pictures]
+                        WHERE [Pictures].[group]='PERSON' 
+                        AND [Pictures].[id]=@person_id 
+                        AND [Pictures].[subid]=@sub_id");
+            else
+            {
+                sqlText =
+                string.Format(
+                    @"SELECT TOP(1) Pictures.picture
+                        FROM Pictures
+                        WHERE [Pictures].[group]='PERSON' 
+                        AND [Pictures].[id]=@person_id 
+                        AND [Pictures].[subid]=@sub_id");
+            }
+            
+            using (SqlCommand cmd=new SqlCommand(sqlText, DefaultConnection))
+            {
+                cmd.Parameters.AddWithValue("person_id", personId);
+                cmd.Parameters.AddWithValue("@sub_id", photoSubId);
+                using (SqlDataReader dataReader = cmd.ExecuteReader())
+                {
+                    while (dataReader.Read())
+                    {
+                        return (byte[]) dataReader[0];
+                    }
+                }
+                return null;
+            }
+        }
+
+        public byte[] GetPicture(string clientType, int clientId, bool thumbnail, int photoSubId)
+        {
+            string sqlText;
+            if (thumbnail)
+                sqlText = string.Format(
+                      @"SELECT TOP(1) [Pictures].[thumbnail]
+                        FROM [Pictures]
+                        WHERE [Pictures].[group]=@client_type 
+                              AND [Pictures].[id]=@client_id 
+                              AND [Pictures].[subid]=@photo_sub_id
+                              ");
+            else
+            {
+                sqlText =
+                string.Format(
+                      @"SELECT TOP(1) Pictures.picture
+                        FROM Pictures
+                        WHERE [Pictures].[group]=@client_type 
+                              AND [Pictures].[id]=@client_id
+                              AND [Pictures].[subid]=@photo_sub_id 
+                        ");
+            }
+
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                cmd.Parameters.AddWithValue("client_type", clientType);
+                cmd.Parameters.AddWithValue("client_id", clientId);
+                cmd.Parameters.AddWithValue("photo_sub_id", photoSubId);
+                using (SqlDataReader dataReader = cmd.ExecuteReader())
+                {
+                    if (dataReader.Read())
+                        return (byte[])dataReader[0];
+                    else
+                        return null;
+                }
+            }
+        }
+    }
+}   

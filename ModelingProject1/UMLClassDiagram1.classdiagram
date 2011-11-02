@@ -1,0 +1,222 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<logicalClassDesignerModel xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" xmlns:dm1="http://schemas.microsoft.com/dsltools/Kernel" xmlns:dm2="http://schemas.microsoft.com/dsltools/Component" xmlns:dm3="http://schemas.microsoft.com/dsltools/Activity" xmlns:dm4="http://schemas.microsoft.com/dsltools/Interaction" xmlns:dm5="http://schemas.microsoft.com/dsltools/UseCase" xmlns:dm6="http://schemas.microsoft.com/dsltools/UmlModelLibrary" xmlns:dm7="http://schemas.microsoft.com/dsltools/UmlDiagrams" xmlns:dm8="http://schemas.microsoft.com/dsltools/ModelStore" xmlns:dm9="http://schemas.microsoft.com/VisualStudio/TeamArchitect/ComponentDesigner" dslVersion="1.0.0.0" Id="a9517239-de59-43d8-ad60-5a897bf812e6" name="UMLClassDiagram1" linkedPackageId="39455769-e225-43a2-b593-920a024ccf69" xmlns="http://schemas.microsoft.com/dsltools/LogicalClassDesigner">
+  <profileInstances>
+    <packageHasProfileInstances Id="40707ff9-8eed-46e5-85d4-c5f26f1cc886">
+      <profileInstance Id="34a13f68-a7c8-4e4f-9f9e-d03ce5ece064" name="StandardProfileL2">
+        <elementDefinition Id="e34d544e-0fea-4ed6-ac5e-1b74119ac791" />
+      </profileInstance>
+      <elementDefinition Id="0caec977-1f8c-4ba3-a7db-8cc9ad9cc73b" />
+    </packageHasProfileInstances>
+    <packageHasProfileInstances Id="f4efd171-1348-4474-8af5-b76b11f1e1d7">
+      <profileInstance Id="155c4e8e-2ab8-4cca-a03a-9894f8078640" name="StandardProfileL3">
+        <elementDefinition Id="532ea607-fb19-44b8-8502-3351b05452be" />
+      </profileInstance>
+      <elementDefinition Id="29349502-908c-4fda-9054-c48619c59ed0" />
+    </packageHasProfileInstances>
+  </profileInstances>
+  <packagedElements>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="3653eb1a-7786-4003-a22c-8a53eb21e833" name="Enums">
+        <elementDefinition Id="60943c12-bf60-4d58-8c0b-ee79cdaab2b6" />
+        <packagedElements>
+          <packageHasNamedElement>
+            <enumeration Id="bf9aeaf7-b68c-4959-ab07-ca0124d9ba58" name="OUserEvents.cs" isAbstract="false" isLeaf="false">
+              <elementDefinition Id="1baa5528-009f-4e61-bcbe-719428b8a8ef" />
+              <ownedLiterals>
+                <enumerationLiteral Id="878c5b3d-377f-427f-8ccd-55895426c0ea" name="UserLogIn">
+                  <elementDefinition Id="a188ab5a-cc53-4a69-bb58-356bdbef701a" />
+                </enumerationLiteral>
+                <enumerationLiteral Id="fa96275e-e46a-4ec4-a35c-31e1a8fba14b" name="UserLogOut">
+                  <elementDefinition Id="57165001-6c98-46dc-ba92-14220ac2864a" />
+                </enumerationLiteral>
+              </ownedLiterals>
+            </enumeration>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <enumeration Id="aa173cdd-5f6e-45db-a0f4-388978bc2754" name="OWindowStyle.cs" isAbstract="false" isLeaf="false">
+              <elementDefinition Id="f07fbbc3-0289-4b61-8bff-69ff4d154bb1" />
+              <ownedLiterals>
+                <enumerationLiteral Id="5094a203-a05c-4e18-a003-1c4e7f0e2540" name="Modal">
+                  <elementDefinition Id="812af8bd-d355-4355-948d-1c4323f72539" />
+                </enumerationLiteral>
+                <enumerationLiteral Id="43f050e4-c6ef-488d-8958-c975d5c3510b" name="Child">
+                  <elementDefinition Id="b9b3ed02-1f9e-4fc7-a281-570ede1eede3" />
+                </enumerationLiteral>
+                <enumerationLiteral Id="f4e8ef1c-65c1-4711-aeb7-3f43a0fc4d36" name="Parent">
+                  <elementDefinition Id="2345aaa2-2ae8-4bf4-8662-95385d256cf7" />
+                </enumerationLiteral>
+              </ownedLiterals>
+            </enumeration>
+          </packageHasNamedElement>
+        </packagedElements>
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="bedcc8d4-5562-4321-8ea2-8c7dbc897719" name="Foms.DatabaseConnection">
+        <ownedCommentsInternal>
+          <comment Id="6546aa88-e7b8-4234-99f2-52fa7c90f9e0">
+            <elementDefinition Id="ce82db75-983a-4c2e-b138-607679e64e14" />
+            <body>Методы для соединения с БД. Не знает ничего о конкретной бд, схеме и прочих аспектах программа - только соединение с базой.</body>
+          </comment>
+        </ownedCommentsInternal>
+        <elementDefinition Id="59a13b71-8d2a-4381-bf04-8d74d4569b5a" />
+        <suppliersInternal>
+          <dependency Id="726920c5-6d60-4274-9328-3c05dcd91880">
+            <packageMoniker Id="7a0ba6d5-1ef6-4882-affc-f361d7b55d03" LastKnownName="Foms.Shared" />
+            <elementDefinition Id="33ca837b-fdff-413b-8522-9cd59a306481" />
+          </dependency>
+          <dependency Id="058177ed-4349-48bf-aade-e784db16422d">
+            <packageMoniker Id="3653eb1a-7786-4003-a22c-8a53eb21e833" LastKnownName="Enums" />
+            <elementDefinition Id="768a2d3e-2a48-4599-b0cc-776bbb7733cb" />
+          </dependency>
+        </suppliersInternal>
+        <packagedElements>
+          <packageHasNamedElement>
+            <class Id="777733b5-3a5a-4c46-bd2a-7750955b1a71" name="ConnectionManager.cs" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="165b1c0b-3701-4983-b607-b8f6c62605ab" />
+              <ownedAttributesInternal>
+                <property Id="2f6f3d51-15d6-41c6-8589-d9b0c0ff5e41" name="SqlConnection" isLeaf="false" isStatic="false" isReadOnly="false" isUnique="false" isDerived="false" isDerivedUnion="false" aggregation="None" isComposite="false">
+                  <elementDefinition Id="ca8ed020-2f2f-41b4-954d-42ef36fc02a7" />
+                </property>
+                <property Id="f1069b3a-f2f6-4585-bd72-e41f44d01bee" name="ConnectionInitSuceeded" isLeaf="false" isStatic="false" isReadOnly="false" isUnique="false" isDerived="false" isDerivedUnion="false" aggregation="None" isComposite="false">
+                  <elementDefinition Id="03ac1d6a-ccff-457e-b1cc-df0de466b35c" />
+                </property>
+              </ownedAttributesInternal>
+              <ownedOperationsInternal>
+                <operation Id="e3821d5a-00aa-43b0-a411-9a8ed9716268" name="GetInstance" isLeaf="false" isStatic="false" isAbstract="false" concurrency="Sequential" isQuery="false">
+                  <elementDefinition Id="570938da-fe60-4cd2-a6cb-aabfaf16c1dd" />
+                </operation>
+                <operation Id="f4f4833c-cde1-43bc-8920-b05893c23ad6" name="CheckSQLServerConnection" isLeaf="false" isStatic="false" isAbstract="false" concurrency="Sequential" isQuery="false">
+                  <elementDefinition Id="e9e5653e-ede8-4312-aa4c-c2df23aa899f" />
+                </operation>
+              </ownedOperationsInternal>
+            </class>
+          </packageHasNamedElement>
+        </packagedElements>
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="7a0ba6d5-1ef6-4882-affc-f361d7b55d03" name="Foms.Shared">
+        <elementDefinition Id="7c2c7197-f48e-4ecd-b7db-f9d750ecd8ec" />
+        <suppliersInternal>
+          <dependency Id="4306b580-4087-4d38-9e16-331118713dfc">
+            <packageMoniker Id="3653eb1a-7786-4003-a22c-8a53eb21e833" LastKnownName="Enums" />
+            <elementDefinition Id="e3a82bf8-ba3c-4c5f-8542-a543a01afaf9" />
+          </dependency>
+        </suppliersInternal>
+        <packagedElements>
+          <packageHasNamedElement>
+            <class Id="cb2bbddc-fb68-4886-9f5f-099391f3d5bf" name="Log" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="49221d0e-6f35-4bbe-9095-3efe5af14053" />
+              <ownedOperationsInternal>
+                <operation Id="d282edb9-592e-4b64-b454-699e05bdd228" name="GetLogger" isLeaf="false" isStatic="false" isAbstract="false" concurrency="Sequential" isQuery="false">
+                  <elementDefinition Id="23920a1a-c4d6-4b99-af8d-519619580e18" />
+                </operation>
+              </ownedOperationsInternal>
+            </class>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <class Id="99a5725b-92f8-461b-b4a8-6df5abd26e27" name="ZipHelper" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="81964c92-cf5b-471a-ac52-51dabf70e2f4" />
+              <ownedAttributesInternal>
+                <property Id="6498de92-eb39-4825-a01b-d39c01df184c" name="StrPathFile" isLeaf="false" isStatic="false" isReadOnly="false" isUnique="false" isDerived="false" isDerivedUnion="false" aggregation="None" isComposite="false">
+                  <elementDefinition Id="3c820744-7cbf-4255-b035-ef600303b25b" />
+                </property>
+              </ownedAttributesInternal>
+              <ownedOperationsInternal>
+                <operation Id="40eaaf52-df2e-4a4e-8d83-593e0b7d2d37" name="ZipFile" isLeaf="false" isStatic="false" isAbstract="false" concurrency="Sequential" isQuery="false">
+                  <elementDefinition Id="aa1e0ca6-d5c4-4b74-a0fd-3720735d768c" />
+                </operation>
+                <operation Id="6779ad66-314e-4944-8d2e-01d8ae580f62" name="UnzipFile" isLeaf="false" isStatic="false" isAbstract="false" concurrency="Sequential" isQuery="false">
+                  <elementDefinition Id="f86e0dc7-d257-46b2-88c3-c3168d0c0b24" />
+                </operation>
+              </ownedOperationsInternal>
+            </class>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <class Id="49b3159c-4137-4b63-a30f-06cd9da5d0d2" name="ApplicationSettings" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="5fac30a6-9bcc-4239-ace8-6b83d099201e" />
+            </class>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <class Id="072ae3ff-6823-4a49-bf53-49fb215b370b" name="TechnicalSettings.cs" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="da023e7c-af3c-4215-a1fa-72137442dca1" />
+            </class>
+          </packageHasNamedElement>
+        </packagedElements>
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="89ced174-63a8-418c-b0c0-980cb64190b0" name="Foms.ExceptionsHandler">
+        <elementDefinition Id="c9d24582-4483-43bf-844b-83b6bf2251d5" />
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="714b7494-d53a-4b22-9fc9-2052dbe4c89a" name="Foms.Managers">
+        <ownedCommentsInternal>
+          <comment Id="35430f67-c009-400e-af7e-587657fd4d03">
+            <elementDefinition Id="8ee4ef44-f90d-4e6a-86b0-b758804da447" />
+            <body>Помошники всякие.
+Проверка версии схемы, бекап и прочие.
+
+По идее это Датасет</body>
+          </comment>
+        </ownedCommentsInternal>
+        <elementDefinition Id="ebeb2939-13cb-46fc-9393-7d707102f2c9" />
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="54b48a3a-3c5d-4498-ab67-252e72f6402a" name="Octopus.Services">
+        <ownedCommentsInternal>
+          <comment Id="3d445088-a2c1-4961-bd64-d94c639254b7">
+            <elementDefinition Id="64c55560-4373-43b8-a185-3b3a84fd7320" />
+            <body>Обеспечивают работу разных сервисов, доступность справочников (что уже загружены) и прочее. </body>
+          </comment>
+        </ownedCommentsInternal>
+        <elementDefinition Id="a357af27-6e58-4fa8-a863-3cdcc90b1042" />
+        <suppliersInternal>
+          <dependency Id="b2267b5a-c1c7-4e13-b1ee-65f1b48486db">
+            <packageMoniker Id="714b7494-d53a-4b22-9fc9-2052dbe4c89a" LastKnownName="Foms.Managers" />
+            <elementDefinition Id="10d3fff6-08d0-4dca-a261-0f40748c4c9c" />
+          </dependency>
+        </suppliersInternal>
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="b7583b20-8ea1-4c48-88a4-504f323ffb6f" name="Foms.AdoDatasets">
+        <ownedCommentsInternal>
+          <comment Id="f5938d3c-f419-478a-922e-7141d67e7b51">
+            <elementDefinition Id="dd958791-63b5-412e-abcb-d102b3c51fef" />
+            <body>А это будет датасет отдельный для АДО.</body>
+          </comment>
+          <comment Id="2162e571-e032-4947-83a6-87e5ac580c4e">
+            <elementDefinition Id="5c252410-54a2-4517-b128-9da998045425" />
+            <body>Т.К. датасет АДО использует строку подключения свою, мы просто замещаем в конструкторе строку подключения на нормальную, взятую из наших настроек.</body>
+          </comment>
+        </ownedCommentsInternal>
+        <elementDefinition Id="a292ac0b-1f5f-43ee-bc34-b9bd8616586f" />
+        <packagedElements>
+          <packageHasNamedElement>
+            <class Id="f2b16788-7f49-43e5-9fad-2bc8b4269083" name="Settings" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="ee5f38eb-97a3-4e1b-81a6-744e56ca2acc" />
+              <suppliersInternal>
+                <dependency Id="4bca7d34-af87-4103-a955-50b3a10b85c1">
+                  <packageMoniker Id="7a0ba6d5-1ef6-4882-affc-f361d7b55d03" LastKnownName="Foms.Shared" />
+                  <elementDefinition Id="1a46172d-a64f-4f28-9fe9-f37c1572b714" />
+                </dependency>
+              </suppliersInternal>
+              <ownedOperationsInternal>
+                <operation Id="c42b6e0c-776a-4aa0-9242-d4cdc4f027af" name="Settings" isLeaf="false" isStatic="false" isAbstract="false" concurrency="Sequential" isQuery="false">
+                  <elementDefinition Id="2800eedd-446b-4ddb-8de0-278a9e8e4d4c" />
+                </operation>
+              </ownedOperationsInternal>
+            </class>
+          </packageHasNamedElement>
+        </packagedElements>
+      </package>
+    </logicalClassDesignerModelHasPackages>
+  </packagedElements>
+  <package Id="39455769-e225-43a2-b593-920a024ccf69" name="ModelingProject1">
+    <elementDefinition Id="71d042ab-d81e-44df-bd55-a5c31c47620b" />
+  </package>
+</logicalClassDesignerModel>

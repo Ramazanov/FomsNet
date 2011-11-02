@@ -1,0 +1,426 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.Shared;
+
+namespace Octopus.Manager
+{
+    /// <summary>
+    /// Database manager for locations : Provinces, Districts and Cities.
+    /// </summary>
+    public class LocationsManager : Manager
+    {
+        public LocationsManager(User pUser) : base(pUser) { }
+
+        public LocationsManager(string testDB) : base(testDB) { }
+
+        public List<Province> GetProvinces()
+        {
+            List<Province> provinces = new List<Province>();
+            const string sqlText = "SELECT [id],[name] FROM [Provinces]  WHERE [deleted] = 0 ORDER BY name";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        while (reader.Read())
+                        {
+                            Province province = new Province();
+                            province.Id = (int) reader[0];
+                            province.Name = (string)reader[1];
+                            provinces.Add(province);
+                        }
+                    }
+                }
+            }
+            return provinces;
+        }
+
+        public List<City> GetCities()
+        {
+            List<City> cities = new List<City>();
+            const string sqlText = "SELECT [id], [name] ,[district_id]FROM [City] WHERE [deleted]=0 ORDER BY name ";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        while (reader.Read())
+                        {
+                            City city = new City();
+                            city.Id = (int)reader[0];
+                            city.Name = (string)reader[1];
+                            city.DistrictId = (int)reader[2];
+                            cities.Add(city);
+                        }
+                    }
+                }
+            }
+            return cities;
+        }
+
+        public List<District> GetDistricts()
+        {
+            List<Province> provinces = GetProvinces();
+
+            List<District> districts = new List<District>();
+
+            const string sqlText = "SELECT [id], [name], [province_id] FROM [Districts]  WHERE [deleted]=0 ORDER BY name";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        while (reader.Read())
+                        {
+                            District district = new District();
+                            district.Id = (int)reader[0];
+                            district.Name = (string)reader[1];
+                            int province_id = (int) reader[2];
+                            foreach (Province p in provinces)
+                            {
+                                if (p.Id == province_id)
+                                {
+                                    district.Province = p;
+                                }
+                            }
+                            districts.Add(district);
+                        }
+                    }
+                }
+            }
+            return districts;
+        }
+
+        public int AddDistrict(string pName, int pProvinceId)
+        {
+            const string sqlText = "INSERT INTO [Districts] ([name],[province_id],[deleted]) VALUES( @name, @province,0) SELECT SCOPE_IDENTITY()";
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", sqlCommand, pName);
+                DatabaseHelper.InsertInt32Param("@province", sqlCommand, pProvinceId);
+                DatabaseHelper.InsertBooleanParam("@deleted", sqlCommand, false);
+                return int.Parse(sqlCommand.ExecuteScalar().ToString());
+            }
+        }
+
+        public District SelectDistrictById(int pId)
+        {
+            District district = null;
+
+            const string sqlText = "SELECT Districts.id, Districts.name, Districts.province_id, " +
+                                   "Provinces.id AS province_id, Provinces.name AS province_name " +
+                                   "FROM Districts INNER JOIN " +
+                                   "Provinces ON Districts.province_id = Provinces.id " +
+                                   "WHERE Districts.id= @id ORDER BY Districts.name";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        district = new District();
+                        district.Province = new Province();
+                        district.Id = DatabaseHelper.GetInt32("id", reader);
+                        district.Name = DatabaseHelper.GetString("name", reader);
+                        district.Province.Id = DatabaseHelper.GetInt32("province_id", reader);
+                        district.Province.Name = DatabaseHelper.GetString("province_name", reader);
+                    }
+                }
+            }
+            return district;
+        }
+
+        public District SelectDistrictByName(string name)
+        {
+            District district = null;
+
+            const string sqlText = "SELECT Districts.id, Districts.name, Districts.province_id, " +
+                                   "Provinces.id AS province_id, Provinces.name AS province_name " +
+                                   "FROM Districts INNER JOIN " +
+                                   "Provinces ON Districts.province_id = Provinces.id " +
+                                   "WHERE Districts.name= @name";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, name);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Read();
+                        district = new District();
+                        district.Province = new Province();
+                        district.Id = DatabaseHelper.GetInt32("id", reader);
+                        district.Name = DatabaseHelper.GetString("name", reader);
+                        district.Province.Id = DatabaseHelper.GetInt32("province_id", reader);
+                        district.Province.Name = DatabaseHelper.GetString("province_name", reader);
+                    }
+                }
+            }
+            return district;
+        }
+
+        public int AddProvince(string pName)
+        {
+            const string sqlText = "INSERT INTO [Provinces] ([name], [deleted]) VALUES (@name,0) SELECT SCOPE_IDENTITY()";
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", sqlCommand, pName);
+                DatabaseHelper.InsertBooleanParam("@deleted", sqlCommand, false);
+                return int.Parse(sqlCommand.ExecuteScalar().ToString());
+            }
+        }
+
+        public bool UpdateProvince(Province pProvince)
+        {
+            bool updateOk = false;
+            try
+            {
+                const string sqlText = "UPDATE [Provinces] SET [name]=@name WHERE id=@id";
+                SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection);
+                DatabaseHelper.InsertInt32Param("@id", sqlCommand, pProvince.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@name", sqlCommand, pProvince.Name);
+                sqlCommand.ExecuteNonQuery();
+                updateOk = true;
+            }
+            catch (System.Exception ex)
+            {
+                throw ex;
+            }
+            return updateOk;
+        }
+
+        public void DeleteProvinceById(int pProvinceId)
+        {
+            const string deleteProvince = "UPDATE [Provinces]  SET [deleted]=1 WHERE id=@id";
+
+            SqlCommand deleteProvinceCommand = new SqlCommand(deleteProvince, DefaultConnection);
+
+            DatabaseHelper.InsertInt32Param("@id", deleteProvinceCommand, pProvinceId);
+
+            deleteProvinceCommand.ExecuteNonQuery();
+        }
+
+        public int AddDistrict(District pDistrict)
+        {
+            const string sqlText = "INSERT INTO [Districts]([name], [province_id],[deleted]) VALUES(@name,@provinceId,0) SELECT SCOPE_IDENTITY()";
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, pDistrict.Name);
+            DatabaseHelper.InsertInt32Param("@provinceId", insert, pDistrict.Province.Id);
+            DatabaseHelper.InsertBooleanParam("@deleted", insert, false);
+            return int.Parse(insert.ExecuteScalar().ToString());
+        }
+
+        public bool UpdateDistrict(District pDistrict)
+        {
+            bool UpdateOk = false;
+            try
+            {
+                const string sqlText = "UPDATE [Districts] SET [name]=@name WHERE id=@id";
+                SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection);
+                DatabaseHelper.InsertInt32Param("@id", sqlCommand, pDistrict.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@name", sqlCommand, pDistrict.Name);
+                sqlCommand.ExecuteNonQuery();
+                UpdateOk = true;
+            }
+            catch (System.Exception ex)
+            {
+                throw ex; 
+            }
+            return UpdateOk;
+        }
+
+        public void DeleteDistrictById(int districtID)
+        {
+            const string deleteDistrict = "UPDATE [Districts]  SET [deleted]=1 WHERE id=@id";
+
+            SqlCommand deleteDistrictCommand = new SqlCommand(deleteDistrict, DefaultConnection);
+
+            DatabaseHelper.InsertInt32Param("@id", deleteDistrictCommand, districtID);
+
+            deleteDistrictCommand.ExecuteNonQuery();
+        }
+
+        public int AddCity(City pCity)
+        {
+            const string sqlText = "INSERT INTO [City] ([name], [district_id],[deleted]) VALUES (@name,@district_id,0) SELECT SCOPE_IDENTITY()";
+            SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection);
+            
+            DatabaseHelper.InsertStringNVarCharParam("@name", sqlCommand, pCity.Name);
+            DatabaseHelper.InsertInt32Param("@district_id", sqlCommand, pCity.DistrictId);
+            DatabaseHelper.InsertBooleanParam("@deleted", sqlCommand, pCity.Deleted);
+            return int.Parse(sqlCommand.ExecuteScalar().ToString());
+            
+        }
+
+        public bool UpdateCity(City pCity)
+        {
+                bool updateOk = false;
+                try
+                {
+                    const string sqlText = "UPDATE [City] SET [name]=@name WHERE id=@id";
+                    SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection);
+                    DatabaseHelper.InsertInt32Param("@id", sqlCommand, pCity.Id);
+                    DatabaseHelper.InsertStringNVarCharParam("@name", sqlCommand, pCity.Name);
+                    sqlCommand.ExecuteNonQuery();
+                    updateOk = true;
+                }
+                catch (System.Exception ex)
+                {
+                    throw ex;
+                } 
+               return updateOk;
+            
+        }
+
+        public void DeleteCityById(int pCityId)
+        {
+            const string deleteCity = "UPDATE [City]  SET [deleted]=1 WHERE id=@id";
+
+            SqlCommand deleteCityCommand = new SqlCommand(deleteCity, DefaultConnection);
+
+            DatabaseHelper.InsertInt32Param("@id", deleteCityCommand, pCityId);
+
+            deleteCityCommand.ExecuteNonQuery();
+         }
+
+       
+
+        public List<District> SelectDistrictsByProvinceId(int pProvinceId)
+        {
+            List<District> districts = new List<District>();
+
+            const string sqlText = "SELECT Districts.id, Districts.name, Districts.province_id, " +
+                                   "Provinces.id AS province_id, Provinces.name AS province_name " +
+                                   "FROM Districts INNER JOIN " +
+                                   "Provinces ON Districts.province_id = Provinces.id " +
+                                   "WHERE Provinces.id= @id AND Districts.deleted = 0 ORDER BY Districts.name";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pProvinceId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    while (reader.Read())
+                    {
+                        District district = new District();
+                        district.Province = new Province();
+                        district.Id = DatabaseHelper.GetInt32("id", reader);
+                        district.Name = DatabaseHelper.GetString("name", reader);
+                        district.Province.Id = DatabaseHelper.GetInt32("province_id", reader);
+                        district.Province.Name = DatabaseHelper.GetString("province_name", reader);
+                        districts.Add(district);
+                    }
+                }
+            }
+            return districts;
+        }
+
+        public List<Province> SelectAllProvinces()
+        {
+            List<Province> provinces = new List<Province>();
+
+            const string sqlText = "SELECT id,name FROM Provinces ORDER BY name";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    while (reader.Read())
+                    {
+                        Province province = new Province
+                                                {
+                                                    Id = DatabaseHelper.GetInt32("id", reader),
+                                                    Name = DatabaseHelper.GetString("name", reader)
+                                                };
+                        provinces.Add(province);
+                    }
+                }
+            }
+            return provinces;
+        }
+
+        public Province SelectProvinceByName(string name)
+        {
+            const string sqlText = "SELECT id,name FROM Provinces WHERE name = @name";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, name);
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (null == reader) return null;
+                if (!reader.HasRows) return null;
+                reader.Read();
+                Province retval = new Province
+                                        {
+                                            Id = DatabaseHelper.GetInt32("id", reader),
+                                            Name = DatabaseHelper.GetString("name", reader)
+                                        };
+                return retval;
+            }
+        }
+
+        public List<City> SelectCityByDistrictId(int pDistrictId)
+        {
+            List<City> cities = new List<City>();
+
+            const string sqlText = "SELECT name, id FROM City WHERE district_id = @id and deleted = 0 ORDER BY name";
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertInt32Param("@id", select, pDistrictId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    while (reader.Read())
+                    {
+                        City city = new City 
+                        {
+                            Name = DatabaseHelper.GetString("name", reader),
+                            Id=DatabaseHelper.GetInt32("id",reader),
+                            DistrictId = pDistrictId
+                        };
+                        cities.Add(city);
+                    }
+                }
+            }
+            return cities;
+        }
+    }
+}

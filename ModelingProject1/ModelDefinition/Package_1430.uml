@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" xmlns:dm1="http://schemas.microsoft.com/dsltools/Kernel" xmlns:dm2="http://schemas.microsoft.com/dsltools/Component" xmlns:dm3="http://schemas.microsoft.com/dsltools/Activity" xmlns:dm4="http://schemas.microsoft.com/dsltools/Interaction" xmlns:dm5="http://schemas.microsoft.com/dsltools/UseCase" xmlns:dm6="http://schemas.microsoft.com/dsltools/UmlModelLibrary" xmlns:dm7="http://schemas.microsoft.com/dsltools/UmlDiagrams" xmlns:dm8="http://schemas.microsoft.com/VisualStudio/TeamArchitect/ComponentDesigner" xmlns:dm9="http://schemas.microsoft.com/dsltools/LogicalClassDesigner"
+  dslVersion="1.0.0.0"
+  Id="60943c12-bf60-4d58-8c0b-ee79cdaab2b6"
+  name="Enums" xmlns="http://schemas.microsoft.com/dsltools/ModelStore">
+  <packagedElements>
+    <packageHasNamedElement>
+      <class
+        Id="fe44f1be-e4e4-4151-b35c-0f4a82694ec2"
+        name="Class1"
+        isAbstract="false"
+        isLeaf="false"
+        isActiveClass="false" />
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <enumeration
+        Id="1baa5528-009f-4e61-bcbe-719428b8a8ef"
+        name="OUserEvents.cs"
+        isAbstract="false"
+        isLeaf="false">
+        <ownedLiterals>
+          <enumerationLiteral
+            Id="a188ab5a-cc53-4a69-bb58-356bdbef701a"
+            name="UserLogIn" />
+          <enumerationLiteral
+            Id="57165001-6c98-46dc-ba92-14220ac2864a"
+            name="UserLogOut" />
+        </ownedLiterals>
+      </enumeration>
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <enumeration
+        Id="f07fbbc3-0289-4b61-8bff-69ff4d154bb1"
+        name="OWindowStyle.cs"
+        isAbstract="false"
+        isLeaf="false">
+        <ownedLiterals>
+          <enumerationLiteral
+            Id="812af8bd-d355-4355-948d-1c4323f72539"
+            name="Modal" />
+          <enumerationLiteral
+            Id="b9b3ed02-1f9e-4fc7-a281-570ede1eede3"
+            name="Child" />
+          <enumerationLiteral
+            Id="2345aaa2-2ae8-4bf4-8662-95385d256cf7"
+            name="Parent" />
+        </ownedLiterals>
+      </enumeration>
+    </packageHasNamedElement>
+  </packagedElements>
+</package>

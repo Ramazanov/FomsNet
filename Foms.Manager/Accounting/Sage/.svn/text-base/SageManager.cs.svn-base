@@ -1,0 +1,211 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Octopus.CoreDomain;
+using Octopus.Enums;
+using Octopus.CoreDomain.Accounting;
+using Octopus.CoreDomain.Accounting.Sage;
+using System.Data.SqlClient;
+using Octopus.Shared;
+
+namespace Octopus.Manager.Accounting.Sage
+{
+    public class SageManager : Manager
+    {
+        public SageManager(User pUser) : base(pUser) { }
+        public SageManager(string pTestDb) : base(pTestDb) { }
+
+        public List<SageAccountTiers> SelectDisbursedContracts(DateTime pStartDate, DateTime pEndDate)
+        {
+            const string sqlText = @"SELECT  Contracts.id AS contract_id, Contracts.contract_code, 
+		                                     Contracts.start_date, Credit.loanofficer_id,
+		                                     Tiers.id as tiers_id, Tiers.client_type_code, 
+		                                     ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name) AS user_name ,
+		                                     CASE Tiers.client_type_code
+												WHEN 'I' THEN Persons.first_name + SPACE(1) + Persons.last_name
+												WHEN 'G' THEN Groups.name
+												WHEN 'C' THEN Corporates.name
+												WHEN 'V' THEN Villages.name
+		                                     END AS client_name,
+		                                     Accounts.id as account_id, Accounts.local_account_number, Accounts.label
+                                    FROM Contracts 
+                                    INNER JOIN Credit ON Contracts.id = Credit.id 
+                                    INNER JOIN Projects ON Contracts.project_id = Projects.id
+                                    INNER JOIN Tiers ON Projects.tiers_id = Tiers.id 
+                                    INNER JOIN Users ON Users.id = Credit.loanofficer_id 
+                                    INNER JOIN ContractEvents ON ContractEvents.event_type = 'LODE' AND ContractEvents.contract_id = Contracts.id
+                                    INNER JOIN ElementaryMvts ON ElementaryMvts.movement_set_id = ContractEvents.id
+                                    INNER JOIN Accounts ON ElementaryMvts.debit_account_id = Accounts.id
+                                    LEFT OUTER JOIN Persons ON Tiers.id = Persons.id 
+                                    LEFT OUTER JOIN Groups ON Tiers.id = Groups.id
+                                    LEFT OUTER JOIN Corporates ON Tiers.id = Corporates.id
+                                    LEFT OUTER JOIN Villages ON Tiers.id = Villages.id
+                                    WHERE Credit.disbursed = 1
+                                    AND Contracts.start_date BETWEEN @startDate AND @endDate";
+
+            List<SageAccountTiers> accountsTiers = new List<SageAccountTiers>();
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@startDate", select, pStartDate);
+                DatabaseHelper.InsertDateTimeParam("@endDate", select, pEndDate);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return accountsTiers;
+
+                    while (reader.Read())
+                    {
+                        var accountTiers = new SageAccountTiers
+                        {
+                            ContractId = DatabaseHelper.GetInt32("contract_id", reader),
+                            ContractCode = DatabaseHelper.GetString("contract_code", reader),
+                            DisbursmentDate = DatabaseHelper.GetDateTime("start_date", reader),
+                            ClientId = DatabaseHelper.GetInt32("tiers_id", reader),
+                            ClientName = DatabaseHelper.GetString("client_name", reader),
+                            LoanOfficerId = DatabaseHelper.GetInt32("loanofficer_id", reader),
+                            LoanOfficerName = DatabaseHelper.GetString("user_name", reader),
+                            CollectiveAccount = new Account
+                            {
+                                Id = DatabaseHelper.GetInt32("account_id", reader),
+                                LocalNumber = DatabaseHelper.GetString("local_account_number", reader),
+                                Label = DatabaseHelper.GetString("label", reader)
+                            }
+                        };
+
+                        switch (DatabaseHelper.GetChar("client_type_code", reader))
+                        {
+                            case 'I': accountTiers.ClientType = OClientTypes.Person; break;
+                            case 'G': accountTiers.ClientType = OClientTypes.Group; break;
+                            case 'V': accountTiers.ClientType = OClientTypes.Village; break;
+                            case 'C': accountTiers.ClientType = OClientTypes.Corporate; break;
+                        }
+
+                        accountsTiers.Add(accountTiers);
+                    }
+                }
+            }
+
+            return accountsTiers;
+        }
+
+        public List<SageBooking> SelectSageBooking(DateTime pStartDate, DateTime pEndDate, bool pSelectExported)
+        {
+            string sqlText = string.Format(@"SELECT MovementSet.id AS mvt_id, MovementSet.transaction_date,
+	                                        ElementaryMvts.amount, 
+	                                        CreditAccount.id AS credit_account_id, CreditAccount.local_account_number AS credit_local_account_number, CreditAccount.label AS credit_account_label, 
+	                                        DebitAccount.id AS debit_account_id, DebitAccount.local_account_number AS debit_local_account_number, DebitAccount.label AS debit_account_label,
+	                                        ContractEvents.event_type,
+	                                        Contracts.id AS contract_id, Contracts.contract_code,
+	                                        Packages.code, RepaymentEvents.installment_number,
+	                                        Tiers.id AS client_id,
+	                                        CASE Tiers.client_type_code
+			                                    WHEN 'I' THEN Persons.first_name + SPACE(1) + Persons.last_name
+			                                    WHEN 'G' THEN Groups.name
+			                                    WHEN 'C' THEN Corporates.name
+			                                    WHEN 'V' THEN Villages.name
+	                                         END AS client_name,
+	                                         SetUp_SageJournal.journal_code
+                                    FROM ElementaryMvts
+                                    INNER JOIN MovementSet ON ElementaryMvts.movement_set_id = MovementSet.id
+                                    INNER JOIN Accounts DebitAccount ON DebitAccount.id = ElementaryMvts.debit_account_id
+                                    INNER JOIN Accounts CreditAccount ON CreditAccount.id = ElementaryMvts.credit_account_id
+                                    INNER JOIN ContractEvents ON ContractEvents.id = MovementSet.id
+                                    INNER JOIN Contracts ON Contracts.id = ContractEvents.contract_id
+                                    INNER JOIN Credit ON Credit.id = Contracts.id
+                                    INNER JOIN Packages ON Packages.id = Credit.package_id
+                                    INNER JOIN Projects ON Projects.id = Contracts.project_id
+                                    INNER JOIN Tiers ON Tiers.id = Projects.tiers_id
+                                    LEFT OUTER JOIN Persons ON Persons.id = Tiers.id
+                                    LEFT OUTER JOIN Groups ON Groups.id = Tiers.id
+                                    LEFT OUTER JOIN Corporates ON Corporates.id = Tiers.id
+                                    LEFT OUTER JOIN Villages ON Villages.id = Tiers.id
+                                    LEFT OUTER JOIN RepaymentEvents ON RepaymentEvents.id = ContractEvents.id
+                                    LEFT OUTER JOIN SetUp_SageJournal ON SetUp_SageJournal.product_code = Packages.code
+                                    WHERE MovementSet.transaction_date BETWEEN @startDate AND @endDate
+                                    AND ContractEvents.event_type IN ('LODE', 'RGLE') 
+                                    {0}
+                                    ORDER BY MovementSet.id, ElementaryMvts.number", pSelectExported ? "" : "AND ElementaryMvts.is_exported = 0");
+
+            List<SageBooking> bookings = new List<SageBooking>();
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@startDate", select, pStartDate);
+                DatabaseHelper.InsertDateTimeParam("@endDate", select, pEndDate);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return bookings;
+
+                    while (reader.Read())
+                    {
+                        SageBooking bookingDebit = new SageBooking
+                        {
+                            JournalCode = DatabaseHelper.GetString("journal_code", reader),
+                            MovementSetId = DatabaseHelper.GetInt32("mvt_id", reader),
+                            Date = DatabaseHelper.GetDateTime("transaction_date", reader),
+                            Amount = DatabaseHelper.GetMoney("amount", reader),
+                            BookingType = DatabaseHelper.GetString("event_type", reader),
+                            ContractId = DatabaseHelper.GetInt32("contract_id", reader),
+                            ContractCode = DatabaseHelper.GetString("contract_code", reader),
+                            ClientId = DatabaseHelper.GetInt32("client_id", reader),
+                            ClientName = DatabaseHelper.GetString("client_name", reader)
+                        };
+
+                        bookingDebit.AccountTiers = bookingDebit.ContractCode.Replace("/", "");
+
+                        int? installmentNumber = DatabaseHelper.GetNullAuthorizedInt32("installment_number", reader);
+                        if (installmentNumber.HasValue)
+                            bookingDebit.Title = string.Format("{0} {1} {2}", bookingDebit.AccountTiers, installmentNumber.Value, bookingDebit.ClientName);
+                        else
+                            bookingDebit.Title = string.Format("{0} {1}", bookingDebit.AccountTiers, bookingDebit.ClientName);
+
+                        bookingDebit.PartNumber = string.Format("{0} {1} {2}", DatabaseHelper.GetString("code", reader), bookingDebit.Date.Month, bookingDebit.MovementSetId);
+
+                        bookingDebit.Reference = bookingDebit.BookingType == "RGLE" ?
+                            string.Format("PRELEV {0}", DatabaseHelper.GetNullAuthorizedInt32("installment_number", reader)) :
+                            "DECAISS";
+
+                        SageBooking bookingCredit = (SageBooking)bookingDebit.Clone();
+
+                        bookingDebit.Direction = OBookingDirections.Debit;
+                        bookingDebit.Account = new Account
+                        {
+                            Id = DatabaseHelper.GetInt32("debit_account_id", reader),
+                            LocalNumber = DatabaseHelper.GetString("debit_local_account_number", reader),
+                            Label = DatabaseHelper.GetString("debit_account_label", reader)
+                        };
+
+                        bookingCredit.Direction = OBookingDirections.Credit;
+                        bookingCredit.Account = new Account
+                        {
+                            Id = DatabaseHelper.GetInt32("credit_account_id", reader),
+                            LocalNumber = DatabaseHelper.GetString("credit_local_account_number", reader),
+                            Label = DatabaseHelper.GetString("credit_account_label", reader)
+                        };
+
+                        bookings.Add(bookingCredit);
+                        bookings.Add(bookingDebit);
+                    }
+                }
+            }
+
+            return bookings;         
+        }
+
+        public void SetBookingsExported(List<int> pMovementSetId)
+        {
+            string sqlText = @"UPDATE [ElementaryMvts] SET [is_exported] = 1, export_date = @exportDate
+                               WHERE movement_set_id IN (" + string.Join(",", pMovementSetId.ConvertAll<string>(item => item.ToString()).ToArray()) + ")";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@exportDate", update, TimeProvider.Now);
+
+                update.ExecuteNonQuery();
+            }
+        }
+    }
+}

@@ -1,0 +1,1707 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnDeselectAllAccountTiers.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonRefreshAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="_labelTitle.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="&gt;&gt;labelSelectedAccountTiers.Name" xml:space="preserve">
+    <value>labelSelectedAccountTiers</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnDeselectAllAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="btnSelectAllAccountTiers.Text" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderCollectiveAccount.Name" xml:space="preserve">
+    <value>columnHeaderCollectiveAccount</value>
+  </data>
+  <data name="buttonSelectAllBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="columnHeaderBookingAmount.Text" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="columnHeaderBookingReference.Text" xml:space="preserve">
+    <value>Reference</value>
+  </data>
+  <data name="labelEndDateBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="progressBarExport.Location" type="System.Drawing.Point, System.Drawing">
+    <value>394, 15</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonRefreshBookings.Name" xml:space="preserve">
+    <value>buttonRefreshBookings</value>
+  </data>
+  <data name="labelSelectedBookings.Text" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingDirection.Name" xml:space="preserve">
+    <value>columnHeaderBookingDirection</value>
+  </data>
+  <data name="columnHeaderAccountTiersTitle.Width" type="System.Int32, mscorlib">
+    <value>125</value>
+  </data>
+  <data name="labelTotalBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>14, 15</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Name" xml:space="preserve">
+    <value>splitContainerSage</value>
+  </data>
+  <data name="&gt;&gt;buttonSelectAllBookings.Name" xml:space="preserve">
+    <value>buttonSelectAllBookings</value>
+  </data>
+  <data name="&gt;&gt;buttonDeselectAllBookings.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="buttonRefreshAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingPartNumber.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="columnHeaderClientType.Text" xml:space="preserve">
+    <value>Client Type</value>
+  </data>
+  <data name="dateTimePickerBeginDateAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="columnHeaderLoanOfficer.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="&gt;&gt;labelTotalBookings.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;saveFileDialogAccountTiers.Name" xml:space="preserve">
+    <value>saveFileDialogAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;tabControlExportations.Name" xml:space="preserve">
+    <value>tabControlExportations</value>
+  </data>
+  <data name="labelSlashBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>232, 21</value>
+  </data>
+  <data name="btnDeselectAllAccountTiers.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="columnHeaderClientName.Text" xml:space="preserve">
+    <value>Client Name</value>
+  </data>
+  <data name="groupBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;labelTotalAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelEndDateBookings.Name" xml:space="preserve">
+    <value>labelEndDateBookings</value>
+  </data>
+  <data name="&gt;&gt;buttonExportAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="columnHeaderClientType.Width" type="System.Int32, mscorlib">
+    <value>75</value>
+  </data>
+  <data name="labelTotalAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="_buttonExit.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="groupBoxExportAccountsTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 451</value>
+  </data>
+  <data name="&gt;&gt;labelBeginDateAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelSelectedBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelEndDateAccountTiers.Name" xml:space="preserve">
+    <value>labelEndDateAccountTiers</value>
+  </data>
+  <data name="columnHeaderBookingReference.Width" type="System.Int32, mscorlib">
+    <value>75</value>
+  </data>
+  <data name="labelSlashAccountTiers.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonExportBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>855, 15</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Name" xml:space="preserve">
+    <value>splitContainerBookings</value>
+  </data>
+  <data name="buttonExportAccountTiers.Text" xml:space="preserve">
+    <value>Run export</value>
+  </data>
+  <data name="labelTotalBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="buttonExportBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>128, 25</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonRefreshBookings.Parent" xml:space="preserve">
+    <value>splitContainerBookings.Panel1</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>1003, 620</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingDate.Name" xml:space="preserve">
+    <value>columnHeaderBookingDate</value>
+  </data>
+  <data name="buttonExportBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="buttonDeselectAllBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>100, 16</value>
+  </data>
+  <data name="&gt;&gt;buttonRefreshAccountTiers.Name" xml:space="preserve">
+    <value>buttonRefreshAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;buttonRefreshAccountTiers.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="progressBar1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_buttonExit.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="&gt;&gt;btnDeselectAllAccountTiers.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;tabPageBookings.Name" xml:space="preserve">
+    <value>tabPageBookings</value>
+  </data>
+  <data name="buttonExportAccountTiers.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderContractCode.Name" xml:space="preserve">
+    <value>columnHeaderContractCode</value>
+  </data>
+  <data name="labelEndDateAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>418, 13</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>FrmExportSage</value>
+  </data>
+  <data name="&gt;&gt;listViewBookings.Name" xml:space="preserve">
+    <value>listViewBookings</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Panel2.Parent" xml:space="preserve">
+    <value>splitContainerSage</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Name" xml:space="preserve">
+    <value>splitContainerAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingContractCode.Name" xml:space="preserve">
+    <value>columnHeaderBookingContractCode</value>
+  </data>
+  <data name="buttonExportBookings.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderAccountTiers.Name" xml:space="preserve">
+    <value>columnHeaderAccountTiers</value>
+  </data>
+  <data name="saveFileDialogAccountTiers.Filter" xml:space="preserve">
+    <value>SAGE files|*.txt</value>
+  </data>
+  <data name="labelBeginDateBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="&gt;&gt;saveFileDialogBookings.Name" xml:space="preserve">
+    <value>saveFileDialogBookings</value>
+  </data>
+  <data name="progressBar1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingClientName.Name" xml:space="preserve">
+    <value>columnHeaderBookingClientName</value>
+  </data>
+  <data name="tabPageAccountTiers.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="&gt;&gt;btnDeselectAllAccountTiers.Name" xml:space="preserve">
+    <value>btnDeselectAllAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;tabPageAccountTiers.Parent" xml:space="preserve">
+    <value>tabControlExportations</value>
+  </data>
+  <data name="_labelTitle.Size" type="System.Drawing.Size, System.Drawing">
+    <value>1003, 41</value>
+  </data>
+  <data name="&gt;&gt;labelSelectedBookings.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;labelEndDateAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="tabPageAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>995, 542</value>
+  </data>
+  <data name="buttonSelectAllBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>88, 24</value>
+  </data>
+  <data name="dateTimePickerBeginDateAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 20</value>
+  </data>
+  <data name="btnDeselectAllAccountTiers.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="&gt;&gt;listViewAccountsTiers.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelBeginDateAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>97, 13</value>
+  </data>
+  <data name="_labelTitle.Text" xml:space="preserve">
+    <value>Sage Exportations</value>
+  </data>
+  <data name="buttonSelectAllBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="&gt;&gt;_labelTitle.Name" xml:space="preserve">
+    <value>_labelTitle</value>
+  </data>
+  <data name="labelBeginDateBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>97, 13</value>
+  </data>
+  <data name="dateTimePickerBeginDateBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="splitContainerSage.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
+  </data>
+  <data name="&gt;&gt;labelTotalAccountTiers.Name" xml:space="preserve">
+    <value>labelTotalAccountTiers</value>
+  </data>
+  <data name="splitContainerAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>989, 536</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabPageBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelEndDateBookings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelEndDateBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>418, 13</value>
+  </data>
+  <data name="splitContainerBookings.IsSplitterFixed" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSelectAllAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxShowExportedBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingDirection.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Panel2.Name" xml:space="preserve">
+    <value>splitContainerSage.Panel2</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderCollectiveAccount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnDeselectAllAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonExportAccountTiers.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAk1JREFUaEPt1EtI
+        VGEchvFXiIigRduWbdu1auuiCAoqCCS6B10FI8EwkMIQixJExCKTpEwMs0QGTTRLNLNMbcj7ZZJRR6dx
+        dBxHHefiTKdtLsRnMVF9H7/tA4eXPycpHo8LPCsDT6D59YEm+30BM8mamzCTmEnW/1GYKzFXYq5k/QXM
+        lay/kfmXmCv5z68khp5QFTPZmt3MJH96ktXYKiDQWInJ1qyt6GoUUCQaBf7xLBKJbpg1yYYbK0lwFo6E
+        AYUiYSDB2Uo4BAg0VkKzYHgFEGisRMuhIKCllSDwd2SB4BIg0FiJFpYXgQRn/qUAIN9iAKDZXMAPaDYw
+        D9DMu+ADNOP3ATTzzM8C+uHzApr2eQGaTc3NAHLNegBNet2AxmfcgJVNA3J6XIDGPC5ADvcEoNHpcYBm
+        w1NOQEOuMUADk98B9U84APU6RwD1OIcB2ccGAXU7+gF1OfoAdY72AuoY6QHUPmQH9HHQDqh1oBtQS18n
+        oPc9HYCavn0C1GhvB1T/tQ1QXXcroNquFkC2L82Aqj83AXrV/hbQy7YGQC8+vAFU3lILqKzZBqj0XQ2g
+        ksbXgIobqgA9rK8EVFhXASjf9hxQXs0zQHeqSwHlVJUAyq4sBpRV8QDQjfJCQNfLCgClP80HlPbkPqAr
+        j+8COv8oF9CZotuAThTeApRSkAXocF4moIP3MgDty70GKDnnKqA92amAdt+8BGhX1gVAOzPPAtqRcQrQ
+        9vTjgLalpQDamnoU0JbLRwBtvngI0KZzBwAlnd4PSCf3EjqWDPwEBJzkfwZ3dsgAAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="labelSelectedAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>14, 15</value>
+  </data>
+  <data name="checkBoxShowExportedBookings.Text" xml:space="preserve">
+    <value>Show also exported bookings</value>
+  </data>
+  <data name="labelSelectedBookings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="buttonExportBookings.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="groupBoxExportAccountsTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>989, 46</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Panel1.Parent" xml:space="preserve">
+    <value>splitContainerBookings</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderAccountTiersTitle.Name" xml:space="preserve">
+    <value>columnHeaderAccountTiersTitle</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Panel1.Name" xml:space="preserve">
+    <value>splitContainerSage.Panel1</value>
+  </data>
+  <data name="&gt;&gt;labelBeginDateBookings.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="splitContainerBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerBeginDateBookings.Name" xml:space="preserve">
+    <value>dateTimePickerBeginDateBookings</value>
+  </data>
+  <data name="tabPageBookings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="&gt;&gt;tabPageBookings.Parent" xml:space="preserve">
+    <value>tabControlExportations</value>
+  </data>
+  <data name="tabControlExportations.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="labelSlashBookings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnSelectAllAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>88, 24</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingDate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonExportBookings.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAk1JREFUaEPt1EtI
+        VGEchvFXiIigRduWbdu1auuiCAoqCCS6B10FI8EwkMIQixJExCKTpEwMs0QGTTRLNLNMbcj7ZZJRR6dx
+        dBxHHefiTKdtLsRnMVF9H7/tA4eXPycpHo8LPCsDT6D59YEm+30BM8mamzCTmEnW/1GYKzFXYq5k/QXM
+        lay/kfmXmCv5z68khp5QFTPZmt3MJH96ktXYKiDQWInJ1qyt6GoUUCQaBf7xLBKJbpg1yYYbK0lwFo6E
+        AYUiYSDB2Uo4BAg0VkKzYHgFEGisRMuhIKCllSDwd2SB4BIg0FiJFpYXgQRn/qUAIN9iAKDZXMAPaDYw
+        D9DMu+ADNOP3ATTzzM8C+uHzApr2eQGaTc3NAHLNegBNet2AxmfcgJVNA3J6XIDGPC5ADvcEoNHpcYBm
+        w1NOQEOuMUADk98B9U84APU6RwD1OIcB2ccGAXU7+gF1OfoAdY72AuoY6QHUPmQH9HHQDqh1oBtQS18n
+        oPc9HYCavn0C1GhvB1T/tQ1QXXcroNquFkC2L82Aqj83AXrV/hbQy7YGQC8+vAFU3lILqKzZBqj0XQ2g
+        ksbXgIobqgA9rK8EVFhXASjf9hxQXs0zQHeqSwHlVJUAyq4sBpRV8QDQjfJCQNfLCgClP80HlPbkPqAr
+        j+8COv8oF9CZotuAThTeApRSkAXocF4moIP3MgDty70GKDnnKqA92amAdt+8BGhX1gVAOzPPAtqRcQrQ
+        9vTjgLalpQDamnoU0JbLRwBtvngI0KZzBwAlnd4PSCf3EjqWDPwEBJzkfwZ3dsgAAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="progressBar1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>455, 25</value>
+  </data>
+  <data name="labelSlashAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="splitContainerBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>989, 536</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerBeginDateBookings.Parent" xml:space="preserve">
+    <value>splitContainerBookings.Panel1</value>
+  </data>
+  <data name="labelSlashBookings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Parent" xml:space="preserve">
+    <value>tabPageAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerEndDateBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DateTimePicker, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControlExportations.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerBeginDateBookings.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="listViewAccountsTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="columnHeaderDisbursedDate.Text" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonRefreshAccountTiers.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="&gt;&gt;tabPageBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonSelectAllBookings.Text" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="buttonRefreshBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="dateTimePickerEndDateBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="_buttonExit.Text" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="progressBar1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>394, 15</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerBeginDateAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DateTimePicker, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelSelectedBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelSlashAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>232, 21</value>
+  </data>
+  <data name="&gt;&gt;checkBoxShowExportedBookings.Parent" xml:space="preserve">
+    <value>splitContainerBookings.Panel1</value>
+  </data>
+  <data name="labelEndDateAccountTiers.Text" xml:space="preserve">
+    <value>End Date :</value>
+  </data>
+  <data name="progressBarExport.Size" type="System.Drawing.Size, System.Drawing">
+    <value>455, 25</value>
+  </data>
+  <data name="&gt;&gt;_labelTitle.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingAmount.Name" xml:space="preserve">
+    <value>columnHeaderBookingAmount</value>
+  </data>
+  <data name="&gt;&gt;labelSlashBookings.Name" xml:space="preserve">
+    <value>labelSlashBookings</value>
+  </data>
+  <data name="dateTimePickerEndDateAccountTiers.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
+  </data>
+  <data name="labelBeginDateAccountTiers.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;groupBoxExportAccountsTiers.Name" xml:space="preserve">
+    <value>groupBoxExportAccountsTiers</value>
+  </data>
+  <data name="_buttonExit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>827, 10</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingClientName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonSelectAllBookings.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="&gt;&gt;labelSlashBookings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;progressBarExport.Parent" xml:space="preserve">
+    <value>groupBoxExportAccountsTiers</value>
+  </data>
+  <data name="btnSelectAllAccountTiers.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_labelTitle.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 15.75pt, style=Bold</value>
+  </data>
+  <data name="splitContainerSage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>1003, 620</value>
+  </data>
+  <data name="&gt;&gt;buttonRefreshBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonSelectAllBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="tabPageBookings.Text" xml:space="preserve">
+    <value>Bookings</value>
+  </data>
+  <data name="labelTotalBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="columnHeaderBookingContractCode.Text" xml:space="preserve">
+    <value>Contract Code</value>
+  </data>
+  <data name="tabControlExportations.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;listViewBookings.Parent" xml:space="preserve">
+    <value>splitContainerBookings.Panel2</value>
+  </data>
+  <data name="splitContainerSage.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="listViewBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>983, 442</value>
+  </data>
+  <data name="&gt;&gt;labelBeginDateBookings.Name" xml:space="preserve">
+    <value>labelBeginDateBookings</value>
+  </data>
+  <data name="buttonDeselectAllBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 24</value>
+  </data>
+  <data name="labelSlashAccountTiers.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="saveFileDialogBookings.Filter" xml:space="preserve">
+    <value>SAGE files|*.txt</value>
+  </data>
+  <data name="&gt;&gt;buttonExportBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonDeselectAllBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="columnHeaderAccountTiers.Text" xml:space="preserve">
+    <value>Account Tiers</value>
+  </data>
+  <data name="dateTimePickerEndDateBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 20</value>
+  </data>
+  <data name="btnSelectAllAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="&gt;&gt;buttonExportAccountTiers.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="labelSelectedBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>14, 15</value>
+  </data>
+  <data name="buttonRefreshAccountTiers.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="columnHeaderBookingJournalCode.Text" xml:space="preserve">
+    <value>Journal</value>
+  </data>
+  <data name="buttonExportBookings.Text" xml:space="preserve">
+    <value>Run export</value>
+  </data>
+  <data name="&gt;&gt;labelSlashAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelSelectedAccountTiers.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="buttonRefreshBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>88, 24</value>
+  </data>
+  <data name="dateTimePickerEndDateAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="&gt;&gt;tabPageAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="tabControlExportations.ItemSize" type="System.Drawing.Size, System.Drawing">
+    <value>83, 25</value>
+  </data>
+  <data name="&gt;&gt;buttonSelectAllBookings.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;labelEndDateBookings.Parent" xml:space="preserve">
+    <value>splitContainerBookings.Panel1</value>
+  </data>
+  <data name="columnHeaderBookingPartNumber.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="labelSlashBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="btnSelectAllAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="labelSelectedAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>212, 21</value>
+  </data>
+  <data name="splitContainerBookings.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
+  </data>
+  <data name="splitContainerAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="dateTimePickerBeginDateBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>177, 8</value>
+  </data>
+  <data name="columnHeaderAccountTiers.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="&gt;&gt;progressBarExport.Name" xml:space="preserve">
+    <value>progressBarExport</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="columnHeaderDisbursedDate.Width" type="System.Int32, mscorlib">
+    <value>75</value>
+  </data>
+  <data name="dateTimePickerBeginDateAccountTiers.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Parent" xml:space="preserve">
+    <value>tabPageBookings</value>
+  </data>
+  <data name="tabControlExportations.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingContractCode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelSlashAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="labelTotalBookings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="splitContainerAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;buttonExportBookings.Name" xml:space="preserve">
+    <value>buttonExportBookings</value>
+  </data>
+  <data name="labelTotalBookings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelBeginDateAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnSelectAllAccountTiers.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="dateTimePickerEndDateBookings.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
+  </data>
+  <data name="splitContainerSage.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerEndDateAccountTiers.Name" xml:space="preserve">
+    <value>dateTimePickerEndDateAccountTiers</value>
+  </data>
+  <data name="dateTimePickerEndDateAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>488, 8</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelBeginDateAccountTiers.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel1</value>
+  </data>
+  <data name="_labelTitle.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="&gt;&gt;labelBeginDateBookings.Parent" xml:space="preserve">
+    <value>splitContainerBookings.Panel1</value>
+  </data>
+  <data name="&gt;&gt;labelEndDateBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;progressBar1.Name" xml:space="preserve">
+    <value>progressBar1</value>
+  </data>
+  <data name="splitContainerAccountTiers.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="&gt;&gt;listViewAccountsTiers.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel2</value>
+  </data>
+  <data name="labelEndDateAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabControlExportations.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelSlashBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 15</value>
+  </data>
+  <data name="&gt;&gt;buttonDeselectAllBookings.Name" xml:space="preserve">
+    <value>buttonDeselectAllBookings</value>
+  </data>
+  <data name="&gt;&gt;labelSlashAccountTiers.Parent" xml:space="preserve">
+    <value>groupBoxExportAccountsTiers</value>
+  </data>
+  <data name="&gt;&gt;labelSlashAccountTiers.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerBeginDateAccountTiers.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="buttonDeselectAllBookings.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="labelEndDateBookings.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9pt</value>
+  </data>
+  <data name="_buttonExit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>172, 25</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listViewBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Panel2.Name" xml:space="preserve">
+    <value>splitContainerBookings.Panel2</value>
+  </data>
+  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>989, 46</value>
+  </data>
+  <data name="buttonExportBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonDeselectAllBookings.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="&gt;&gt;labelSlashBookings.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderClientType.Name" xml:space="preserve">
+    <value>columnHeaderClientType</value>
+  </data>
+  <data name="labelSelectedAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnDeselectAllAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Panel1.Name" xml:space="preserve">
+    <value>splitContainerBookings.Panel1</value>
+  </data>
+  <data name="columnHeaderAccountTiersTitle.Text" xml:space="preserve">
+    <value>Account Tiers Title</value>
+  </data>
+  <data name="&gt;&gt;buttonSelectAllBookings.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="btnDeselectAllAccountTiers.Text" xml:space="preserve">
+    <value>Deselect All</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Panel1.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;groupBoxExportAccountsTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="dateTimePickerBeginDateAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>177, 8</value>
+  </data>
+  <data name="groupBoxExportAccountsTiers.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9pt</value>
+  </data>
+  <data name="labelEndDateAccountTiers.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9pt</value>
+  </data>
+  <data name="&gt;&gt;listViewBookings.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="progressBarExport.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="labelTotalAccountTiers.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerEndDateAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DateTimePicker, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelSelectedBookings.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;buttonExportAccountTiers.Parent" xml:space="preserve">
+    <value>groupBoxExportAccountsTiers</value>
+  </data>
+  <data name="buttonRefreshAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>88, 24</value>
+  </data>
+  <data name="listViewBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="&gt;&gt;labelBeginDateAccountTiers.Name" xml:space="preserve">
+    <value>labelBeginDateAccountTiers</value>
+  </data>
+  <data name="columnHeaderBookingType.Text" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="labelBeginDateBookings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="columnHeaderClientName.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="columnHeaderBookingAccountTiers.Text" xml:space="preserve">
+    <value>Account Tiers</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 451</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderClientName.Name" xml:space="preserve">
+    <value>columnHeaderClientName</value>
+  </data>
+  <data name="_buttonExit.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="labelBeginDateBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 15</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingAccount.Name" xml:space="preserve">
+    <value>columnHeaderBookingAccount</value>
+  </data>
+  <data name="&gt;&gt;btnDeselectAllAccountTiers.Parent" xml:space="preserve">
+    <value>groupBoxExportAccountsTiers</value>
+  </data>
+  <data name="&gt;&gt;tabControlExportations.Parent" xml:space="preserve">
+    <value>splitContainerSage.Panel2</value>
+  </data>
+  <data name="&gt;&gt;progressBarExport.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="labelSelectedBookings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="splitContainerBookings.SplitterDistance" type="System.Int32, mscorlib">
+    <value>35</value>
+  </data>
+  <data name="columnHeaderBookingClientName.Text" xml:space="preserve">
+    <value>Client Name</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Panel2.Name" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel2</value>
+  </data>
+  <data name="columnHeaderBookingDate.Text" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="_buttonExit.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="&gt;&gt;saveFileDialogAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SaveFileDialog, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="splitContainerSage.IsSplitterFixed" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="dateTimePickerEndDateBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>488, 8</value>
+  </data>
+  <data name="splitContainerAccountTiers.IsSplitterFixed" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="tabControlExportations.Size" type="System.Drawing.Size, System.Drawing">
+    <value>1003, 575</value>
+  </data>
+  <data name="checkBoxShowExportedBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>188, 19</value>
+  </data>
+  <data name="listViewAccountsTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>983, 442</value>
+  </data>
+  <data name="&gt;&gt;labelBeginDateBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderContractCode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="columnHeaderLoanOfficer.Text" xml:space="preserve">
+    <value>Loan Officer</value>
+  </data>
+  <data name="btnSelectAllAccountTiers.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="&gt;&gt;_buttonExit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelEndDateBookings.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="labelSlashBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="buttonExportAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>128, 25</value>
+  </data>
+  <data name="dateTimePickerBeginDateBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 20</value>
+  </data>
+  <data name="labelEndDateBookings.Text" xml:space="preserve">
+    <value>End Date :</value>
+  </data>
+  <data name="labelSelectedBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>212, 21</value>
+  </data>
+  <data name="splitContainerSage.SplitterDistance" type="System.Int32, mscorlib">
+    <value>41</value>
+  </data>
+  <data name="dateTimePickerBeginDateAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelSelectedBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="groupBoxExportAccountsTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSelectAllAccountTiers.Name" xml:space="preserve">
+    <value>btnSelectAllAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;progressBarExport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="tabPageAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="buttonRefreshBookings.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="tabPageAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 29</value>
+  </data>
+  <data name="labelEndDateBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="listViewBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;labelSlashBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="_labelTitle.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderLoanOfficer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="_labelTitle.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="columnHeaderCollectiveAccount.Text" xml:space="preserve">
+    <value>Collective Account</value>
+  </data>
+  <data name="labelTotalBookings.Text" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonExportAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="columnHeaderBookingClientName.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="&gt;&gt;buttonDeselectAllBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="splitContainerAccountTiers.SplitterDistance" type="System.Int32, mscorlib">
+    <value>35</value>
+  </data>
+  <data name="&gt;&gt;buttonRefreshBookings.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="columnHeaderBookingAccount.Text" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="&gt;&gt;groupBoxExportAccountsTiers.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel2</value>
+  </data>
+  <data name="dateTimePickerEndDateAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelEndDateBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>64, 15</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;labelSlashAccountTiers.Name" xml:space="preserve">
+    <value>labelSlashAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Panel1.Name" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel1</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderLoanOfficer.Name" xml:space="preserve">
+    <value>columnHeaderLoanOfficer</value>
+  </data>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingType.Name" xml:space="preserve">
+    <value>columnHeaderBookingType</value>
+  </data>
+  <data name="dateTimePickerEndDateAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 20</value>
+  </data>
+  <data name="labelTotalBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>328, 21</value>
+  </data>
+  <data name="progressBarExport.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="buttonDeselectAllBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="dateTimePickerEndDateBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelTotalAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>328, 21</value>
+  </data>
+  <data name="columnHeaderContractCode.Text" xml:space="preserve">
+    <value>Contract Code</value>
+  </data>
+  <data name="columnHeaderBookingDate.Width" type="System.Int32, mscorlib">
+    <value>75</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelBeginDateAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;checkBoxShowExportedBookings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;listViewAccountsTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageBookings.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingAccount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelEndDateAccountTiers.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;tabPageAccountTiers.Name" xml:space="preserve">
+    <value>tabPageAccountTiers</value>
+  </data>
+  <data name="splitContainerAccountTiers.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
+  </data>
+  <data name="&gt;&gt;splitContainerAccountTiers.Panel2.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderClientType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingJournalCode.Name" xml:space="preserve">
+    <value>columnHeaderBookingJournalCode</value>
+  </data>
+  <data name="tabPageBookings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>995, 542</value>
+  </data>
+  <data name="&gt;&gt;checkBoxShowExportedBookings.Name" xml:space="preserve">
+    <value>checkBoxShowExportedBookings</value>
+  </data>
+  <data name="buttonExportAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>855, 15</value>
+  </data>
+  <data name="groupBoxExportAccountsTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>FrmExportSage</value>
+  </data>
+  <data name="labelBeginDateAccountTiers.Text" xml:space="preserve">
+    <value>Begin Date :</value>
+  </data>
+  <data name="columnHeaderBookingPartNumber.Text" xml:space="preserve">
+    <value>Part Number</value>
+  </data>
+  <data name="buttonExportAccountTiers.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="labelBeginDateAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 15</value>
+  </data>
+  <data name="columnHeaderBookingAccountTiers.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingReference.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="progressBar1.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerEndDateBookings.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="listViewBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerEndDateBookings.Name" xml:space="preserve">
+    <value>dateTimePickerEndDateBookings</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="listViewAccountsTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="checkBoxShowExportedBookings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderAccountTiersTitle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonRefreshBookings.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="&gt;&gt;labelTotalBookings.Name" xml:space="preserve">
+    <value>labelTotalBookings</value>
+  </data>
+  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAB+fn8AkYyKAJKOjgCVk5MAlpaWAKWmpQCwr68AsrOyALS2tQC2trYAuru7ALu8vAC/vbwAvb29AMG/
+        vgDBwcAAwcLCAMXDwwDHxsUAxcbHAMbIxwDMyMcAyMnIAMrKygDKyssAy8vLAMzMywDNzcwAz87OANLQ
+        0ADP0tEA0NPSANLT0gDU1NIA1NXUANjV1QDW1tUA19fVANjX1QDX2NcA2tnYANnZ2QDb2dkA29zcANzc
+        3ADd3t0A397eAN3f3gDf394A4d/fAN3g3wDf4N8A3uDgAN/h4ADh4eAA3+HhAOHh4QDg4uEA4uLhAOPi
+        4QDi4uIA4+LiAOTj4wDi5OMA5OTkAOLl5ADm5eQA5ubmAOTn5gDl5+YA5OjnAOXo5wDm6OcA6OjnAObp
+        6ADp6egA6unpAObq6QDn6uoA6urpAOvq6QDp6uoA6urqAOvr6ADn6+oA6uvpAOnr6gDq7OsA6uzsAOzs
+        7ADq7esA7O3sAO3t7ADs7uwA7u7uAOzv7QDu7+0A7e/uAO3v7wDu7+8A7+/vAO/w7gDx8fAA7/HxAO/y
+        8QDx8vEA8PPyAPHz8gDy9PQA9PT0APP19QD09fUA9Pb2APX29gD19/YA9ff3APb4+AD4+PgA9vn4APf5
+        +AD4+/oA+fv6APr8/AD6/fwA+/38APz9/AD7/v0A/P79APv+/gD8/v4A+//9APz//QD9//0A+//+APz/
+        /gD9//8A/v//AP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAR4aGiRtCHXOGhoaGhoaGR0eGf1dAhYQkhoaGgH6HiEREgXqJMIZxX4aGhX5vOSMySDM2Yldm
+        S2qJiH5ua4GJCzRViD5oZV5kGCJ4cIZ7JzVHWCB1Y1sqFQkNdoY8VolERH6JWEOJAgADiTlhiH5+R0eG
+        hn6HGgZZZAVRfoaGhkdHhoaGiBYseYgHiX5+hoZHR4Z+iFGJAQQPUSlxhoaDR0SISTqGKCYMDlJ5bEly
+        h0cvK313Lk8iITsZcGCHXDFBEIl8OCVpQF0RF4dsTIKJE009NzMthm1TiYmGflpQbwpHhn45HH1FP36G
+        hoZ+dGdOH0dHShQSCFRHR0dHREdGHgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+</value>
+  </data>
+  <data name="&gt;&gt;buttonRefreshAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelEndDateAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>64, 15</value>
+  </data>
+  <data name="buttonExportAccountTiers.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonRefreshBookings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="_buttonExit.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9.75pt</value>
+  </data>
+  <data name="buttonRefreshAccountTiers.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="&gt;&gt;labelBeginDateAccountTiers.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="_buttonExit.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelBeginDateBookings.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9pt</value>
+  </data>
+  <data name="checkBoxShowExportedBookings.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9pt</value>
+  </data>
+  <data name="&gt;&gt;labelEndDateAccountTiers.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel1</value>
+  </data>
+  <data name="columnHeaderBookingAccount.Width" type="System.Int32, mscorlib">
+    <value>150</value>
+  </data>
+  <data name="&gt;&gt;labelEndDateAccountTiers.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSelectAllAccountTiers.Parent" xml:space="preserve">
+    <value>groupBoxExportAccountsTiers</value>
+  </data>
+  <data name="columnHeaderContractCode.Width" type="System.Int32, mscorlib">
+    <value>150</value>
+  </data>
+  <data name="labelSelectedAccountTiers.Text" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderDisbursedDate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_labelTitle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="btnSelectAllAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 16</value>
+  </data>
+  <data name="dateTimePickerBeginDateBookings.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt</value>
+  </data>
+  <data name="buttonDeselectAllBookings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelTotalAccountTiers.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelTotalAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="columnHeaderBookingType.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="&gt;&gt;listViewAccountsTiers.Name" xml:space="preserve">
+    <value>listViewAccountsTiers</value>
+  </data>
+  <data name="labelSelectedAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="splitContainerSage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="labelTotalAccountTiers.Text" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="columnHeaderBookingDirection.Width" type="System.Int32, mscorlib">
+    <value>75</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerBeginDateAccountTiers.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel1</value>
+  </data>
+  <data name="buttonRefreshBookings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="&gt;&gt;labelSelectedAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelSlashBookings.Text" xml:space="preserve">
+    <value>selected out of:</value>
+  </data>
+  <data name="&gt;&gt;btnSelectAllAccountTiers.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="_buttonExit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="&gt;&gt;buttonExportBookings.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;labelSelectedAccountTiers.Parent" xml:space="preserve">
+    <value>groupBoxExportAccountsTiers</value>
+  </data>
+  <data name="&gt;&gt;_buttonExit.Name" xml:space="preserve">
+    <value>_buttonExit</value>
+  </data>
+  <data name="buttonDeselectAllBookings.Text" xml:space="preserve">
+    <value>Deselect All</value>
+  </data>
+  <data name="&gt;&gt;labelTotalAccountTiers.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabPageBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 29</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerEndDateBookings.Parent" xml:space="preserve">
+    <value>splitContainerBookings.Panel1</value>
+  </data>
+  <data name="labelSlashAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 15</value>
+  </data>
+  <data name="labelSlashAccountTiers.Text" xml:space="preserve">
+    <value>selected out of:</value>
+  </data>
+  <data name="splitContainerBookings.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="&gt;&gt;_buttonExit.Parent" xml:space="preserve">
+    <value>splitContainerSage.Panel1</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerEndDateAccountTiers.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnDeselectAllAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 24</value>
+  </data>
+  <data name="listViewAccountsTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="checkBoxShowExportedBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;buttonExportBookings.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="buttonExportBookings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonRefreshAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 8</value>
+  </data>
+  <data name="&gt;&gt;buttonExportAccountTiers.Name" xml:space="preserve">
+    <value>buttonExportAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;labelTotalBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="progressBar1.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingReference.Name" xml:space="preserve">
+    <value>columnHeaderBookingReference</value>
+  </data>
+  <data name="&gt;&gt;splitContainerBookings.Panel2.Parent" xml:space="preserve">
+    <value>splitContainerBookings</value>
+  </data>
+  <data name="progressBarExport.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxShowExportedBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>727, 9</value>
+  </data>
+  <data name="groupBox1.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9pt</value>
+  </data>
+  <data name="btnDeselectAllAccountTiers.Location" type="System.Drawing.Point, System.Drawing">
+    <value>100, 16</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingPartNumber.Name" xml:space="preserve">
+    <value>columnHeaderBookingPartNumber</value>
+  </data>
+  <data name="splitContainerBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="&gt;&gt;tabPageAccountTiers.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonExportAccountTiers.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;saveFileDialogBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SaveFileDialog, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonExportAccountTiers.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="&gt;&gt;progressBar1.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="buttonExportBookings.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerEndDateAccountTiers.Parent" xml:space="preserve">
+    <value>splitContainerAccountTiers.Panel1</value>
+  </data>
+  <data name="dateTimePickerBeginDateBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="_labelTitle.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleCenter</value>
+  </data>
+  <data name="&gt;&gt;progressBar1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="_labelTitle.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;labelSelectedBookings.Name" xml:space="preserve">
+    <value>labelSelectedBookings</value>
+  </data>
+  <data name="labelSelectedAccountTiers.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelBeginDateBookings.Text" xml:space="preserve">
+    <value>Begin Date :</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderDisbursedDate.Name" xml:space="preserve">
+    <value>columnHeaderDisbursedDate</value>
+  </data>
+  <data name="tabPageAccountTiers.Text" xml:space="preserve">
+    <value>Accounts Tiers</value>
+  </data>
+  <data name="buttonRefreshAccountTiers.Text" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="buttonRefreshBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 8</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderAccountTiers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxExportAccountsTiers.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;_labelTitle.Parent" xml:space="preserve">
+    <value>splitContainerSage.Panel1</value>
+  </data>
+  <data name="buttonRefreshBookings.Text" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="labelTotalAccountTiers.Size" type="System.Drawing.Size, System.Drawing">
+    <value>14, 15</value>
+  </data>
+  <data name="progressBarExport.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="labelBeginDateAccountTiers.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9pt</value>
+  </data>
+  <data name="&gt;&gt;labelSelectedAccountTiers.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelBeginDateBookings.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+    <value>splitContainerBookings.Panel2</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingAmount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="columnHeaderBookingContractCode.Width" type="System.Int32, mscorlib">
+    <value>150</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingAccountTiers.Name" xml:space="preserve">
+    <value>columnHeaderBookingAccountTiers</value>
+  </data>
+  <data name="&gt;&gt;labelTotalBookings.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="buttonSelectAllBookings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 16</value>
+  </data>
+  <data name="buttonSelectAllBookings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="columnHeaderCollectiveAccount.Width" type="System.Int32, mscorlib">
+    <value>150</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerBeginDateBookings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DateTimePicker, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonSelectAllBookings.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="&gt;&gt;_buttonExit.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;buttonDeselectAllBookings.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;labelTotalAccountTiers.Parent" xml:space="preserve">
+    <value>groupBoxExportAccountsTiers</value>
+  </data>
+  <data name="&gt;&gt;splitContainerSage.Panel1.Parent" xml:space="preserve">
+    <value>splitContainerSage</value>
+  </data>
+  <data name="columnHeaderBookingDirection.Text" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="&gt;&gt;progressBar1.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;dateTimePickerBeginDateAccountTiers.Name" xml:space="preserve">
+    <value>dateTimePickerBeginDateAccountTiers</value>
+  </data>
+  <data name="labelEndDateAccountTiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderClientName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonRefreshAccountTiers.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBookingJournalCode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="splitContainerSage.Locked" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="saveFileDialogAccountTiers.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <metadata name="saveFileDialogBookings.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>220, 19</value>
+  </metadata>
+</root>

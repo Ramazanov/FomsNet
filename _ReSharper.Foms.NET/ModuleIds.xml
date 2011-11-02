@@ -1,0 +1,16 @@
+<Modules>
+  <Module PersistentId="d:Miscellaneous Files" ModuleId="System.Windows.Forms" />
+  <Module PersistentId="941B6658-6BC7-46AC-BB38-DBAB2835923E" ModuleId="Foms.Test" />
+  <Module PersistentId="D539C388-3848-4A3E-AB87-42B8E329755A" ModuleId="Foms.CoreDomain" />
+  <Module PersistentId="D63E15B6-24DF-4C27-8593-EFACE31FA52A" ModuleId="Foms.Extensions" />
+  <Module PersistentId="30AF40FB-FA8B-4F5E-B41A-CA59E82BA5A0" ModuleId="Foms.DatabaseConnection" />
+  <Module PersistentId="98B26AD8-D160-462B-B70F-982D8701154A" ModuleId="Foms.ExceptionsHandler" />
+  <Module PersistentId="8AFC1E87-3856-4F05-8280-5360D33C200B" ModuleId="Foms.Enums" />
+  <Module PersistentId="B3288E21-E5A9-4620-BEF3-AFB0B207655C" ModuleId="Foms.Shared" />
+  <Module PersistentId="A859D97A-51FB-4961-AF07-5856640511AF" ModuleId="Foms.Services" />
+  <Module PersistentId="098C8842-6538-4B87-8851-BB1B1FA379FE" ModuleId="Foms.GUI" />
+  <Module PersistentId="963A6B8B-779C-4052-B39A-8ABBFBF16C1A" ModuleId="Octopus.Manager" />
+  <Module PersistentId="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" ModuleId="System.Windows.Forms_1" />
+  <Module PersistentId="mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" ModuleId="mscorlib" />
+  <Module PersistentId="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" ModuleId="System.Drawing" />
+</Modules>

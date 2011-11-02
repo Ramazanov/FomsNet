@@ -1,0 +1,2004 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="buttonDefault.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        R0lGODlhEgDEAIYAAPL29Pj6+fn7+tzn4ufv7Ovx7/P39e3z8O/08/f6+Je4qsLVzKvFuqXCtQBdRcbY
+        0Nrm4XynlgBZQWWZhleRfL3SyOrw7d3o487d1rXNwmCVggprVBFyWwhpUTiBa9nl31yTf+Lr6Pb597vQ
+        x+Ts6LPLwLbOw7/TyqjEt/H183ajkdbj3UGEb9Ph2gZnT5++sW6ei8zc1O7z8eLr55y7rs3d1a3HvGqb
+        iHmlkwFfSJq6rHKhj4yxooSsnCJ4YaPAs/r7+rjPxezy7zJ+aNfk3oGqmgRiS1CMeI+zpMfZ0EaGccPX
+        zoevn9/q5crb05O2p9Th2+Xt6uHq5ebu6w1uV/z9/Onv7NDf2EyKdRp1Xq/JvSt8ZvX49/v8+/v8/P3+
+        /f7+/v///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEBAAAh+QQA
+        AAAAACwAAAAAEgDEAAAI/wDDCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJ
+        kyhTqlzJkiSYlzBjypxJs6bNmzhz6tzJs6fPn0CDChX6pajRo0iTKl3KtKnTp1CjSk1aparVq1itetnK
+        tavXr2DDih1LtmzZLmjTql3Ltq3bt3DjsgVCt67du3UF6N3Lt6/fv4ADBw5AuLDhw4gTK168OIHjx5Aj
+        S55MWYTly5gzX+bCubPnz6BDix5NujRoA6hTq17NurVrALBjy55Nu7bt27dT6N7Nu/duBMCDCx9OvLhx
+        GciTK1+e/IDz59CjS59OXYj169izXy/Avbv37+DDi/+3QL68+fPlrahfz779egLw48ufT7++/Sn48+vf
+        nz+K//8ABvgfCQQWaOCBBYag4IIMNrjgDBBGKOGEEUph4YUYZnhhExx26OGHHV4g4ogkljjiACimqOKK
+        LLboIgQwxijjjDF+YOONOOZ4IxE89ujjjz2uIOSQRBY5JBRIJqnkkkm24OSTUEb55BVUVmnllVVioOWW
+        XHa5ZQ1ghinmmGHGYOaZaKZ5phNstunmm20mIeecdNY55wN45qnnnnku4eefgAb65wKEFmrooYWeoOii
+        jDa6aAWQRirppJGOYOmlmGZ6aRCcdurpp52aIOqopJY6agaopqrqqqmW4OqrsMb/+qoWtNZq66212qDr
+        rrz2uisDwAYr7LDBomDsscgme2wDzDbr7LPN/iDttNRWO+0L2Gar7bbZ0uDtt+CG+60O5JZr7rnlKqDu
+        uuy2u+4T8MYr77zxImHvvfjmey8P/Pbr77/9MiHwwAQXPHAPCCes8MIJF+HwwxBH/HAEFFds8cUV46Dx
+        xhx3vLEKIIcs8sgh72DyySinfDIMLLfs8sst3yDzzDTXPPMEOOes8845a+Dzz0AH/TMIRBdt9NFFU6D0
+        0kw3vfQRUEct9dRRY2H11VhnfbUSXHft9dddsyD22GSXPbYHaKet9tppD+H223DH/fYWdNdt9911+6D3
+        3nz3Tr13FoAHLvjggXNg+OGIJ344FYw37vjjjW8g+eSUVz55B5hnrvnmmbvg+eegh/65EaSXbvrppeeg
+        +uqst766A7DHLvvssUtg++245357QAA7
+</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="buttonDefault.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonDefault.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonDefault.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9.75pt</value>
+  </data>
+  <data name="buttonDefault.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonDefault.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonDefault.Location" type="System.Drawing.Point, System.Drawing">
+    <value>259, 79</value>
+  </data>
+  <data name="buttonDefault.Size" type="System.Drawing.Size, System.Drawing">
+    <value>134, 22</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="buttonDefault.TabIndex" type="System.Int32, mscorlib">
+    <value>39</value>
+  </data>
+  <data name="buttonDefault.Text" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="&gt;&gt;buttonDefault.Name" xml:space="preserve">
+    <value>buttonDefault</value>
+  </data>
+  <data name="&gt;&gt;buttonDefault.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonDefault.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;buttonDefault.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonGetServersList.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        R0lGODlhEgDEAIYAAPL29Pj6+fn7+tzn4ufv7Ovx7/P39e3z8O/08/f6+Je4qsLVzKvFuqXCtQBdRcbY
+        0Nrm4XynlgBZQWWZhleRfL3SyOrw7d3o487d1rXNwmCVggprVBFyWwhpUTiBa9nl31yTf+Lr6Pb597vQ
+        x+Ts6LPLwLbOw7/TyqjEt/H183ajkdbj3UGEb9Ph2gZnT5++sW6ei8zc1O7z8eLr55y7rs3d1a3HvGqb
+        iHmlkwFfSJq6rHKhj4yxooSsnCJ4YaPAs/r7+rjPxezy7zJ+aNfk3oGqmgRiS1CMeI+zpMfZ0EaGccPX
+        zoevn9/q5crb05O2p9Th2+Xt6uHq5ebu6w1uV/z9/Onv7NDf2EyKdRp1Xq/JvSt8ZvX49/v8+/v8/P3+
+        /f7+/v///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEBAAAh+QQA
+        AAAAACwAAAAAEgDEAAAI/wDDCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJ
+        kyhTqlzJkiSYlzBjypxJs6bNmzhz6tzJs6fPn0CDChX6pajRo0iTKl3KtKnTp1CjSk1aparVq1itetnK
+        tavXr2DDih1LtmzZLmjTql3Ltq3bt3DjsgVCt67du3UF6N3Lt6/fv4ADBw5AuLDhw4gTK168OIHjx5Aj
+        S55MWYTly5gzX+bCubPnz6BDix5NujRoA6hTq17NurVrALBjy55Nu7bt27dT6N7Nu/duBMCDCx9OvLhx
+        GciTK1+e/IDz59CjS59OXYj169izXy/Avbv37+DDi/+3QL68+fPlrahfz779egLw48ufT7++/Sn48+vf
+        nz+K//8ABvgfCQQWaOCBBYag4IIMNrjgDBBGKOGEEUph4YUYZnhhExx26OGHHV4g4ogkljjiACimqOKK
+        LLboIgQwxijjjDF+YOONOOZ4IxE89ujjjz2uIOSQRBY5JBRIJqnkkkm24OSTUEb55BVUVmnllVVioOWW
+        XHa5ZQ1ghinmmGHGYOaZaKZ5phNstunmm20mIeecdNY55wN45qnnnnku4eefgAb65wKEFmrooYWeoOii
+        jDa6aAWQRirppJGOYOmlmGZ6aRCcdurpp52aIOqopJY6agaopqrqqqmW4OqrsMb/+qoWtNZq66212qDr
+        rrz2uisDwAYr7LDBomDsscgme2wDzDbr7LPN/iDttNRWO+0L2Gar7bbZ0uDtt+CG+60O5JZr7rnlKqDu
+        uuy2u+4T8MYr77zxImHvvfjmey8P/Pbr77/9MiHwwAQXPHAPCCes8MIJF+HwwxBH/HAEFFds8cUV46Dx
+        xhx3vLEKIIcs8sgh72DyySinfDIMLLfs8sst3yDzzDTXPPMEOOes8845a+Dzz0AH/TMIRBdt9NFFU6D0
+        0kw3vfQRUEct9dRRY2H11VhnfbUSXHft9dddsyD22GSXPbYHaKet9tppD+H223DH/fYWdNdt9911+6D3
+        3nz3Tr13FoAHLvjggXNg+OGIJ344FYw37vjjjW8g+eSUVz55B5hnrvnmmbvg+eegh/65EaSXbvrppeeg
+        +uqst766A7DHLvvssUtg++245357QAA7
+</value>
+  </data>
+  <data name="buttonGetServersList.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonGetServersList.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonGetServersList.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9.75pt</value>
+  </data>
+  <data name="buttonGetServersList.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonGetServersList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonGetServersList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>119, 79</value>
+  </data>
+  <data name="buttonGetServersList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>134, 22</value>
+  </data>
+  <data name="buttonGetServersList.TabIndex" type="System.Int32, mscorlib">
+    <value>38</value>
+  </data>
+  <data name="buttonGetServersList.Text" xml:space="preserve">
+    <value>Get servers list</value>
+  </data>
+  <data name="&gt;&gt;buttonGetServersList.Name" xml:space="preserve">
+    <value>buttonGetServersList</value>
+  </data>
+  <data name="&gt;&gt;buttonGetServersList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonGetServersList.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;buttonGetServersList.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelInstallInstructionSQLServer.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelInstallInstructionSQLServer.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelInstallInstructionSQLServer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>71, 147</value>
+  </data>
+  <data name="labelInstallInstructionSQLServer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>451, 13</value>
+  </data>
+  <data name="labelInstallInstructionSQLServer.TabIndex" type="System.Int32, mscorlib">
+    <value>34</value>
+  </data>
+  <data name="labelInstallInstructionSQLServer.Text" xml:space="preserve">
+    <value>If you do not have SQLServer installed then click on the following link for detailed instructions. </value>
+  </data>
+  <data name="&gt;&gt;labelInstallInstructionSQLServer.Name" xml:space="preserve">
+    <value>labelInstallInstructionSQLServer</value>
+  </data>
+  <data name="&gt;&gt;labelInstallInstructionSQLServer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelInstallInstructionSQLServer.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;labelInstallInstructionSQLServer.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelHelpServerName.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelHelpServerName.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+  </data>
+  <data name="labelHelpServerName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>399, 55</value>
+  </data>
+  <data name="labelHelpServerName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>251, 13</value>
+  </data>
+  <data name="labelHelpServerName.TabIndex" type="System.Int32, mscorlib">
+    <value>33</value>
+  </data>
+  <data name="labelHelpServerName.Text" xml:space="preserve">
+    <value>typically in the form computer_name\SQLEXPRESS</value>
+  </data>
+  <data name="&gt;&gt;labelHelpServerName.Name" xml:space="preserve">
+    <value>labelHelpServerName</value>
+  </data>
+  <data name="&gt;&gt;labelHelpServerName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelHelpServerName.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;labelHelpServerName.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="linkLabelSQLServerInstallInstruction.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkLabelSQLServerInstallInstruction.Location" type="System.Drawing.Point, System.Drawing">
+    <value>545, 147</value>
+  </data>
+  <data name="linkLabelSQLServerInstallInstruction.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 13</value>
+  </data>
+  <data name="linkLabelSQLServerInstallInstruction.TabIndex" type="System.Int32, mscorlib">
+    <value>32</value>
+  </data>
+  <data name="linkLabelSQLServerInstallInstruction.Text" xml:space="preserve">
+    <value>SQLServer Install Instructions</value>
+  </data>
+  <data name="&gt;&gt;linkLabelSQLServerInstallInstruction.Name" xml:space="preserve">
+    <value>linkLabelSQLServerInstallInstruction</value>
+  </data>
+  <data name="&gt;&gt;linkLabelSQLServerInstallInstruction.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabelSQLServerInstallInstruction.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;linkLabelSQLServerInstallInstruction.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="cbServerName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>119, 51</value>
+  </data>
+  <data name="cbServerName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>274, 21</value>
+  </data>
+  <data name="cbServerName.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="cbServerName.Text" xml:space="preserve">
+    <value>localhost</value>
+  </data>
+  <data name="&gt;&gt;cbServerName.Name" xml:space="preserve">
+    <value>cbServerName</value>
+  </data>
+  <data name="&gt;&gt;cbServerName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbServerName.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;cbServerName.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="txtPassword.Location" type="System.Drawing.Point, System.Drawing">
+    <value>390, 115</value>
+  </data>
+  <data name="txtPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
+    <value>*</value>
+  </data>
+  <data name="txtPassword.Size" type="System.Drawing.Size, System.Drawing">
+    <value>163, 20</value>
+  </data>
+  <data name="txtPassword.TabIndex" type="System.Int32, mscorlib">
+    <value>24</value>
+  </data>
+  <data name="txtPassword.Text" xml:space="preserve">
+    <value>octopus</value>
+  </data>
+  <data name="&gt;&gt;txtPassword.Name" xml:space="preserve">
+    <value>txtPassword</value>
+  </data>
+  <data name="&gt;&gt;txtPassword.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtPassword.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;txtPassword.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="label9.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
+  </data>
+  <data name="label9.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
+    <value>278, 112</value>
+  </data>
+  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 24</value>
+  </data>
+  <data name="label9.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="label9.Text" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="label9.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;label9.Name" xml:space="preserve">
+    <value>label9</value>
+  </data>
+  <data name="&gt;&gt;label9.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label9.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="txtLoginName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>119, 115</value>
+  </data>
+  <data name="txtLoginName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 20</value>
+  </data>
+  <data name="txtLoginName.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="txtLoginName.Text" xml:space="preserve">
+    <value>sa</value>
+  </data>
+  <data name="&gt;&gt;txtLoginName.Name" xml:space="preserve">
+    <value>txtLoginName</value>
+  </data>
+  <data name="&gt;&gt;txtLoginName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtLoginName.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;txtLoginName.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="label8.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
+  </data>
+  <data name="label8.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
+    <value>23, 115</value>
+  </data>
+  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 20</value>
+  </data>
+  <data name="label8.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="label8.Text" xml:space="preserve">
+    <value>Login Name</value>
+  </data>
+  <data name="label8.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;label8.Name" xml:space="preserve">
+    <value>label8</value>
+  </data>
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label8.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="label5.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
+  </data>
+  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>23, 51</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 21</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>Server Name</value>
+  </data>
+  <data name="label5.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="label.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9pt</value>
+  </data>
+  <data name="label.Location" type="System.Drawing.Point, System.Drawing">
+    <value>123, 26</value>
+  </data>
+  <data name="label.Size" type="System.Drawing.Size, System.Drawing">
+    <value>580, 15</value>
+  </data>
+  <data name="label.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label.Text" xml:space="preserve">
+    <value>Octopus needs to know where to find the database. Please enter in the details below and click on Connect</value>
+  </data>
+  <data name="&gt;&gt;label.Name" xml:space="preserve">
+    <value>label</value>
+  </data>
+  <data name="&gt;&gt;label.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label.Parent" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;label.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="groupBoxSQLServerConnection.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="groupBoxSQLServerConnection.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="groupBoxSQLServerConnection.Size" type="System.Drawing.Size, System.Drawing">
+    <value>823, 177</value>
+  </data>
+  <data name="groupBoxSQLServerConnection.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLServerConnection.Name" xml:space="preserve">
+    <value>groupBoxSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLServerConnection.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLServerConnection.Parent" xml:space="preserve">
+    <value>tableLayoutPanelServerSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLServerConnection.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>567, 21</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 24</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>34</value>
+  </data>
+  <data name="buttonSQLServerChangeSettings.Text" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLServerChangeSettings.Name" xml:space="preserve">
+    <value>buttonSQLServerChangeSettings</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLServerChangeSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLServerChangeSettings.Parent" xml:space="preserve">
+    <value>groupBoxSQLSettings</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLServerChangeSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lbSQLServerSettings.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lbSQLServerSettings.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
+  </data>
+  <data name="lbSQLServerSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>23, 27</value>
+  </data>
+  <data name="lbSQLServerSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>0, 13</value>
+  </data>
+  <data name="lbSQLServerSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;lbSQLServerSettings.Name" xml:space="preserve">
+    <value>lbSQLServerSettings</value>
+  </data>
+  <data name="&gt;&gt;lbSQLServerSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lbSQLServerSettings.Parent" xml:space="preserve">
+    <value>groupBoxSQLSettings</value>
+  </data>
+  <data name="&gt;&gt;lbSQLServerSettings.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="groupBoxSQLSettings.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="groupBoxSQLSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="groupBoxSQLSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>823, 57</value>
+  </data>
+  <data name="groupBoxSQLSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="groupBoxSQLSettings.Text" xml:space="preserve">
+    <value>SQLServer Settings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLSettings.Name" xml:space="preserve">
+    <value>groupBoxSQLSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLSettings.Parent" xml:space="preserve">
+    <value>tableLayoutPanelSQLSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelDetectDatabasesInProgress.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDetectDatabasesInProgress.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 10pt, style=Bold</value>
+  </data>
+  <data name="labelDetectDatabasesInProgress.Location" type="System.Drawing.Point, System.Drawing">
+    <value>123, 97</value>
+  </data>
+  <data name="labelDetectDatabasesInProgress.Size" type="System.Drawing.Size, System.Drawing">
+    <value>308, 17</value>
+  </data>
+  <data name="labelDetectDatabasesInProgress.TabIndex" type="System.Int32, mscorlib">
+    <value>39</value>
+  </data>
+  <data name="labelDetectDatabasesInProgress.Text" xml:space="preserve">
+    <value>Please wait during databases detection...</value>
+  </data>
+  <data name="&gt;&gt;labelDetectDatabasesInProgress.Name" xml:space="preserve">
+    <value>labelDetectDatabasesInProgress</value>
+  </data>
+  <data name="&gt;&gt;labelDetectDatabasesInProgress.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDetectDatabasesInProgress.Parent" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;labelDetectDatabasesInProgress.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.Location" type="System.Drawing.Point, System.Drawing">
+    <value>567, 76</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 24</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.TabIndex" type="System.Int32, mscorlib">
+    <value>40</value>
+  </data>
+  <data name="buttonSQLServerSettingsShowDetails.Text" xml:space="preserve">
+    <value>See details</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLServerSettingsShowDetails.Name" xml:space="preserve">
+    <value>buttonSQLServerSettingsShowDetails</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLServerSettingsShowDetails.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLServerSettingsShowDetails.Parent" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLServerSettingsShowDetails.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="buttonRestore.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonRestore.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonRestore.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonRestore.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonRestore.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonRestore.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonRestore.Location" type="System.Drawing.Point, System.Drawing">
+    <value>567, 155</value>
+  </data>
+  <data name="buttonRestore.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 24</value>
+  </data>
+  <data name="buttonRestore.TabIndex" type="System.Int32, mscorlib">
+    <value>38</value>
+  </data>
+  <data name="buttonRestore.Text" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="&gt;&gt;buttonRestore.Name" xml:space="preserve">
+    <value>buttonRestore</value>
+  </data>
+  <data name="&gt;&gt;buttonRestore.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonRestore.Parent" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;buttonRestore.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="buttonBackup.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonBackup.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonBackup.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonBackup.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonBackup.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonBackup.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonBackup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>567, 125</value>
+  </data>
+  <data name="buttonBackup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 24</value>
+  </data>
+  <data name="buttonBackup.TabIndex" type="System.Int32, mscorlib">
+    <value>37</value>
+  </data>
+  <data name="buttonBackup.Text" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="&gt;&gt;buttonBackup.Name" xml:space="preserve">
+    <value>buttonBackup</value>
+  </data>
+  <data name="&gt;&gt;buttonBackup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonBackup.Parent" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;buttonBackup.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="buttonSetAsDefault.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonSetAsDefault.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonSetAsDefault.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonSetAsDefault.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonSetAsDefault.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonSetAsDefault.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonSetAsDefault.Location" type="System.Drawing.Point, System.Drawing">
+    <value>567, 46</value>
+  </data>
+  <data name="buttonSetAsDefault.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 24</value>
+  </data>
+  <data name="buttonSetAsDefault.TabIndex" type="System.Int32, mscorlib">
+    <value>36</value>
+  </data>
+  <data name="buttonSetAsDefault.Text" xml:space="preserve">
+    <value>Set as default</value>
+  </data>
+  <data name="&gt;&gt;buttonSetAsDefault.Name" xml:space="preserve">
+    <value>buttonSetAsDefault</value>
+  </data>
+  <data name="&gt;&gt;buttonSetAsDefault.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonSetAsDefault.Parent" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;buttonSetAsDefault.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="buttonCreateNewDatabase.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonCreateNewDatabase.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonCreateNewDatabase.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonCreateNewDatabase.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonCreateNewDatabase.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonCreateNewDatabase.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonCreateNewDatabase.Location" type="System.Drawing.Point, System.Drawing">
+    <value>390, 185</value>
+  </data>
+  <data name="buttonCreateNewDatabase.Size" type="System.Drawing.Size, System.Drawing">
+    <value>174, 24</value>
+  </data>
+  <data name="buttonCreateNewDatabase.TabIndex" type="System.Int32, mscorlib">
+    <value>35</value>
+  </data>
+  <data name="buttonCreateNewDatabase.Text" xml:space="preserve">
+    <value>Create new database</value>
+  </data>
+  <data name="&gt;&gt;buttonCreateNewDatabase.Name" xml:space="preserve">
+    <value>buttonCreateNewDatabase</value>
+  </data>
+  <data name="&gt;&gt;buttonCreateNewDatabase.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonCreateNewDatabase.Parent" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;buttonCreateNewDatabase.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="lbDatabases.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
+  </data>
+  <data name="lbDatabases.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lbDatabases.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 23</value>
+  </data>
+  <data name="lbDatabases.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 21</value>
+  </data>
+  <data name="lbDatabases.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="lbDatabases.Text" xml:space="preserve">
+    <value>Databases</value>
+  </data>
+  <data name="lbDatabases.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;lbDatabases.Name" xml:space="preserve">
+    <value>lbDatabases</value>
+  </data>
+  <data name="&gt;&gt;lbDatabases.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lbDatabases.Parent" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;lbDatabases.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="columnHeaderName.Width" type="System.Int32, mscorlib">
+    <value>300</value>
+  </data>
+  <data name="columnHeaderBranchCode.DisplayIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="columnHeaderBranchCode.Width" type="System.Int32, mscorlib">
+    <value>70</value>
+  </data>
+  <data name="columnHeaderVersion.DisplayIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="columnHeaderVersion.Width" type="System.Int32, mscorlib">
+    <value>100</value>
+  </data>
+  <data name="columnHeaderSize.DisplayIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="columnHeaderSize.Width" type="System.Int32, mscorlib">
+    <value>70</value>
+  </data>
+  <data name="listViewDatabases.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 46</value>
+  </data>
+  <data name="listViewDatabases.Size" type="System.Drawing.Size, System.Drawing">
+    <value>547, 133</value>
+  </data>
+  <data name="listViewDatabases.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;listViewDatabases.Name" xml:space="preserve">
+    <value>listViewDatabases</value>
+  </data>
+  <data name="&gt;&gt;listViewDatabases.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listViewDatabases.Parent" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;listViewDatabases.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="groupBoxDatabaseManagement.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="groupBoxDatabaseManagement.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 66</value>
+  </data>
+  <data name="groupBoxDatabaseManagement.Size" type="System.Drawing.Size, System.Drawing">
+    <value>823, 218</value>
+  </data>
+  <data name="groupBoxDatabaseManagement.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="groupBoxDatabaseManagement.Text" xml:space="preserve">
+    <value>Database Management</value>
+  </data>
+  <data name="&gt;&gt;groupBoxDatabaseManagement.Name" xml:space="preserve">
+    <value>groupBoxDatabaseManagement</value>
+  </data>
+  <data name="&gt;&gt;groupBoxDatabaseManagement.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxDatabaseManagement.Parent" xml:space="preserve">
+    <value>tableLayoutPanelSQLSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxDatabaseManagement.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnDatabaseConnection.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnDatabaseConnection.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="btnDatabaseConnection.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="btnDatabaseConnection.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="btnDatabaseConnection.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="btnDatabaseConnection.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnDatabaseConnection.Location" type="System.Drawing.Point, System.Drawing">
+    <value>687, 18</value>
+  </data>
+  <data name="btnDatabaseConnection.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 24</value>
+  </data>
+  <data name="btnDatabaseConnection.TabIndex" type="System.Int32, mscorlib">
+    <value>41</value>
+  </data>
+  <data name="btnDatabaseConnection.Text" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="&gt;&gt;btnDatabaseConnection.Name" xml:space="preserve">
+    <value>btnDatabaseConnection</value>
+  </data>
+  <data name="&gt;&gt;btnDatabaseConnection.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnDatabaseConnection.Parent" xml:space="preserve">
+    <value>groupBoxSaveSettings</value>
+  </data>
+  <data name="&gt;&gt;btnDatabaseConnection.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonExit.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        R0lGODlhEgDEAIYAAPL29Pj6+fn7+tzn4ufv7Ovx7/P39e3z8O/08/f6+Je4qsLVzKvFuqXCtQBdRcbY
+        0Nrm4XynlgBZQWWZhleRfL3SyOrw7d3o487d1rXNwmCVggprVBFyWwhpUTiBa9nl31yTf+Lr6Pb597vQ
+        x+Ts6LPLwLbOw7/TyqjEt/H183ajkdbj3UGEb9Ph2gZnT5++sW6ei8zc1O7z8eLr55y7rs3d1a3HvGqb
+        iHmlkwFfSJq6rHKhj4yxooSsnCJ4YaPAs/r7+rjPxezy7zJ+aNfk3oGqmgRiS1CMeI+zpMfZ0EaGccPX
+        zoevn9/q5crb05O2p9Th2+Xt6uHq5ebu6w1uV/z9/Onv7NDf2EyKdRp1Xq/JvSt8ZvX49/v8+/v8/P3+
+        /f7+/v///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEBAAAh+QQA
+        AAAAACwAAAAAEgDEAAAI/wDDCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJ
+        kyhTqlzJkiSYlzBjypxJs6bNmzhz6tzJs6fPn0CDChX6pajRo0iTKl3KtKnTp1CjSk1aparVq1itetnK
+        tavXr2DDih1LtmzZLmjTql3Ltq3bt3DjsgVCt67du3UF6N3Lt6/fv4ADBw5AuLDhw4gTK168OIHjx5Aj
+        S55MWYTly5gzX+bCubPnz6BDix5NujRoA6hTq17NurVrALBjy55Nu7bt27dT6N7Nu/duBMCDCx9OvLhx
+        GciTK1+e/IDz59CjS59OXYj169izXy/Avbv37+DDi/+3QL68+fPlrahfz779egLw48ufT7++/Sn48+vf
+        nz+K//8ABvgfCQQWaOCBBYag4IIMNrjgDBBGKOGEEUph4YUYZnhhExx26OGHHV4g4ogkljjiACimqOKK
+        LLboIgQwxijjjDF+YOONOOZ4IxE89ujjjz2uIOSQRBY5JBRIJqnkkkm24OSTUEb55BVUVmnllVVioOWW
+        XHa5ZQ1ghinmmGHGYOaZaKZ5phNstunmm20mIeecdNY55wN45qnnnnku4eefgAb65wKEFmrooYWeoOii
+        jDa6aAWQRirppJGOYOmlmGZ6aRCcdurpp52aIOqopJY6agaopqrqqqmW4OqrsMb/+qoWtNZq66212qDr
+        rrz2uisDwAYr7LDBomDsscgme2wDzDbr7LPN/iDttNRWO+0L2Gar7bbZ0uDtt+CG+60O5JZr7rnlKqDu
+        uuy2u+4T8MYr77zxImHvvfjmey8P/Pbr77/9MiHwwAQXPHAPCCes8MIJF+HwwxBH/HAEFFds8cUV46Dx
+        xhx3vLEKIIcs8sgh72DyySinfDIMLLfs8sst3yDzzDTXPPMEOOes8845a+Dzz0AH/TMIRBdt9NFFU6D0
+        0kw3vfQRUEct9dRRY2H11VhnfbUSXHft9dddsyD22GSXPbYHaKet9tppD+H223DH/fYWdNdt9911+6D3
+        3nz3Tr13FoAHLvjggXNg+OGIJ344FYw37vjjjW8g+eSUVz55B5hnrvnmmbvg+eegh/65EaSXbvrppeeg
+        +uqst766A7DHLvvssUtg++245357QAA7
+</value>
+  </data>
+  <data name="buttonExit.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonExit.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonExit.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial, 9.75pt</value>
+  </data>
+  <data name="buttonExit.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonExit.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonExit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 20</value>
+  </data>
+  <data name="buttonExit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>88, 22</value>
+  </data>
+  <data name="buttonExit.TabIndex" type="System.Int32, mscorlib">
+    <value>37</value>
+  </data>
+  <data name="buttonExit.Text" xml:space="preserve">
+    <value>Quit</value>
+  </data>
+  <data name="&gt;&gt;buttonExit.Name" xml:space="preserve">
+    <value>buttonExit</value>
+  </data>
+  <data name="&gt;&gt;buttonExit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonExit.Parent" xml:space="preserve">
+    <value>groupBoxSaveSettings</value>
+  </data>
+  <data name="&gt;&gt;buttonExit.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelResult.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelResult.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 10pt, style=Bold</value>
+  </data>
+  <data name="labelResult.Location" type="System.Drawing.Point, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="labelResult.Size" type="System.Drawing.Size, System.Drawing">
+    <value>0, 17</value>
+  </data>
+  <data name="labelResult.TabIndex" type="System.Int32, mscorlib">
+    <value>36</value>
+  </data>
+  <data name="&gt;&gt;labelResult.Name" xml:space="preserve">
+    <value>labelResult</value>
+  </data>
+  <data name="&gt;&gt;labelResult.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelResult.Parent" xml:space="preserve">
+    <value>groupBoxSaveSettings</value>
+  </data>
+  <data name="&gt;&gt;labelResult.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="buttonSave.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonSave.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonSave.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonSave.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonSave.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonSave.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonSave.Location" type="System.Drawing.Point, System.Drawing">
+    <value>687, 19</value>
+  </data>
+  <data name="buttonSave.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 24</value>
+  </data>
+  <data name="buttonSave.TabIndex" type="System.Int32, mscorlib">
+    <value>35</value>
+  </data>
+  <data name="buttonSave.Text" xml:space="preserve">
+    <value>Launch Octopus</value>
+  </data>
+  <data name="&gt;&gt;buttonSave.Name" xml:space="preserve">
+    <value>buttonSave</value>
+  </data>
+  <data name="&gt;&gt;buttonSave.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonSave.Parent" xml:space="preserve">
+    <value>groupBoxSaveSettings</value>
+  </data>
+  <data name="&gt;&gt;buttonSave.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="groupBoxSaveSettings.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="groupBoxSaveSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 290</value>
+  </data>
+  <data name="groupBoxSaveSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>823, 52</value>
+  </data>
+  <data name="groupBoxSaveSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSaveSettings.Name" xml:space="preserve">
+    <value>groupBoxSaveSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSaveSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSaveSettings.Parent" xml:space="preserve">
+    <value>tableLayoutPanelSQLSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSaveSettings.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabPageSQLServerConnection.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="tableLayoutPanelServerSettings.ColumnCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanelServerSettings.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanelServerSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="tableLayoutPanelServerSettings.RowCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tableLayoutPanelServerSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>829, 345</value>
+  </data>
+  <data name="tableLayoutPanelServerSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelServerSettings.Name" xml:space="preserve">
+    <value>tableLayoutPanelServerSettings</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelServerSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelServerSettings.Parent" xml:space="preserve">
+    <value>tabPageSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelServerSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanelServerSettings.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="groupBoxSQLServerConnection" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="Absolute,183,Percent,100,Absolute,52" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="tabPageSQLServerConnection.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageSQLServerConnection.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageSQLServerConnection.Size" type="System.Drawing.Size, System.Drawing">
+    <value>835, 351</value>
+  </data>
+  <data name="tabPageSQLServerConnection.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabPageSQLServerConnection.Text" xml:space="preserve">
+    <value>Connect to SQLServer</value>
+  </data>
+  <data name="&gt;&gt;tabPageSQLServerConnection.Name" xml:space="preserve">
+    <value>tabPageSQLServerConnection</value>
+  </data>
+  <data name="&gt;&gt;tabPageSQLServerConnection.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageSQLServerConnection.Parent" xml:space="preserve">
+    <value>tabControlDatabase</value>
+  </data>
+  <data name="&gt;&gt;tabPageSQLServerConnection.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabPageSQLServerSettings.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="tableLayoutPanelSQLSettings.ColumnCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanelSQLSettings.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanelSQLSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="tableLayoutPanelSQLSettings.RowCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tableLayoutPanelSQLSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>829, 345</value>
+  </data>
+  <data name="tableLayoutPanelSQLSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelSQLSettings.Name" xml:space="preserve">
+    <value>tableLayoutPanelSQLSettings</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelSQLSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelSQLSettings.Parent" xml:space="preserve">
+    <value>tabPageSQLServerSettings</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelSQLSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanelSQLSettings.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="groupBoxSQLSettings" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="groupBoxSaveSettings" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="groupBoxDatabaseManagement" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="Absolute,63,Absolute,224,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="tabPageSQLServerSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageSQLServerSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageSQLServerSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>835, 351</value>
+  </data>
+  <data name="tabPageSQLServerSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabPageSQLServerSettings.Text" xml:space="preserve">
+    <value>SQLServer settings</value>
+  </data>
+  <data name="&gt;&gt;tabPageSQLServerSettings.Name" xml:space="preserve">
+    <value>tabPageSQLServerSettings</value>
+  </data>
+  <data name="&gt;&gt;tabPageSQLServerSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageSQLServerSettings.Parent" xml:space="preserve">
+    <value>tabControlDatabase</value>
+  </data>
+  <data name="&gt;&gt;tabPageSQLServerSettings.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanelDatabaseSettings.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="tableLayoutPanelDatabaseSettings.ColumnCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.Location" type="System.Drawing.Point, System.Drawing">
+    <value>532, 48</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 24</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.TabIndex" type="System.Int32, mscorlib">
+    <value>36</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsUpgrade.Text" xml:space="preserve">
+    <value>Upgrade</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLDatabaseSettingsUpgrade.Name" xml:space="preserve">
+    <value>buttonSQLDatabaseSettingsUpgrade</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLDatabaseSettingsUpgrade.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLDatabaseSettingsUpgrade.Parent" xml:space="preserve">
+    <value>groupBoxSQLDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLDatabaseSettingsUpgrade.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>532, 21</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 24</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.TabIndex" type="System.Int32, mscorlib">
+    <value>35</value>
+  </data>
+  <data name="buttonSQLDatabaseSettingsChangeName.Text" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLDatabaseSettingsChangeName.Name" xml:space="preserve">
+    <value>buttonSQLDatabaseSettingsChangeName</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLDatabaseSettingsChangeName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLDatabaseSettingsChangeName.Parent" xml:space="preserve">
+    <value>groupBoxSQLDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;buttonSQLDatabaseSettingsChangeName.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsVersion.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsVersion.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsVersion.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 54</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsVersion.Size" type="System.Drawing.Size, System.Drawing">
+    <value>0, 13</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsVersion.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsVersion.Name" xml:space="preserve">
+    <value>lbSQLDatabaseSettingsVersion</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsVersion.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsVersion.Parent" xml:space="preserve">
+    <value>groupBoxSQLDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsVersion.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsName.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsName.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 27</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>0, 13</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsName.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsName.Name" xml:space="preserve">
+    <value>lbSQLDatabaseSettingsName</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsName.Parent" xml:space="preserve">
+    <value>groupBoxSQLDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsName.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="groupBoxSQLDatabaseSettings.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="groupBoxSQLDatabaseSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 66</value>
+  </data>
+  <data name="groupBoxSQLDatabaseSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>829, 86</value>
+  </data>
+  <data name="groupBoxSQLDatabaseSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="groupBoxSQLDatabaseSettings.Text" xml:space="preserve">
+    <value>SQL Database settings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLDatabaseSettings.Name" xml:space="preserve">
+    <value>groupBoxSQLDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLDatabaseSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLDatabaseSettings.Parent" xml:space="preserve">
+    <value>tableLayoutPanelDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLDatabaseSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonContinue.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="buttonContinue.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABIAAADECAIAAAAdy+YyAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAkNJREFUaEPt1EtI
+        VGEchvE3iIigRduWbdu1auuiCAoqCCS6B10FI8EwGApDLEoQEYtMkjIxzBIRTTRLxmzK1Ia8XyYZdXSa
+        i6OOOs5F7exnMfgsBOP7+G2fzcv/HK2jJ1StmyxpNzOJmST1x2SuxFyJuZLUC5grSb2R+ZeYKzFXknoB
+        cyWpN9IaeiZLms1MskUnWV1bBQQaKzFZ0tpKrCYAxRMJ4D/P4vHEhlmTbLixkk3OYvEYoGg8BmxythKL
+        AgKNldAsElsBBBor0XI0AmhpJQJsjSwcWQIEGivRwvIisMnZ/FIYUGgxDNBsNjwPKBieA2gWWAgB8s+H
+        AJr55oKA/oYCgGZCAYBm07N+QJ6gD9BUwAtowu8FrGwGkNvnATTu8wByeScBjc1MADQbmXYDGvaMAxqc
+        +gNoYNIFqM89CqjXPQLIOT4EqMc1AKjb1Q+oa6wPUOdoLyDHsBPQtyEnoPbBHkD2/i5AX3o7AbX+/g6o
+        xekA1PSrA1BjTzughm47oPqfbYBqf7QCeu/4BOhdRzOgt18/Aqq0NwCqaKsHVP65DlBZywdApc01gJ41
+        VQMqbqwCVFj/BlBB3WtAD2vLAeXVlAHKrS4FZKt6CuhuZTGgOxVFgLJeFQLKfPkE0M0XjwBdeZ4P6GLJ
+        A0Bni+8DSi+yATpRkAPo2ONsQIfzbwNKy7sF6GBuBqAD964D2m+7CmhfziVAe7PPA9qTdQbQ7sx0QLsy
+        TgHaeeMkoB3XjgPafvkooG0XjgDSuUOETqcB/wDGrhdauanTEAAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="buttonContinue.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="buttonContinue.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Popup</value>
+  </data>
+  <data name="buttonContinue.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 8.25pt, style=Bold</value>
+  </data>
+  <data name="buttonContinue.ImageAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="buttonContinue.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonContinue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>532, 68</value>
+  </data>
+  <data name="buttonContinue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>142, 24</value>
+  </data>
+  <data name="buttonContinue.TabIndex" type="System.Int32, mscorlib">
+    <value>42</value>
+  </data>
+  <data name="buttonContinue.Text" xml:space="preserve">
+    <value>CONTINUE</value>
+  </data>
+  <data name="buttonContinue.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;buttonContinue.Name" xml:space="preserve">
+    <value>buttonContinue</value>
+  </data>
+  <data name="&gt;&gt;buttonContinue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonContinue.Parent" xml:space="preserve">
+    <value>groupBoxSQLDatabaseStructure</value>
+  </data>
+  <data name="&gt;&gt;buttonContinue.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsUpgradeNeedfull.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsUpgradeNeedfull.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 10pt, style=Bold</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsUpgradeNeedfull.Location" type="System.Drawing.Point, System.Drawing">
+    <value>233, 48</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsUpgradeNeedfull.Size" type="System.Drawing.Size, System.Drawing">
+    <value>388, 17</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsUpgradeNeedfull.TabIndex" type="System.Int32, mscorlib">
+    <value>40</value>
+  </data>
+  <data name="lbSQLDatabaseSettingsUpgradeNeedfull.Text" xml:space="preserve">
+    <value>Please ugrade your database to the current version!</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsUpgradeNeedfull.Name" xml:space="preserve">
+    <value>lbSQLDatabaseSettingsUpgradeNeedfull</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsUpgradeNeedfull.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsUpgradeNeedfull.Parent" xml:space="preserve">
+    <value>groupBoxSQLDatabaseStructure</value>
+  </data>
+  <data name="&gt;&gt;lbSQLDatabaseSettingsUpgradeNeedfull.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tBDatabaseSettingsSchemaResult.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tBDatabaseSettingsSchemaResult.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 16</value>
+  </data>
+  <data name="tBDatabaseSettingsSchemaResult.Size" type="System.Drawing.Size, System.Drawing">
+    <value>823, 119</value>
+  </data>
+  <data name="tBDatabaseSettingsSchemaResult.TabIndex" type="System.Int32, mscorlib">
+    <value>41</value>
+  </data>
+  <data name="tBDatabaseSettingsSchemaResult.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;tBDatabaseSettingsSchemaResult.Name" xml:space="preserve">
+    <value>tBDatabaseSettingsSchemaResult</value>
+  </data>
+  <data name="&gt;&gt;tBDatabaseSettingsSchemaResult.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tBDatabaseSettingsSchemaResult.Parent" xml:space="preserve">
+    <value>groupBoxSQLDatabaseStructure</value>
+  </data>
+  <data name="&gt;&gt;tBDatabaseSettingsSchemaResult.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="groupBoxSQLDatabaseStructure.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="groupBoxSQLDatabaseStructure.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 158</value>
+  </data>
+  <data name="groupBoxSQLDatabaseStructure.Size" type="System.Drawing.Size, System.Drawing">
+    <value>829, 138</value>
+  </data>
+  <data name="groupBoxSQLDatabaseStructure.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="groupBoxSQLDatabaseStructure.Text" xml:space="preserve">
+    <value>SQL Database structure</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLDatabaseStructure.Name" xml:space="preserve">
+    <value>groupBoxSQLDatabaseStructure</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLDatabaseStructure.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLDatabaseStructure.Parent" xml:space="preserve">
+    <value>tableLayoutPanelDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSQLDatabaseStructure.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanelDatabaseSettings.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanelDatabaseSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="tableLayoutPanelDatabaseSettings.RowCount" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tableLayoutPanelDatabaseSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>835, 351</value>
+  </data>
+  <data name="tableLayoutPanelDatabaseSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelDatabaseSettings.Name" xml:space="preserve">
+    <value>tableLayoutPanelDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelDatabaseSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelDatabaseSettings.Parent" xml:space="preserve">
+    <value>tabPageSqlDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanelDatabaseSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanelDatabaseSettings.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="groupBoxSQLDatabaseSettings" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="groupBoxSQLDatabaseStructure" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="Absolute,63,Absolute,92,Percent,100,Absolute,52" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="tabPageSqlDatabaseSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageSqlDatabaseSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>835, 351</value>
+  </data>
+  <data name="tabPageSqlDatabaseSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabPageSqlDatabaseSettings.Text" xml:space="preserve">
+    <value>SQL Database settings</value>
+  </data>
+  <data name="&gt;&gt;tabPageSqlDatabaseSettings.Name" xml:space="preserve">
+    <value>tabPageSqlDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;tabPageSqlDatabaseSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageSqlDatabaseSettings.Parent" xml:space="preserve">
+    <value>tabControlDatabase</value>
+  </data>
+  <data name="&gt;&gt;tabPageSqlDatabaseSettings.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabControlDatabase.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tabControlDatabase.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="tabControlDatabase.Size" type="System.Drawing.Size, System.Drawing">
+    <value>843, 377</value>
+  </data>
+  <data name="tabControlDatabase.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;tabControlDatabase.Name" xml:space="preserve">
+    <value>tabControlDatabase</value>
+  </data>
+  <data name="&gt;&gt;tabControlDatabase.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControlDatabase.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tabControlDatabase.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="bWDatabasesDetection.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>6, 5</value>
+  </metadata>
+  <metadata name="openFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>296, 5</value>
+  </metadata>
+  <data name="openFileDialog.Filter" xml:space="preserve">
+    <value>Backups|*.bak;*.zip</value>
+  </data>
+  <data name="openFileDialog.Title" xml:space="preserve">
+    <value>Select the backup file to restore</value>
+  </data>
+  <metadata name="bWDatabaseCreation.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>406, 5</value>
+  </metadata>
+  <metadata name="bWDatabaseBackup.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>686, 5</value>
+  </metadata>
+  <metadata name="bWDatabaseRestore.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>548, 5</value>
+  </metadata>
+  <metadata name="bWDatabaseUpdate.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>160, 5</value>
+  </metadata>
+  <metadata name="folderBrowserDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>822, 6</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>32</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>Stretch</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>843, 377</value>
+  </data>
+  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAB+fn8AkYyKAJKOjgCVk5MAlpaWAKWmpQCwr68AsrOyALS2tQC2trYAuru7ALu8vAC/vbwAvb29AMG/
+        vgDBwcAAwcLCAMXDwwDHxsUAxcbHAMbIxwDMyMcAyMnIAMrKygDKyssAy8vLAMzMywDNzcwAz87OANLQ
+        0ADP0tEA0NPSANLT0gDU1NIA1NXUANjV1QDW1tUA19fVANjX1QDX2NcA2tnYANnZ2QDb2dkA29zcANzc
+        3ADd3t0A397eAN3f3gDf394A4d/fAN3g3wDf4N8A3uDgAN/h4ADh4eAA3+HhAOHh4QDg4uEA4uLhAOPi
+        4QDi4uIA4+LiAOTj4wDi5OMA5OTkAOLl5ADm5eQA5ubmAOTn5gDl5+YA5OjnAOXo5wDm6OcA6OjnAObp
+        6ADp6egA6unpAObq6QDn6uoA6urpAOvq6QDp6uoA6urqAOvr6ADn6+oA6uvpAOnr6gDq7OsA6uzsAOzs
+        7ADq7esA7O3sAO3t7ADs7uwA7u7uAOzv7QDu7+0A7e/uAO3v7wDu7+8A7+/vAO/w7gDx8fAA7/HxAO/y
+        8QDx8vEA8PPyAPHz8gDy9PQA9PT0APP19QD09fUA9Pb2APX29gD19/YA9ff3APb4+AD4+PgA9vn4APf5
+        +AD4+/oA+fv6APr8/AD6/fwA+/38APz9/AD7/v0A/P79APv+/gD8/v4A+//9APz//QD9//0A+//+APz/
+        /gD9//8A/v//AP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAR4aGiRtCHXOGhoaGhoaGR0eGf1dAhYQkhoaGgH6HiEREgXqJMIZxX4aGhX5vOSMySDM2Yldm
+        S2qJiH5ua4GJCzRViD5oZV5kGCJ4cIZ7JzVHWCB1Y1sqFQkNdoY8VolERH6JWEOJAgADiTlhiH5+R0eG
+        hn6HGgZZZAVRfoaGhkdHhoaGiBYseYgHiX5+hoZHR4Z+iFGJAQQPUSlxhoaDR0SISTqGKCYMDlJ5bEly
+        h0cvK313Lk8iITsZcGCHXDFBEIl8OCVpQF0RF4dsTIKJE009NzMthm1TiYmGflpQbwpHhn45HH1FP36G
+        hoZ+dGdOH0dHShQSCFRHR0dHREdGHgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterScreen</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Database Control Panel</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderName.Name" xml:space="preserve">
+    <value>columnHeaderName</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBranchCode.Name" xml:space="preserve">
+    <value>columnHeaderBranchCode</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderBranchCode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderVersion.Name" xml:space="preserve">
+    <value>columnHeaderVersion</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderVersion.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderSize.Name" xml:space="preserve">
+    <value>columnHeaderSize</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderSize.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bWDatabasesDetection.Name" xml:space="preserve">
+    <value>bWDatabasesDetection</value>
+  </data>
+  <data name="&gt;&gt;bWDatabasesDetection.Type" xml:space="preserve">
+    <value>System.ComponentModel.BackgroundWorker, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;openFileDialog.Name" xml:space="preserve">
+    <value>openFileDialog</value>
+  </data>
+  <data name="&gt;&gt;openFileDialog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.OpenFileDialog, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bWDatabaseCreation.Name" xml:space="preserve">
+    <value>bWDatabaseCreation</value>
+  </data>
+  <data name="&gt;&gt;bWDatabaseCreation.Type" xml:space="preserve">
+    <value>System.ComponentModel.BackgroundWorker, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bWDatabaseBackup.Name" xml:space="preserve">
+    <value>bWDatabaseBackup</value>
+  </data>
+  <data name="&gt;&gt;bWDatabaseBackup.Type" xml:space="preserve">
+    <value>System.ComponentModel.BackgroundWorker, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bWDatabaseRestore.Name" xml:space="preserve">
+    <value>bWDatabaseRestore</value>
+  </data>
+  <data name="&gt;&gt;bWDatabaseRestore.Type" xml:space="preserve">
+    <value>System.ComponentModel.BackgroundWorker, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bWDatabaseUpdate.Name" xml:space="preserve">
+    <value>bWDatabaseUpdate</value>
+  </data>
+  <data name="&gt;&gt;bWDatabaseUpdate.Type" xml:space="preserve">
+    <value>System.ComponentModel.BackgroundWorker, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;folderBrowserDialog.Name" xml:space="preserve">
+    <value>folderBrowserDialog</value>
+  </data>
+  <data name="&gt;&gt;folderBrowserDialog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FolderBrowserDialog, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>FrmDatabaseSettings</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+</root>

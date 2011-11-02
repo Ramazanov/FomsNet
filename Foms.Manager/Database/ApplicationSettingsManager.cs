@@ -1,0 +1,186 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Data.SqlClient;
+using System.Collections;
+using Foms.CoreDomain;
+using Foms.Shared.Settings;
+
+namespace Foms.Manager.Database
+{
+	/// <summary>
+	/// General settings database storage manager.
+	/// </summary>
+	public class ApplicationSettingsManager : Manager
+	{
+        private User _user = new User();
+
+        public ApplicationSettingsManager(User pUser) : base(pUser)
+        {
+            _user = pUser;
+        }
+
+        public ApplicationSettingsManager(string testDB) : base(testDB) { }
+
+
+        /// <summary>
+        /// Fills General Settings with values from database
+        /// </summary>
+        /// 
+
+        public void FillGeneralSettings()
+        {
+            ApplicationSettings.GetInstance(_user.Md5).DeleteAllParameters();
+
+            string sqlText = "SELECT  UPPER([key]) as [key], [value] FROM GeneralParameters";
+
+            SqlCommand selectParameterValue = new SqlCommand(sqlText, DefaultConnection);
+
+            using (SqlDataReader reader = selectParameterValue.ExecuteReader())
+            {
+                while (reader.Read())
+                    ApplicationSettings.GetInstance(_user.Md5).AddParameter(DatabaseHelper.GetString("key", reader),
+                                                                 DatabaseHelper.GetString("value", reader));
+            }
+        }
+
+        public object SelectParameterValue(string key)
+        {
+            string sqlText = "SELECT [value] FROM GeneralParameters WHERE [key] = @name";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, key);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    return DatabaseHelper.GetString("value",reader);
+                }
+            }
+            return null;
+        }
+
+        public Guid? GetGuid()
+        {
+            string query = "SELECT [value] FROM TechnicalParameters WHERE [name] = 'GUID'";
+            SqlCommand cmd = new SqlCommand(query, DefaultConnection);
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    reader.Read();
+                    string temp = DatabaseHelper.GetString("value", reader);
+                    return new Guid(temp);
+                }
+            }
+            return null;
+        }
+
+        public void SetGuid(Guid guid)
+        {
+            string query = "INSERT INTO [TechnicalParameters] ([name], [value]) VALUES ('GUID', @value)";
+            SqlCommand cmd = new SqlCommand(query, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@value", cmd, guid.ToString());
+            cmd.ExecuteNonQuery();
+        }
+     
+        public void AddParameter(DictionaryEntry entry)
+        {
+            ApplicationSettings.GetInstance(_user.Md5).AddParameter(entry.Key.ToString(), entry.Value);
+
+            string sqlText = "INSERT INTO [GeneralParameters]([key], [value])" +
+                " VALUES(@name,@value)";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, entry.Key.ToString());
+
+            if (entry.Value != null)
+                DatabaseHelper.InsertStringNVarCharParam("@value", insert, entry.Value.ToString());
+            else
+                DatabaseHelper.InsertStringNVarCharParam("@value", insert, null);
+
+            insert.ExecuteNonQuery();
+        }
+
+        public int UpdateSelectedParameter(string pName)
+        {
+            ApplicationSettings.GetInstance(_user.Md5).UpdateParameter(pName, null);
+            string sql = "UPDATE GeneralParameters SET [value] = @value WHERE upper([key]) = @key";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@value", cmd, null);
+            DatabaseHelper.InsertStringNVarCharParam("@key", cmd, pName);
+
+            return cmd.ExecuteNonQuery();
+        }
+
+	    public int UpdateSelectedParameter(string pName, string pNewValue)
+        {
+            ApplicationSettings.GetInstance(_user.Md5).UpdateParameter(pName, pNewValue);
+
+            string sql = "UPDATE GeneralParameters SET [value] = @value WHERE upper([key]) = @key";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@value", cmd, pNewValue);
+            DatabaseHelper.InsertStringNVarCharParam("@key", cmd, pName);
+
+            return cmd.ExecuteNonQuery();
+        }
+
+        public int UpdateSelectedParameter(string pName, int pNewValue)
+        {
+            ApplicationSettings.GetInstance(_user.Md5).UpdateParameter(pName, pNewValue);
+
+            string sql = "UPDATE GeneralParameters SET [value] = @value WHERE upper([key]) = @key";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@value", cmd, pNewValue.ToString());
+            DatabaseHelper.InsertStringNVarCharParam("@key", cmd, pName);
+
+            return cmd.ExecuteNonQuery();
+        }
+
+        public int UpdateSelectedParameter(string pName, bool pNewValue)
+        {
+            ApplicationSettings.GetInstance(_user.Md5).UpdateParameter(pName, pNewValue);
+            string sql = "UPDATE GeneralParameters SET [value] = @value WHERE upper([key]) = @key";
+            SqlCommand cmd = new SqlCommand(sql, DefaultConnection);
+            if (pNewValue)
+                DatabaseHelper.InsertStringNVarCharParam("@value", cmd, "1");
+            else
+                DatabaseHelper.InsertStringNVarCharParam("@value", cmd, "0");
+
+            DatabaseHelper.InsertStringNVarCharParam("@key", cmd, pName);
+            return cmd.ExecuteNonQuery();
+        }
+
+	    public void DeleteSelectedParameter(string key)
+        {
+            string sqlText = "DELETE FROM GeneralParameters WHERE  upper([key]) = @name";
+            SqlCommand delete = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@name", delete, key);
+            delete.ExecuteNonQuery();
+        }
+	}
+}

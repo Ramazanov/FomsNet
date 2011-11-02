@@ -1,0 +1,2013 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.CoreDomain.Alerts;
+using Octopus.CoreDomain.Clients;
+using Octopus.CoreDomain.Contracts.Collaterals;
+using Octopus.CoreDomain.Contracts.Loans;
+using Octopus.CoreDomain.Contracts.Loans.Installments;
+using Octopus.CoreDomain.Contracts.Loans.LoanRepayment;
+using Octopus.CoreDomain.Events;
+using Octopus.CoreDomain.SearchResult;
+using Octopus.Enums;
+using Octopus.Manager.Accounting;
+using Octopus.Manager.Clients;
+using Octopus.Manager.Collaterals;
+using Octopus.Manager.Products;
+using Octopus.Manager.Events;
+using Octopus.Manager.QueryForObject;
+using Octopus.Shared;
+using Octopus.Shared.Settings;
+using Octopus.CoreDomain.Products.Collaterals;
+
+namespace Octopus.Manager.Contracts
+{
+    /// <summary>
+    /// CreditContractManagement contains all methods relative to selecting, inserting, updating
+    /// and deleting creditContract objects to and from our database.
+    /// </summary>
+    public class LoanManager : Manager
+    {
+        private readonly LoanProductManager _packageManager;
+        private readonly InstallmentTypeManager _installmentTypeManagement;
+        private readonly InstallmentManager _installmentManagement;
+        private readonly UserManager _userManager;
+        private readonly EventManager _eventManagement;
+        private readonly AccountManager _accountManager;
+        private readonly AccountingTransactionManager _accountingTransactionManager;
+        private readonly AccountingRuleManager _accountingRuleManager;
+        private readonly FundingLineManager _fundingLineManager;
+        private readonly ProjectManager _projectManager;
+        private readonly ClientManager _clientManager;
+        private readonly CollateralProductManager _collateralProductManager;
+        //private readonly SavingManager _savingManager;
+
+        private readonly User _user = new User();
+
+        public LoanManager(User pUser): base(pUser)
+        {
+            _user = pUser;
+            _userManager = new UserManager(pUser);
+            _packageManager = new LoanProductManager(pUser);
+            _installmentTypeManagement = new InstallmentTypeManager(pUser);
+            _installmentManagement = new InstallmentManager(pUser);
+            _eventManagement = new EventManager(pUser);
+            _accountManager = new AccountManager(pUser);
+            _fundingLineManager = new FundingLineManager(pUser);
+            _accountingTransactionManager = new AccountingTransactionManager(pUser);
+            _accountingRuleManager = new AccountingRuleManager(pUser);
+            _projectManager = new ProjectManager(pUser, false);
+            _clientManager = new ClientManager(pUser, false, false);
+            _collateralProductManager = new CollateralProductManager(pUser);
+            //_savingManager = new SavingManager(pUser);
+        }
+
+        public LoanManager(string pTestDb): base(pTestDb)
+        {
+            _userManager = new UserManager(pTestDb);
+            _packageManager = new LoanProductManager(pTestDb);
+            _installmentTypeManagement = new InstallmentTypeManager(pTestDb);
+            _installmentManagement = new InstallmentManager(pTestDb);
+            _eventManagement = new EventManager(pTestDb);
+            _accountManager = new AccountManager(pTestDb);
+            _fundingLineManager = new FundingLineManager(pTestDb);
+            _accountingTransactionManager = new AccountingTransactionManager(pTestDb);
+            _accountingRuleManager = new AccountingRuleManager(pTestDb);
+            //_projectManager = new ProjectManager(pTestDb);
+            //_clientManager = new ClientManager(pTestDb);
+            _collateralProductManager = new CollateralProductManager(pTestDb);
+            //_savingManager = new SavingManager(pTestDb);
+        }
+
+        public LoanManager(string pTestDb, User pUser): base(pTestDb)
+        {
+            _user = pUser;
+            _userManager = new UserManager(pTestDb, _user);
+            _packageManager = new LoanProductManager(pTestDb);
+            _installmentTypeManagement = new InstallmentTypeManager(pTestDb);
+            _installmentManagement = new InstallmentManager(pTestDb);
+            _eventManagement = new EventManager(pTestDb);
+            _accountManager = new AccountManager(pTestDb);
+            _fundingLineManager = new FundingLineManager(pTestDb);
+            _accountingTransactionManager = new AccountingTransactionManager(pTestDb);
+            _accountingRuleManager = new AccountingRuleManager(pTestDb);
+            //_projectManager = new ProjectManager(pTestDb);
+            _clientManager = new ClientManager(pTestDb);
+            _collateralProductManager = new CollateralProductManager(pTestDb);
+            //_savingManager = new SavingManager(pTestDb);
+        }
+
+        /// <summary>
+        /// Add a loan in database
+        /// </summary>
+        /// <param name="pLoan">loan to add</param>
+        /// <param name="pProjectId">loan's project id</param>
+        /// <param name="pSqlTransac">use an sql transaction?</param>
+        /// <returns></returns>
+        public int Add(Loan pLoan, int pProjectId, SqlTransaction pSqlTransac)
+        {
+            pLoan.Id = _AddContract(pLoan, pProjectId, pSqlTransac);
+
+            const string sqlText = @"INSERT INTO [Credit](
+                        [id], 
+                        [package_id],
+                        [fundingLine_id],
+                        [amount], 
+                        [interest_rate], 
+                        [installment_type], 
+                        [nb_of_installment], 
+                        [anticipated_total_repayment_penalties],
+                        [anticipated_partial_repayment_penalties], 
+                        [disbursed], 
+                        [loanofficer_id], 
+                        [grace_period], 
+                        [written_off], 
+                        [rescheduled], 
+                        [bad_loan],[synchronize],
+                        [non_repayment_penalties_based_on_initial_amount],
+                        [non_repayment_penalties_based_on_olb],
+                        [non_repayment_penalties_based_on_overdue_interest],
+                        [non_repayment_penalties_based_on_overdue_principal],
+                        [fake],
+                        [grace_period_of_latefees],
+                        [number_of_drawings_loc],
+                        [amount_under_loc],
+                        [maturity_loc],
+                        [anticipated_partial_repayment_base],
+                        [anticipated_total_repayment_base],
+                        [entry_fees]
+                        ,[amount_min]
+                        ,[amount_max]
+                        ,[ir_min]
+                        ,[ir_max]
+                        ,[nmb_of_inst_min]
+                        ,[nmb_of_inst_max]
+                        ,[loan_cycle]            ) 
+                        VALUES(@id, 
+                        @packageId, 
+                        @fundingLine_id, 
+                        @amount, @interestRate, @installmentType, @nbOfInstallments, 
+                        @anticipatedTotalRepaymentPenalties,
+                        @anticipatedPartialRepaymentPenalties,  
+                        @disbursed, 
+                        @loanOfficerId,
+                        @gracePeriod,
+                        @writtenOff,
+                        @rescheduled,
+                        @badLoan,
+                        @synchronize, 
+                        @nonRepaymentPenaltiesInitialAmount,
+                        @nonRepaymentPenaltiesOLB,
+                        @nonRepaymentPenaltiesOverdueInterest,
+                        @nonRepaymentPenaltiesOverduePrincipal,
+                        @fake,@grace_period_of_latefees,
+                        @DrawingsNumber, @AmountUnderLoc, @MaturityLoc,
+                        @AnticipatedPartialRepaymentPenaltiesBase, @AnticipatedTotalRepaymentPenaltiesBase,
+                        0,
+                        @amount_min,
+                        @amount_max,
+                        @ir_min,
+                        @ir_max,
+                        @nmb_of_inst_min,
+                        @nmb_of_inst_max,
+                        @loan_cycle
+                        )";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                SetLoan(pLoan, insert);
+                insert.ExecuteNonQuery();
+            }
+
+            if (OClientTypes.Group == pLoan.ClientType) _SetLoanShareAmount(pLoan, pSqlTransac);
+
+            _installmentManagement.AddInstallments(pLoan.InstallmentList, pLoan.Id, pSqlTransac);
+            return pLoan.Id;
+        }
+
+        /// <summary>
+        /// Select the latest active loan for a client
+        /// </summary>
+        /// <param name="pClientId"></param>
+        /// <returns></returns>
+        public Loan SelectLatestActiveLoan(int pClientId)
+        {
+            int loanId;
+            const string sql = @"SELECT Contracts.id 
+                        FROM Contracts RIGHT JOIN Projects ON Contracts.project_id = Projects.id
+                        WHERE Projects.tiers_id = @id AND Contracts.status <> 6";
+
+            using(SqlCommand cmd = new SqlCommand(sql, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", cmd, pClientId);
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    loanId = DatabaseHelper.GetInt32("id", reader);
+                }
+            }
+            return SelectLoan(loanId, true, true, true);
+        }
+
+        public int SelectLoanID(string pLoanContractCode)
+        {
+            const string sqlText = @"SELECT ID 
+                                     FROM Contracts
+                                     WHERE contract_code = @contractCode";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@contractCode", select, pLoanContractCode);
+                return (int)select.ExecuteScalar();
+            }
+        }
+
+        public int GetNbOfLoansForClosure()
+        {
+            const string sqlText = @"SELECT COUNT(Credit.id) FROM Credit WHERE Credit.disbursed = 1 AND Credit.fake = 0 AND Credit.written_off = 0 AND 
+                                (NOT ((SELECT SUM(interest_repayment) + SUM(capital_repayment) - SUM(paid_interest) - SUM(paid_capital) 
+                                FROM Installments WHERE contract_id = Credit.id) < 0.02))";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                return (int)select.ExecuteScalar();
+            }
+        }
+
+        public int GetNumberCreditContract(string pQuery)
+        {
+            const string selectFromProjet = @" SELECT TOP 100 percent Contracts.id , Contracts.contract_code, 
+                    Contracts.start_date, 
+                    Contracts.align_disbursed_date, 
+                    Contracts.close_date,
+                    Persons.identification_data as identification_data,Credit.amount, Credit.loanofficer_id,Tiers.client_type_code, 
+                    ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name) AS user_name ,
+                    ISNULL(Groups.name,Persons.first_name + SPACE(1) + Persons.last_name) AS client_name ,
+                    ISNULL((SELECT TOP 1 Persons.first_name + SPACE(1) + Persons.last_name FROM Persons WHERE Persons.id=Credit.loanofficer_id),'-') as loanofficer_name
+                    FROM Contracts INNER JOIN Credit ON Contracts.id = Credit.id
+                    INNER JOIN Projects ON Contracts.project_id = Projects.id
+	                INNER JOIN Tiers ON Projects.tiers_id = Tiers.id 
+                    INNER JOIN Users ON Users.id = Credit.loanofficer_id LEFT OUTER JOIN Persons ON Tiers.id = Persons.id LEFT OUTER JOIN 
+                    Groups ON Tiers.id = Groups.id 
+                    WHERE Tiers.branch_id = @branchId
+                    ) maTable ";
+
+            const string closeWhere = @" WHERE (contract_code LIKE @contractCode OR client_name LIKE @clientName OR user_name LIKE @userName 
+                    OR identification_data LIKE @numberPassport OR loanofficer_name LIKE @loanofficerName )) maTable";
+
+            QueryEntity q = new QueryEntity(pQuery, selectFromProjet, closeWhere);
+            string sqlText = q.ConstructSQLEntityNumberProxy();
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                foreach (var item in q.DynamiqParameters())
+                {
+                    DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+                }
+                DatabaseHelper.InsertInt32Param("@branchId", select, TechnicalSettings.BranchId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return 0;
+
+                    reader.Read();
+                    return reader.GetInt32(0);
+                }
+            }
+        }
+
+        public int GetNumberOfRecordsFoundForSearchCreditContract(string pQuery,bool pIsLoanOfficerPortfolioFilterActive)
+        {
+            string sqlText = @"SELECT COUNT(Contracts.id) 
+                FROM Contracts 
+                INNER JOIN Credit ON Contracts.id = Credit.id
+                INNER JOIN Projects ON Projects.id = Contracts.project_id 
+                INNER JOIN Tiers ON Projects.tiers_id = Tiers.id 
+                INNER JOIN Users ON Users.id = Credit.loanofficer_id 
+                LEFT OUTER JOIN Persons ON Tiers.id = Persons.id 
+                LEFT OUTER JOIN Groups ON Tiers.id = Groups.id 
+                WHERE 1 = 1 " + _BuildWhereConditionsForSearchCreditContract(pQuery, pIsLoanOfficerPortfolioFilterActive);
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertStringNVarCharParam("@contractCode", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@passportNumber", select, string.Format("%{0}%", pQuery));
+            DatabaseHelper.InsertStringNVarCharParam("@name", select, string.Format("%{0}%", pQuery));
+
+            if (pIsLoanOfficerPortfolioFilterActive)
+            {
+                if (!_user.HasAdminRole)
+                    DatabaseHelper.InsertInt32Param("@loanOfficerId", select, _user.Id);
+            }
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader == null || !reader.HasRows) return 0;
+
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        public List<CreditSearchResult> SearchCreditContractByCriteres(int pageNumber, string pQuery)
+        {
+            var list = new List<CreditSearchResult>();
+            
+            const string selectFromProjet = @" 
+                            SELECT TOP 100 percent 
+                              Contracts.id, 
+                              Contracts.contract_code, 
+                              Contracts.status, 
+                              Contracts.start_date, 
+                              Contracts.align_disbursed_date, 
+                              Contracts.close_date, 
+                              Persons.identification_data as identification_data,
+                              Credit.amount, 
+                              Credit.loanofficer_id, 
+                              Tiers.client_type_code, 
+                              ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name) AS user_name,
+                              ISNULL(ISNULL(ISNULL(Groups.name, Persons.first_name + SPACE(1) + Persons.last_name), Corporates.name),'Error!') AS client_name,
+                              ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name) AS loanofficer_name,
+                              Credit.[amount_min],
+                              Credit.[amount_max],
+                              Credit.[ir_min],
+                              Credit.[ir_max],
+                              Credit.[nmb_of_inst_min],
+                              Credit.[nmb_of_inst_max],
+                              Credit.[loan_cycle]
+                            FROM Contracts 
+                            INNER JOIN Credit ON Contracts.id = Credit.id 
+	                        INNER JOIN Projects ON Contracts.project_id = Projects.id
+	                        INNER JOIN Tiers ON Projects.tiers_id = Tiers.id 
+                            LEFT JOIN Users ON Users.id = Credit.loanofficer_id 
+                            LEFT OUTER JOIN Persons ON Tiers.id = Persons.id 
+                            LEFT OUTER JOIN Groups ON Tiers.id = Groups.id 
+                            LEFT OUTER JOIN Corporates ON Tiers.id = Corporates.id
+                            WHERE Tiers.branch_id = @branchId
+                            
+                            UNION ALL
+                            
+                            SELECT TOP 100 percent
+                              ISNULL(Contracts.id,0) AS id, ISNULL(Contracts.contract_code,'No contract') AS contract_code, 
+                              ISNULL(Contracts.status,0) AS status, ISNULL(Contracts.start_date,'01-01-1900') AS start_date, 
+                              ISNULL(Contracts.align_disbursed_date,'01-01-1900') AS align_disbursed_date, 
+                              ISNULL(Contracts.close_date,'01-01-1900') AS close_date, 
+                              Persons.identification_data AS identification_data, ISNULL(Credit.amount,0) AS amount, 
+                              ISNULL(Credit.loanofficer_id,0) AS loanofficer_id, 
+                              CASE (Tiers.client_type_code) WHEN 'I' THEN 'V' ELSE '-' END AS client_type_code, 
+                              ISNULL(ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name),'No contract') AS user_name,
+                              Villages.name AS client_name,
+                              ISNULL(ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name),'No contract') AS loanofficer_name,
+                              Credit.[amount_min],
+                              Credit.[amount_max],
+                              Credit.[ir_min],
+                              Credit.[ir_max],
+                              Credit.[nmb_of_inst_min],
+                              Credit.[nmb_of_inst_max],
+                              Credit.[loan_cycle]
+                            FROM Villages
+                            INNER JOIN VillagesPersons ON VillagesPersons.village_id = Villages.id
+                            INNER JOIN Persons ON Persons.id = VillagesPersons.person_id
+                            INNER JOIN Tiers ON Persons.id = Tiers.id
+                            INNER JOIN Projects ON Tiers.id = Projects.tiers_id
+                            INNER JOIN Contracts ON Contracts.project_id = Projects.id
+                            INNER JOIN Credit ON Credit.id = Contracts.id
+                            LEFT JOIN Users ON Users.id = Credit.loanofficer_id
+                            WHERE Tiers.branch_id = @branchId) maTable ";
+
+            const string closeWhere = @" WHERE ( contract_code LIKE @contractCode 
+                                           OR client_name LIKE @clientName 
+                                           OR user_name LIKE @UserName 
+                                           OR identification_data LIKE @numberPassport 
+                                           OR loanofficer_name LIKE @loanofficerName )) maTable";
+
+            var q = new QueryEntity(pQuery, selectFromProjet, closeWhere);
+
+            string pSqlText = q.ConstructSQLEntityByCriteresProxy(20, (pageNumber - 1) * 20);
+
+            var select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+
+            DatabaseHelper.InsertInt32Param("@branchId", select, TechnicalSettings.BranchId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        var result = new CreditSearchResult
+                             {
+                                 Id = DatabaseHelper.GetInt32("id", reader),
+                                 ContractCode = DatabaseHelper.GetString("contract_code", reader),
+                                 ClientType = DatabaseHelper.GetString("client_type_code", reader),
+                                 ClientName = DatabaseHelper.GetString("client_name", reader),
+                                 ContractStartDate = DatabaseHelper.GetDateTime("start_date", reader).ToShortDateString(),
+                                 ContractEndDate = DatabaseHelper.GetDateTime("close_date", reader).ToShortDateString(),
+                                 ContractStatus = ((OContractStatus) DatabaseHelper.GetSmallInt("status", reader)).ToString(),
+                                 LoanOfficer = new User {Id = DatabaseHelper.GetInt32("loanofficer_id", reader)}
+                             };
+
+                        list.Add(result);
+                    }
+                }
+            }
+            return list;
+        }
+
+        private List<Guarantor> GetGuarantors(int pLoanId)
+        {
+            const string sqlText = @"SELECT [tiers_id], 
+                                       [guarantee_amount], 
+                                       [guarantee_desc], 
+                                       [client_type_code], 
+                                       Groups.name, 
+                                       Persons.first_name, 
+                                       Persons.last_name, 
+                                       district_id
+                                     FROM [LinkGuarantorCredit] 
+                                     INNER JOIN Tiers ON LinkGuarantorCredit.tiers_id = Tiers.id
+                                     LEFT OUTER JOIN Groups ON Groups.id = Tiers.id 
+                                     LEFT OUTER JOIN Persons ON Persons.id = Tiers.id
+                                     WHERE LinkGuarantorCredit.contract_id = @id";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pLoanId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new List<Guarantor>();
+
+                    List<Guarantor> list = new List<Guarantor>();
+                    while (reader.Read())
+                    {
+                        Guarantor guarantor = new Guarantor
+                                                  {
+                                                      Amount = DatabaseHelper.GetMoney("guarantee_amount", reader),
+                                                      Description = DatabaseHelper.GetString("guarantee_desc", reader)
+                                                  };
+
+                        if (DatabaseHelper.GetChar("client_type_code", reader) == 'I')
+                        {
+                            guarantor.Tiers = new Person
+                                                  {
+                                                      FirstName = DatabaseHelper.GetString("first_name", reader),
+                                                      LastName = DatabaseHelper.GetString("last_name", reader),
+                                                      District = new District
+                                                                     {
+                                                                         Id = DatabaseHelper.GetInt32("district_id",reader),
+                                                                         Name = null
+                                                                     }
+                                                  };
+                        }
+                        else
+                            guarantor.Tiers = new Group {Name = DatabaseHelper.GetString("name", reader)};
+
+                        guarantor.Tiers.Id = DatabaseHelper.GetInt32("tiers_id", reader);
+                        list.Add(guarantor);
+                    }
+                    return list;
+                }
+            }
+        }
+
+        private string _BuildWhereConditionsForSearchCreditContract(string pQuery, bool pIsLoanOfficerPortfolioFilterActive)
+        {
+            string whereConditions = string.Empty;
+
+            //loanOfficer
+            if (pIsLoanOfficerPortfolioFilterActive)
+            {
+                if (!_user.HasAdminRole)
+                    whereConditions += " AND Users.id = @loanOfficerId ";
+            }
+            if (pQuery != null)
+            {
+                //ContractCode
+                whereConditions += "AND (Contracts.contract_code LIKE @contractCode ";
+
+                //ClientName
+                whereConditions += "OR (Groups.name LIKE @name OR Persons.first_name LIKE @name OR Persons.last_name LIKE @name) ";
+
+                //ClientPassport
+                whereConditions += "OR Persons.identification_data LIKE @passportNumber) ";
+            }
+
+            return whereConditions;
+        }
+
+        public void UpdateLoanToWriteOff(int pLoanId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"UPDATE Credit SET written_off = 1, bad_loan = 0 WHERE id = @id";
+            
+            using (var update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pLoanId);
+                update.ExecuteNonQuery();
+            }
+
+            // Updating contract status to WritenOff
+            const string sqlTextContract = @"UPDATE Contracts SET status = @status WHERE id = @id";
+
+            using (var updateCont = new SqlCommand(sqlTextContract, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", updateCont, pLoanId);
+                DatabaseHelper.InsertInt32Param("@status", updateCont, (int)OContractStatus.WrittenOff);
+                updateCont.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateLoanToRescheduled(decimal pNewInterestRate, int pNbOfMaturity, Loan pLoan, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"UPDATE Credit 
+                                     SET rescheduled = 1, 
+                                         nb_of_installment = @nbOfInstallment, 
+                                         interest_rate = @newInterestRate                                         
+                                     WHERE id = @id";
+
+            using(SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pLoan.Id);
+                DatabaseHelper.InsertInt32Param("@nbOfInstallment", update, pLoan.NbOfInstallments);
+                DatabaseHelper.InsertDoubleParam("@newInterestRate", update, Convert.ToDouble(pNewInterestRate));
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateLoanWithinTranche(decimal pNewInterestRate, int pNbOfMaturity, Loan pLoan, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"UPDATE Credit 
+                                     SET nb_of_installment = @nbOfInstallment, 
+                                         interest_rate = @newInterestRate,
+                                         amount = @amount 
+                                     WHERE id = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pLoan.Id);
+                DatabaseHelper.InsertInt32Param("@nbOfInstallment", update, pLoan.NbOfInstallments);
+                DatabaseHelper.InsertDoubleParam("@newInterestRate", update, Convert.ToDouble(pNewInterestRate));
+                DatabaseHelper.InsertMoneyParam("@amount", update, pLoan.Amount);
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateLoanToBadLoan(int pLoanId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"UPDATE Credit 
+                                     SET bad_loan = 1
+                                     WHERE id = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pLoanId);
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateLoan(Loan pLoan, SqlTransaction pSqlTransac)
+        {
+            string sqlText = @"UPDATE Credit 
+                              SET loanofficer_id = @loanOfficerId, 
+                                fundingLine_id = @fundingLine_id, 
+                                disbursed = @disbursed,
+                                rescheduled = @rescheduled,
+                                nb_of_installment = @NbOfInstallment, 
+                                amount = @Amount, 
+                                interest_rate = @InterestRate, 
+                                grace_period = @GracePeriode,
+                                anticipated_total_repayment_penalties = @AnticipatedTotalRepayment,
+                                anticipated_partial_repayment_penalties = @AnticipatedPartialRepayment,
+                                non_repayment_penalties_based_on_overdue_principal = @NRPBOOP,
+                                non_repayment_penalties_based_on_initial_amount = @NRPBOIA,
+                                non_repayment_penalties_based_on_olb = @NRPBOOLB,
+                                non_repayment_penalties_based_on_overdue_interest = @NRPBOOI,
+                                synchronize = @synchronize,
+                                grace_period_of_latefees = @grace_period_of_latefees,
+                                [number_of_drawings_loc] = @DrawingsNumber, 
+                                [amount_under_loc] = @AmountUnderLoc,
+                                [maturity_loc] = @MaturityLoc,
+                                [anticipated_partial_repayment_base] = @AnticipatedPartialRepaymentPenaltiesBase, 
+                                [anticipated_total_repayment_base] = @AnticipatedTotalRepaymentPenaltiesBase,
+                                [schedule_changed] = @schedule_changed,
+                                [written_off] = @written_off
+                              WHERE id = @id";
+            
+            using(var update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pLoan.Id);
+                DatabaseHelper.InsertInt32Param("@fundingLine_id", update, pLoan.FundingLine.Id);
+                DatabaseHelper.InsertInt32Param("@loanOfficerId", update, pLoan.LoanOfficer.Id);
+                DatabaseHelper.InsertBooleanParam("@disbursed", update, pLoan.Disbursed);
+                DatabaseHelper.InsertBooleanParam("@rescheduled", update, pLoan.Rescheduled);
+                DatabaseHelper.InsertBooleanParam("@synchronize", update, pLoan.Synchronize);
+
+                DatabaseHelper.InsertInt32Param("@NbOfInstallment", update, pLoan.NbOfInstallments);
+                DatabaseHelper.InsertMoneyParam("@Amount", update, pLoan.Amount);
+                DatabaseHelper.InsertDoubleParam("@InterestRate", update, pLoan.InterestRate);
+                DatabaseHelper.InsertInt32Param("@GracePeriode", update, pLoan.GracePeriod);
+                DatabaseHelper.InsertBooleanParam("@entry_fees_percentage", update, pLoan.EntryFeesPercentage);
+                DatabaseHelper.InsertDoubleParam("@AnticipatedPartialRepayment", update, pLoan.AnticipatedPartialRepaymentPenalties);
+                DatabaseHelper.InsertDoubleParam("@AnticipatedTotalRepayment", update, pLoan.AnticipatedTotalRepaymentPenalties);
+                DatabaseHelper.InsertDoubleParam("@NRPBOOP", update, pLoan.NonRepaymentPenalties.OverDuePrincipal);
+                DatabaseHelper.InsertDoubleParam("@NRPBOIA", update, pLoan.NonRepaymentPenalties.InitialAmount);
+                DatabaseHelper.InsertDoubleParam("@NRPBOOLB", update, pLoan.NonRepaymentPenalties.OLB);
+                DatabaseHelper.InsertDoubleParam("@NRPBOOI", update, pLoan.NonRepaymentPenalties.OverDueInterest);
+                DatabaseHelper.InsertInt32Param("@grace_period_of_latefees", update, pLoan.GracePeriodOfLateFees);
+                DatabaseHelper.InsertBooleanParam("@schedule_changed", update, pLoan.ScheduleChangedManually);
+                DatabaseHelper.InsertBooleanParam("@written_off", update, pLoan.WrittenOff);
+
+                DatabaseHelper.InsertInt32Param("@DrawingsNumber", update, pLoan.DrawingsNumber);
+                DatabaseHelper.InsertMoneyParam("@AmountUnderLoc", update, pLoan.AmountUnderLoc);
+                DatabaseHelper.InsertInt32Param("@MaturityLoc", update, pLoan.MaturityLoc);
+
+                DatabaseHelper.InsertSmalIntParam("@AnticipatedTotalRepaymentPenaltiesBase", update, (int)pLoan.AnticipatedTotalRepaymentPenaltiesBase);
+                DatabaseHelper.InsertSmalIntParam("@AnticipatedPartialRepaymentPenaltiesBase", update, (int)pLoan.AnticipatedPartialRepaymentPenaltiesBase);
+
+                update.ExecuteNonQuery();
+            }
+            
+            sqlText = @"UPDATE Contracts 
+                        SET rural = @rural,
+                        start_date = @startDate,
+                        align_disbursed_date = @align_disbursed_date,
+                        close_date = @closeDate, 
+                        closed = @closed, 
+                        status = @status,
+                        loan_purpose = @loanPurpose,
+                        comments = @comments
+                        WHERE id = @id";
+
+            using(var update2 = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertBooleanParam("@rural", update2, pLoan.Rural);
+                DatabaseHelper.InsertDateTimeParam("@startDate", update2, pLoan.StartDate);
+                DatabaseHelper.InsertDateTimeParam("@align_disbursed_date", update2, pLoan.AlignDisbursementDate);
+                DatabaseHelper.InsertDateTimeParam("@closeDate", update2, pLoan.CloseDate);
+                DatabaseHelper.InsertBooleanParam("@closed", update2, pLoan.Closed);
+                DatabaseHelper.InsertInt32Param("@status", update2, Convert.ToInt32(pLoan.ContractStatus));
+                DatabaseHelper.InsertInt32Param("@id", update2, pLoan.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@loanPurpose", update2, pLoan.LoanPurpose);
+                DatabaseHelper.InsertStringNVarCharParam("@comments", update2, pLoan.Comments);
+                update2.ExecuteNonQuery();
+            }
+
+            // Updating Tiers status to 'active'
+            if (pLoan.Project != null && pLoan.Project.Client != null)
+            {
+                sqlText = @"UPDATE Tiers 
+                            SET active = @active 
+                            WHERE id = @id";
+
+                using (var update3 = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+                {
+                    DatabaseHelper.InsertBooleanParam("@active", update3, pLoan.Project.Client.Active);
+                    DatabaseHelper.InsertInt32Param("@id", update3, pLoan.Project.Client.Id);
+                    update3.ExecuteNonQuery();
+                }
+            }
+
+            if (pLoan.EscapedMember != null  && pLoan.Project != null && pLoan.Project.Client != null)
+            {
+                //delete member from the group
+                _clientManager.UpdatePersonFromGroup(pLoan.EscapedMember.Tiers.Id, pLoan.Project.Client.Id, pSqlTransac);
+
+                sqlText = @"UPDATE LoanShareAmounts 
+                            SET payment_date = @payment_date,
+                            event_id = @event_id
+                            WHERE person_id = @person_id
+                            AND group_id = @group_id
+                            AND contract_id = @contract_id";
+
+                using (var update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+                {
+                    DatabaseHelper.InsertDateTimeParam("@payment_date", update, pLoan.GetLastNonDeletedEvent().Date);
+                    DatabaseHelper.InsertInt32Param("@event_id", update, pLoan.GetLastNonDeletedEvent().Id);
+
+                    DatabaseHelper.InsertInt32Param("@person_id", update, pLoan.EscapedMember.Tiers.Id);
+                    DatabaseHelper.InsertInt32Param("@group_id", update, pLoan.Project.Client.Id);
+                    DatabaseHelper.InsertInt32Param("@contract_id", update, pLoan.Id);
+                    update.ExecuteNonQuery();
+                }
+
+                pLoan.EscapedMember = null;
+            }
+            
+            _DeleteGuarantorsFromLoan(pLoan.Id, pSqlTransac);
+            foreach (Guarantor guarantor in pLoan.Guarantors)
+            {
+                _AddGuarantor(guarantor, pLoan.Id, pSqlTransac);
+            }
+
+            _DeleteCollateralsFromLoan(pLoan.Id, pSqlTransac);
+            foreach (ContractCollateral collateral in pLoan.Collaterals)
+            {
+                _AddCollateral(collateral, pLoan.Id, pSqlTransac);
+            }
+
+            // Compulsory savings handling
+            if (pLoan.Product.UseCompulsorySavings && pLoan.CompulsorySavings != null)
+            {
+                const string sqlCompulsory = @"UPDATE [LoansLinkSavingsBook] 
+                                               SET savings_id = @savingsId, loan_percentage = @loanPercentage
+                                               WHERE loan_id = @loanId";
+
+                using (SqlCommand update = new SqlCommand(sqlCompulsory, DefaultConnection, pSqlTransac))
+                {
+                    DatabaseHelper.InsertInt32Param("@savingsId", update, pLoan.CompulsorySavings.Id);
+                    DatabaseHelper.InsertInt32Param("@loanId", update, pLoan.Id);
+                    DatabaseHelper.InsertInt32Param("@loanPercentage", update, pLoan.CompulsorySavingsPercentage);
+                    update.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void _DeleteGuarantorsFromLoan(int pLoanId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = "DELETE FROM [LinkGuarantorCredit] WHERE contract_id = @contractId";
+
+            using(SqlCommand delete = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@contractId", delete, pLoanId);
+                delete.ExecuteNonQuery();
+            }
+        }
+
+        private void _DeleteCollateralsFromLoan(int pLoanId, SqlTransaction pSqlTransac)
+        {
+            List<int> collateralIds = new List<int>();
+
+            const string sqlCollateralText = @"SELECT [id] FROM [CollateralsLinkContracts] WHERE contract_id = @contract_id ";
+
+            using (SqlCommand selectCollateral = new SqlCommand(sqlCollateralText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_id", selectCollateral, pLoanId);
+                using (SqlDataReader reader = selectCollateral.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return; // nothing is coming... (c)
+                    while (reader.Read()) collateralIds.Add(DatabaseHelper.GetInt32("id", reader));
+                }
+            }
+
+            foreach (int collateralId in collateralIds)
+            {
+                string sqlText = @"DELETE FROM CollateralPropertyValues WHERE [contract_collateral_id] = @contract_collateral_id";
+
+                using (SqlCommand delete = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+                {
+                    DatabaseHelper.InsertInt32Param("@contract_collateral_id", delete, collateralId);
+                    delete.ExecuteNonQuery();
+                }
+            }
+
+            string sqlText2 = @"DELETE FROM CollateralsLinkContracts WHERE [contract_id] = @contract_id";
+
+            using (SqlCommand delete2 = new SqlCommand(sqlText2, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_id", delete2, pLoanId);
+                delete2.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateLoanLoanOfficer(int pLoanId, int pOfficerToId, int pOfficerFromId, SqlTransaction pTransac)
+        {
+            string sqlText = @"UPDATE Credit SET loanofficer_id = @loanofficerID WHERE id = @ID";
+            using(SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@loanofficerID", update, pOfficerToId);
+                DatabaseHelper.InsertInt32Param("@ID", update, pLoanId);
+
+                update.ExecuteNonQuery();
+            }
+
+            if (pOfficerFromId != pOfficerToId)
+            {
+                sqlText = @"INSERT INTO ContractAssignHistory (loanofficerFrom_id, loanofficerTo_id, contract_id)
+                            VALUES (@loanofficerFrom_id, @loanofficerTo_id, @contract_id)";
+                
+                using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pTransac))
+                {
+                    DatabaseHelper.InsertInt32Param("@loanofficerFrom_id", insert, pOfficerFromId);
+                    DatabaseHelper.InsertInt32Param("@loanofficerTo_id", insert, pOfficerToId);
+                    DatabaseHelper.InsertInt32Param("@contract_id", insert, pLoanId);
+
+                   insert.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private static Alert GetAlert(SqlDataReader pReader, char pType)
+        {
+            int i = 0;            
+            var alert = new Alert();
+
+            while (i<pReader.FieldCount)
+            {
+                alert.AddParameter(pReader.GetName(i), pReader.GetValue(i));
+                i++;
+            }
+
+            alert.Type = pType;
+            return alert;
+        }
+
+        public AlertStock SelectLoansByLoanOfficer(int pLoanOfficerId)
+        {
+            string addLoanOfficer = "";
+
+            if (pLoanOfficerId != 0)
+                addLoanOfficer = " AND (Credit.loanofficer_id = @loanOfficerId) ";
+
+            string sqlTextRepaymentAlert = 
+                string.Format(@"SELECT Credit.id AS contract_id, 
+                                  Credit.interest_rate, 
+                                  Contracts.contract_code,
+                                  Contracts.creation_date, 
+                                  Contracts.start_date, 
+                                  Contracts.align_disbursed_date, 
+                                  Contracts.close_date, 
+                                  CASE Contracts.status
+                                    WHEN 1 THEN 'Pending'
+                                    WHEN 2 THEN 'Validated'
+                                    WHEN 3 THEN 'Refused'
+                                    WHEN 4 THEN 'Abandoned'
+                                    WHEN 5 THEN 'Active'
+                                    WHEN 6 THEN 'Closed'
+                                    WHEN 7 THEN 'WrittenOff'
+                                    ELSE '-'
+                                  END AS loan_status,
+                                  InstallmentTypes.name AS installment_types,  
+                                  ISNULL(Groups.name, ISNULL(Persons.first_name + ' ' + Persons.last_name,Corporates.name)) AS client_name,
+                                  Districts.name as district_name, Installments.capital_repayment + Installments.interest_repayment
+                                  - Installments.paid_capital - Installments.paid_interest AS amount,
+                                  Installments.expected_date AS effect_date, ISNULL(( SELECT SUM(principal) FROM contractEvents
+                                  INNER JOIN repaymentEvents ON repaymentEvents.id = contractEvents.id WHERE is_deleted = 0
+                                  AND contract_id = Contracts.id ), 0) AS olb FROM Credit
+                                  INNER JOIN Contracts ON Contracts.id = Credit.id
+                                  INNER JOIN Installments ON Installments.contract_id = Credit.id
+                                  INNER JOIN InstallmentTypes ON dbo.Credit.installment_type = dbo.InstallmentTypes.id
+                                  INNER JOIN Projects ON Contracts.project_id = Projects.id
+                                  INNER JOIN Tiers ON Projects.tiers_id = Tiers.id
+                                  LEFT OUTER JOIN Corporates ON Tiers.id=Corporates.id
+                                  LEFT OUTER JOIN Persons ON dbo.Tiers.id = Persons.id
+                                  LEFT OUTER JOIN Groups ON dbo.Tiers.id = Groups.id
+                                  LEFT OUTER JOIN Districts ON dbo.Tiers.district_id = Districts.id
+                                  WHERE ( Installments.capital_repayment + Installments.interest_repayment - Installments.paid_capital - Installments.paid_interest > 0.02 ) 
+                                  {0}
+                                  ORDER BY contract_id, effect_date DESC", addLoanOfficer);
+
+            using(SqlCommand cmdSelectRepayment = new SqlCommand(sqlTextRepaymentAlert, DefaultConnection))
+            {
+                cmdSelectRepayment.CommandType = CommandType.Text;
+                if (pLoanOfficerId != 0)
+                    DatabaseHelper.InsertInt32Param("@loanOfficerId", cmdSelectRepayment, pLoanOfficerId);
+
+                using (SqlDataReader reader = cmdSelectRepayment.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new AlertStock();
+
+                    AlertStock alertStock = new AlertStock();
+                    while (reader.Read())
+                    {
+                        alertStock.Add(GetAlert(reader, 'R')); 
+                    }
+                    return alertStock;
+                }            
+            }
+        }
+
+        public List<KeyValuePair<DateTime,decimal>> CalculateCashToDisburseByDay(DateTime pStartDate, DateTime pEndDate)
+        {
+            const string sqlText = @"SELECT SUM(Credit.amount) AS amount, Contracts.start_date AS date FROM Contracts 
+                    INNER JOIN Credit ON Contracts.id = Credit.id WHERE (Credit.disbursed = 0) AND (Credit.fake = 0) 
+                    AND Contracts.start_date >= @startDate AND Contracts.start_date <= @endDate
+                    GROUP BY Contracts.start_date ORDER BY Contracts.start_date ";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@startDate", select, pStartDate);
+                DatabaseHelper.InsertDateTimeParam("@endDate", select, pEndDate);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<KeyValuePair<DateTime, decimal>>();
+
+                    List<KeyValuePair<DateTime, decimal>> list = new List<KeyValuePair<DateTime, decimal>>();
+                    while (reader.Read())
+                    {
+                        list.Add(new KeyValuePair<DateTime, decimal>(DatabaseHelper.GetDateTime("date", reader),(DatabaseHelper.GetMoney("amount", reader)).Value));
+                    }
+                    return list;
+                }
+            }
+        }
+
+        public List<KeyValuePair<DateTime, decimal>> CalculateCashToRepayByDay(DateTime pStartDate, DateTime pEndDate)
+        {
+            const string sqlText = @"SELECT SUM(Installments.interest_repayment + Installments.capital_repayment - 
+                        Installments.paid_interest - Installments.paid_capital) AS amount, Installments.expected_date AS date
+                        FROM Credit INNER JOIN Contracts ON Credit.id = Contracts.id
+                        INNER JOIN Installments ON Credit.id = Installments.contract_id WHERE (Credit.disbursed = 1) AND (Credit.fake = 0) 
+                        AND (Credit.written_off = 0) AND (Credit.bad_loan = 0) AND Installments.expected_date >= @startDate 
+                        AND Installments.expected_date <= @endDate AND
+                        (NOT (Installments.interest_repayment = Installments.paid_interest)) AND
+                                    (NOT (Installments.capital_repayment = Installments.paid_capital))
+                                    GROUP BY Installments.expected_date
+                                    ORDER BY Installments.expected_date";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@startDate", select, pStartDate);
+                DatabaseHelper.InsertDateTimeParam("@endDate", select, pEndDate);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new List<KeyValuePair<DateTime, decimal>>();
+
+                    List<KeyValuePair<DateTime, decimal>> list = new List<KeyValuePair<DateTime, decimal>>();
+                    while (reader.Read())
+                    {
+                        list.Add(new KeyValuePair<DateTime, decimal>(DatabaseHelper.GetDateTime("date", reader), (DatabaseHelper.GetMoney("amount", reader)).Value));
+                    }
+                    return list;
+                }
+            }
+        }
+
+        public List<KeyValuePair<DateTime, decimal>> CalculateCashToRepayByDayByFundingLine(int pFundingLineId, bool pAssumeLateLoansRepaidToday, bool pCreditInterestsInFundingLine)
+        {
+            string sqlText = pCreditInterestsInFundingLine
+                                 ? @"SELECT SUM(Installments.capital_repayment + Installments.interest_repayment) AS amount,"
+                                 : "SELECT SUM(Installments.capital_repayment) AS amount,";
+            sqlText += @"Installments.expected_date AS date
+                            FROM Credit INNER JOIN Contracts ON Credit.id = Contracts.id
+                            INNER JOIN Installments ON Credit.id = Installments.contract_id
+                            WHERE (Credit.disbursed = 1) AND (Credit.fake = 0) AND (Credit.written_off = 0) 
+							AND (Credit.bad_loan = 0) AND Credit.fundingline_id = 1 AND Installments.expected_date > GETDATE()
+                            GROUP BY Installments.expected_date ";
+
+            if (pAssumeLateLoansRepaidToday)
+            {
+                sqlText += " UNION ALL ";
+                sqlText += pCreditInterestsInFundingLine
+                               ? @"SELECT SUM(Installments.capital_repayment + Installments.interest_repayment
+                                        - Installments.paid_capital-Installments.paid_interest) AS amount,"
+                               : "SELECT SUM(Installments.capital_repayment - Installments.paid_capital) AS amount,";
+
+                sqlText += @" Installments.expected_date AS date
+                            FROM Credit INNER JOIN Contracts ON Credit.id = Contracts.id
+                            INNER JOIN Installments ON Credit.id = Installments.contract_id
+                            WHERE (Credit.disbursed = 1) AND (Credit.fake = 0) AND (Credit.written_off = 0) 
+							AND (Credit.bad_loan = 0) AND Credit.fundingline_id = @fundingLineId AND Installments.expected_date <= GETDATE()
+                            GROUP BY Installments.expected_date";
+            }
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@fundingLineId", select, pFundingLineId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new List<KeyValuePair<DateTime, decimal>>();
+
+                    List<KeyValuePair<DateTime, decimal>> list = new List<KeyValuePair<DateTime, decimal>>();
+                    while (reader.Read())
+                    {
+                        list.Add(new KeyValuePair<DateTime, decimal>(DatabaseHelper.GetDateTime("date", reader), (DatabaseHelper.GetMoney("amount", reader)).Value));
+                    }
+                    return list;
+                }
+            }
+        }
+
+        public decimal GetGlobalOLBForProvisionning()
+        {
+            const string sqlText = @"SELECT ISNULL(SUM(Installments.capital_repayment - Installments.paid_capital),0) 
+                    FROM Credit 
+                   INNER JOIN Installments ON Credit.id = Installments.contract_id 
+                    WHERE (Credit.disbursed = 1) 
+                      AND (Credit.written_off = 0) 
+                      AND (Credit.bad_loan = 0)";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                return (decimal)select.ExecuteScalar();
+            }
+        }
+
+        public List<Loan> SelectLoansByClientId(int clientId)
+        {
+            List<int> ids = new List<int>();
+            const string sqlText = @"SELECT Cont.id FROM Contracts AS Cont
+                                     INNER JOIN Projects AS Pr ON Cont.project_id = Pr.id
+                                     INNER JOIN Tiers AS Tr ON Tr.id = Pr.tiers_id
+                                     WHERE Tr.id = @id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, clientId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<Loan>();
+
+                    while (reader.Read())
+                        ids.Add(DatabaseHelper.GetInt32("id", reader));
+                }
+            }
+
+            List<Loan> loans = new List<Loan>();
+            foreach (int id in ids)
+                loans.Add(SelectLoan(id, true, true, true));
+
+            return loans;
+        }
+
+        public List<Loan> SelectLoansByProject(int pProjectId)
+        {   
+            List<int> ids = new List<int>();
+            const string sqlText = @"SELECT Credit.id 
+                                    FROM Contracts,Credit 
+                                    WHERE Contracts.id = Credit.id AND project_id = @id";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pProjectId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if(reader == null || !reader.HasRows) return new List<Loan>();
+                    while (reader.Read())
+                    {
+                        ids.Add(DatabaseHelper.GetInt32("id", reader));
+                    }
+                }
+            }
+
+            List<Loan> loans = new List<Loan>();
+            foreach (int id in ids)
+            {
+                loans.Add(SelectLoan(id, true, true, true));
+            }
+            return loans;
+        }
+
+        public void UpdateLoanStatus(Loan pLoan, SqlTransaction pTransaction)
+        {
+            string sqlText = @"UPDATE [Contracts] SET [status] = @status, 
+                                                      [credit_commitee_date] = @date, 
+                                                      [credit_commitee_comment] = @comment, 
+                                                      [credit_commitee_code] = @credit_commitee_code,
+                                                      [closed] = @closed WHERE id = @id";
+
+            using(var update = new SqlCommand(sqlText, DefaultConnection, pTransaction))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pLoan.Id);
+                DatabaseHelper.InsertSmalIntParam("@status", update, (int)pLoan.ContractStatus);
+                DatabaseHelper.InsertDateTimeParam("@date", update, pLoan.CreditCommiteeDate);
+                DatabaseHelper.InsertStringNVarCharParam("@comment", update, pLoan.CreditCommiteeComment);
+                DatabaseHelper.InsertStringNVarCharParam("@credit_commitee_code", update, pLoan.CreditCommitteeCode);
+                DatabaseHelper.InsertBooleanParam("@closed", update, pLoan.Closed);
+
+                update.ExecuteNonQuery();
+            }
+
+            // Updating Tiers status to 'active'
+            if (pLoan.Project != null)
+            {
+                sqlText = @"UPDATE Tiers SET active = @active WHERE id = @id";
+
+                using (var update2 = new SqlCommand(sqlText, DefaultConnection, pTransaction))
+                {
+                    DatabaseHelper.InsertBooleanParam("@active", update2, pLoan.Project.Client.Active);
+                    DatabaseHelper.InsertInt32Param("@id", update2, pLoan.Project.Client.Id);
+                    update2.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<Loan> SelectLoansForClosure()
+        {
+            List<int> ids = new List<int>();
+            const string sqlText = @"SELECT Credit.id AS id 
+                                     FROM Credit 
+                                     INNER JOIN Contracts ON Credit.id = Contracts.id
+                                     WHERE Credit.disbursed = 1 
+                                       AND Credit.fake = 0 
+                                       AND Credit.written_off = 0 
+                                       AND Contracts.closed = 0";
+                                 
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<Loan>();
+
+                    while (reader.Read())
+                    {
+                        ids.Add(DatabaseHelper.GetInt32("id", reader));
+                    }
+                }
+            }
+
+            List<Loan> loans = new List<Loan>();
+            foreach (int i in ids)
+            {
+                var loan = SelectLoan(i, true, true, false);
+                if (_projectManager != null)
+                    loan.Project = _projectManager.SelectProjectByContractId(loan.Id);
+                loans.Add(loan);
+                System.Diagnostics.Debug.WriteLine(i);
+            }
+            return loans;
+        }
+
+        public List<Loan> SelectLoansForClosure(OClosureTypes pClosureType)
+        {
+            List<int> ids = new List<int>();
+            string sqlText = pClosureType == OClosureTypes.Degradation
+                                 ? @"SELECT DISTINCT Credit.id AS id 
+                                     FROM Credit 
+                                     WHERE Credit.disbursed = 1 
+                                       AND Credit.fake = 0 
+                                        AND Credit.written_off = 0 
+                                        AND (NOT ((SELECT SUM(interest_repayment) + SUM(capital_repayment) - 
+                                                   SUM(paid_interest) - SUM(paid_capital) 
+                                                   FROM Installments 
+                                                   WHERE contract_id = Credit.id) < 0.02))"
+                                 : @"SELECT DISTINCT Contracts.id 
+                                    FROM Contracts 
+                                    INNER JOIN Credit ON Contracts.id = Credit.id 
+                                        WHERE (Credit.disbursed = 1) 
+                                          AND (Credit.fake = 0) 
+                                          AND (Credit.written_off = 0) 
+                                          AND (Credit.bad_loan = 0) 
+                                          AND (Contracts.closed = 0)";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<Loan>();
+
+                    while (reader.Read())
+                    {
+                        ids.Add(DatabaseHelper.GetInt32("id", reader));
+                    }
+                }
+            }
+
+            List<Loan> loans = new List<Loan>();
+            foreach (int i in ids)
+            {
+                var loan = SelectLoan(i, true, true, false);
+                if (_projectManager != null)
+                    loan.Project = _projectManager.SelectProjectByContractId(loan.Id);
+                loans.Add(loan);
+                System.Diagnostics.Debug.WriteLine(i);
+            }
+            return loans;
+        }
+
+        public void DeleteLoanShareAmountWhereNotDisbursed(int groupId)
+        {
+            const string sqlText = @"
+                                  DELETE FROM [dbo].[LoanShareAmounts]
+                                  WHERE group_id=@group_id 
+                                  AND 
+                                  ( contract_id NOT IN
+	                                (SELECT id 
+	                                 FROM [dbo].[Credit] 
+	                                 WHERE disbursed=1)
+                                   )";
+
+            using (SqlCommand cmd  = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@group_id", cmd, groupId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateLoanShare(LoanShare pLoanShare, int pLoanId, int pGroupId, SqlTransaction pSqlTransac)
+        {
+            // Check if share exists
+            const string check = @"SELECT COUNT(*) 
+                                   FROM dbo.LoanShareAmounts 
+                                   WHERE person_id = @person_id
+                                     AND group_id = @group_id 
+                                     AND contract_id = @contract_id";
+            bool exists;
+            using (SqlCommand cmd = new SqlCommand(check, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@person_id", cmd, pLoanShare.PersonId);
+                DatabaseHelper.InsertInt32Param("@group_id", cmd, pGroupId);
+                DatabaseHelper.InsertInt32Param("@contract_id", cmd, pLoanId);
+                DatabaseHelper.InsertMoneyParam("@amount", cmd, pLoanShare.Amount);
+                exists = (int)cmd.ExecuteScalar() > 0;
+            }
+
+            string query;
+            if (exists)
+            {
+                query = @"UPDATE LoanShareAmounts 
+                         SET amount = @amount 
+                         WHERE person_id = @person_id 
+                         AND group_id = @group_id 
+                           AND contract_id = @contract_id";
+            }
+            else
+            {
+                query = @"INSERT INTO LoanShareAmounts (person_id, group_id, contract_id, amount)
+                          VALUES (@person_id, @group_id, @contract_id, @amount)";
+            }
+            
+            using(SqlCommand cmd = new SqlCommand(query, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@person_id", cmd, pLoanShare.PersonId);
+                DatabaseHelper.InsertInt32Param("@group_id", cmd, pGroupId);
+                DatabaseHelper.InsertInt32Param("@contract_id", cmd, pLoanId);
+                DatabaseHelper.InsertMoneyParam("@amount", cmd, pLoanShare.Amount);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private int _AddContract(Loan pContract, int pProjectId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [Contracts]([contract_code], 
+            [branch_code], 
+            [closed], 
+            [creation_date], 
+            [start_date], 
+            [align_disbursed_date], 
+            [close_date], 
+            [rural],
+            [project_id],
+            [status],
+            [credit_commitee_date],
+            [credit_commitee_comment],
+            [credit_commitee_code],
+            [loan_purpose],
+            [comments])
+            VALUES(@code, 
+            @branchCode, 
+            @closed, 
+            @creationDate, 
+            @startDate,
+            @align_disbursed_date, 
+            @closeDate, 
+            @rural,
+            @projectId,
+            @status,
+            @creditCommiteeDate,
+            @creditCommiteeComment,
+            @creditCommiteeCode,
+            @loanPurpose,
+            @comments)
+            SELECT SCOPE_IDENTITY()";
+
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac);
+
+            DatabaseHelper.InsertStringNVarCharParam("@code", insert, "fake_code");
+            DatabaseHelper.InsertSmalIntParam("@status", insert, (int)pContract.ContractStatus);
+            DatabaseHelper.InsertDateTimeParam("@creditCommiteeDate", insert, pContract.CreditCommiteeDate);
+            DatabaseHelper.InsertStringNVarCharParam("@creditCommiteeComment", insert, pContract.CreditCommiteeComment);
+            DatabaseHelper.InsertStringNVarCharParam("@creditCommiteeCode", insert, pContract.CreditCommitteeCode);
+            DatabaseHelper.InsertStringVarCharParam("@branchCode", insert, pContract.BranchCode);
+            DatabaseHelper.InsertBooleanParam("@closed", insert, pContract.Closed);
+            DatabaseHelper.InsertDateTimeParam("@creationDate", insert, pContract.CreationDate);
+            DatabaseHelper.InsertDateTimeParam("@startDate", insert, pContract.StartDate);
+            DatabaseHelper.InsertDateTimeParam("@align_disbursed_date", insert, pContract.AlignDisbursementDate);
+            DatabaseHelper.InsertDateTimeParam("@closeDate", insert, pContract.CloseDate);
+            DatabaseHelper.InsertBooleanParam("@rural", insert, pContract.Rural);
+            DatabaseHelper.InsertInt32Param("@projectId", insert, pProjectId);
+            DatabaseHelper.InsertStringNVarCharParam("@loanPurpose", insert, pContract.LoanPurpose);
+            DatabaseHelper.InsertStringNVarCharParam("@comments", insert, pContract.Comments);
+
+            pContract.Id = int.Parse(insert.ExecuteScalar().ToString());
+
+            if (string.IsNullOrEmpty(pContract.Code)) pContract.Code = "-";
+
+            SqlCommand updateCode = new SqlCommand("UPDATE Contracts SET contract_code = @code WHERE id = @id", DefaultConnection, pSqlTransac);
+            DatabaseHelper.InsertStringNVarCharParam("@code", updateCode, pContract.Code);
+            DatabaseHelper.InsertInt32Param("@id", updateCode, pContract.Id);
+            updateCode.ExecuteNonQuery();
+
+            if (pContract.Guarantors.Count != 0)
+                foreach (Guarantor guarantor in pContract.Guarantors)
+                    _AddGuarantor(guarantor, pContract.Id, pSqlTransac);
+
+            if (pContract.Collaterals.Count != 0)
+                foreach (ContractCollateral contractCollateral in pContract.Collaterals)
+                    _AddCollateral(contractCollateral, pContract.Id, pSqlTransac);
+
+            // Compulsory savings handling
+            if (pContract.Product.UseCompulsorySavings)
+            {
+                const string sqlCompulsory = @"INSERT INTO LoansLinkSavingsBook ([loan_id], [savings_id], [loan_percentage])
+                                                   VALUES (@loanId, @savingsId, @loanPercentage)";
+
+                using (SqlCommand insertCom = new SqlCommand(sqlCompulsory, DefaultConnection, pSqlTransac))
+                {
+                    if (pContract.CompulsorySavings != null)
+                        DatabaseHelper.InsertInt32Param("@savingsId", insertCom, pContract.CompulsorySavings.Id);
+                    else
+                        DatabaseHelper.InsertInt32Param("@savingsId", insertCom, null);
+                    
+                    DatabaseHelper.InsertInt32Param("@loanId", insertCom, pContract.Id);
+                    DatabaseHelper.InsertInt32Param("@loanPercentage", insertCom, pContract.CompulsorySavingsPercentage);
+                    insertCom.ExecuteNonQuery();
+                }            
+            }
+
+            return pContract.Id;
+        }
+
+        public void _AddCollateral(ContractCollateral contractCollateral, int contractId, SqlTransaction pSqlTransac)
+        {
+            string sqlProductText = @"INSERT INTO [CollateralsLinkContracts] ([contract_id]) 
+                                      VALUES (@contract_id) SELECT CONVERT(int, SCOPE_IDENTITY())";
+
+            using (SqlCommand insertCollateral = new SqlCommand(sqlProductText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_id", insertCollateral, contractId);
+                contractCollateral.Id = int.Parse(insertCollateral.ExecuteScalar().ToString());
+            }
+
+            foreach (CollateralPropertyValue propertyValue in contractCollateral.PropertyValues)
+            {
+                AddCollateralPropertyValue(contractCollateral, propertyValue, pSqlTransac);
+            }
+        }
+
+        public void AddCollateralPropertyValue(ContractCollateral contractCollateral, CollateralPropertyValue propertyValue, SqlTransaction pSqlTransac)
+        {
+            string sqlPropertyText = @"INSERT INTO [CollateralPropertyValues] ([contract_collateral_id], [property_id], [value]) 
+                                       VALUES (@contract_collateral_id, @property_id, @value)";
+
+            using (SqlCommand insertValue = new SqlCommand(sqlPropertyText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_collateral_id", insertValue, contractCollateral.Id);
+                DatabaseHelper.InsertInt32Param("@property_id", insertValue, propertyValue.Property.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@value", insertValue, propertyValue.Value);
+                insertValue.ExecuteNonQuery();
+            }
+        }
+
+        private void _AddGuarantor(Guarantor pGuarantor, int pLoanId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [LinkGuarantorCredit]([tiers_id], [contract_id], [guarantee_amount], [guarantee_desc]) 
+                            VALUES(@tiersId, @contractId, @guaranteeAmount, @guaranteeDesc)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@tiersId", insert, pGuarantor.Tiers.Id);
+                DatabaseHelper.InsertInt32Param("@contractId", insert, pLoanId);
+                DatabaseHelper.InsertMoneyParam("@guaranteeAmount", insert, pGuarantor.Amount);
+                DatabaseHelper.InsertStringNVarCharParam("@guaranteeDesc", insert, pGuarantor.Description);
+
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void RemoveCompulsorySavings(int loanId, SqlTransaction pSqlTransac)
+        {
+            const string sqlCompulsory = @"UPDATE [LoansLinkSavingsBook] 
+                                           SET savings_id = NULL 
+                                           WHERE loan_id = @loanId";
+
+            using (SqlCommand update = new SqlCommand(sqlCompulsory, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@loanId", update, loanId);
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public List<LoanEntryFee> SelectInstalledLoanEntryFees (int loanId)
+        {
+            List<LoanEntryFee> loanEntryFees = new List<LoanEntryFee>();
+            string sqlText =
+                @"SELECT id
+                        ,[entry_fee_id]
+                        ,[fee_value]
+                  FROM [dbo].[CreditEntryFees] 
+                  WHERE [credit_id]=@credit_id";
+            using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@credit_id", cmd, loanId);
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        LoanEntryFee lef = new LoanEntryFee();
+                        lef.Id = (int) reader[0];
+                        lef.ProductEntryFeeId = (int) reader[1];
+                        lef.FeeValue = (decimal) reader[2];
+                        loanEntryFees.Add(lef);
+                    }
+                }
+            }
+            return loanEntryFees;
+        }
+        /// <summary>
+        /// Inserts entry fees for the specified loan into database
+        /// </summary>
+        /// <param name="loanEntryFees">List of loan entry fees</param>
+        /// <param name="loanId">Loan (credit) id</param>
+        public void InsertLoanEntryFees(List<LoanEntryFee> loanEntryFees, int loanId)
+        {
+            string sqlText =
+                @"INSERT INTO [dbo].[CreditEntryFees]
+                 (credit_id, entry_fee_id, fee_value)
+                 VALUES (@credit_id, @entry_fee_id, @fee_value)";
+            foreach (LoanEntryFee entryFee in loanEntryFees)
+            {
+                using (SqlCommand cmd = new SqlCommand(sqlText, DefaultConnection))
+                {
+                    DatabaseHelper.InsertInt32Param("@credit_id", cmd, loanId);
+                    DatabaseHelper.InsertInt32Param("@entry_fee_id", cmd, entryFee.ProductEntryFee.Id);
+                    DatabaseHelper.InsertDecimalParam("@fee_value", cmd, entryFee.FeeValue);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdateLoanEntryFees(List<LoanEntryFee> loanEntryFees, int loanId)
+        {
+            string sqlText =
+                @"UPDATE [dbo].[CreditEntryFees]
+                SET fee_value = @fee_value
+                WHERE id=@loan_entry_fee_id";
+            foreach (LoanEntryFee entryFee in loanEntryFees)
+            {
+                using (SqlCommand cmd =  new SqlCommand(sqlText, DefaultConnection))
+                {
+                    DatabaseHelper.InsertInt32Param("@loan_entry_fee_id", cmd, entryFee.Id);
+                    DatabaseHelper.InsertDecimalParam("@fee_value", cmd, entryFee.FeeValue);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns Loan
+        /// </summary>
+        /// <param name="pLoanId">Loan id</param>
+        /// <param name="pAddGeneralInformation">add product, events, chartOfAccount, and funding line</param>
+        /// <param name="pAddOptionalInformation"></param>
+        /// <param name="pAddOptionalEventInformation"></param>
+        /// <returns></returns>
+        public Loan SelectLoan(int pLoanId, bool pAddGeneralInformation, bool pAddOptionalInformation, bool pAddOptionalEventInformation)
+        {
+            Loan loan;
+            int productId;
+            int installmentTypeId;
+            int loanOfficerId; 
+            int fundingLineId;
+
+            const string sqlText = @"SELECT Credit.id AS credit_id, 
+                                        Credit.package_id, 
+                                        Credit.amount, 
+                                        Credit.interest_rate, 
+                                        Credit.installment_type, 
+                                        Credit.nb_of_installment, 
+                                        Credit.non_repayment_penalties_based_on_overdue_principal,
+                                        Credit.non_repayment_penalties_based_on_overdue_interest, 
+                                        Credit.non_repayment_penalties_based_on_olb,
+                                        Credit.non_repayment_penalties_based_on_initial_amount,
+                                        Credit.anticipated_total_repayment_penalties, 
+                                        Credit.anticipated_partial_repayment_penalties, 
+                                        Credit.anticipated_total_repayment_base,
+                                        Credit.anticipated_partial_repayment_base,
+                                        Credit.disbursed, Credit.loanofficer_id, 
+                                        Credit.fundingLine_id, 
+                                        Credit.entry_fees, 
+                                        Credit.entry_fees_percentage, 
+                                        Credit.grace_period, 
+                                        Credit.written_off, 
+                                        Credit.rescheduled, 
+                                        Credit.bad_loan, 
+                                        Credit.fake, 
+                                        Credit.grace_period_of_latefees,
+                                        Contracts.contract_code, 
+                                        Tiers.client_type_code, 
+                                        Credit.synchronize,
+                                        Credit.schedule_changed,
+                                        ISNULL(Credit.amount_under_loc, 0) AS amount_under_loc,
+                                        Contracts.branch_code, 
+                                        Contracts.creation_date, 
+                                        Contracts.start_date, 
+                                        ISNULL(Contracts.align_disbursed_date, Contracts.start_date) AS align_disbursed_date, 
+                                        Contracts.close_date, Contracts.rural, 
+                                        Contracts.closed, 
+                                        Contracts.status,
+                                        Contracts.credit_commitee_date,
+                                        Contracts.credit_commitee_comment,
+                                        Contracts.credit_commitee_code,
+                                        Contracts.loan_purpose,
+                                        Contracts.comments,
+                                        LoansLinkSavingsBook.loan_percentage,
+                                        Credit.[amount_min],
+                                        Credit.[amount_max],
+                                        Credit.[ir_min],
+                                        Credit.[ir_max],
+                                        Credit.[nmb_of_inst_min],
+                                        Credit.[nmb_of_inst_max],
+                                        Credit.[loan_cycle]
+                                        FROM Contracts 
+                                        INNER JOIN Credit ON Contracts.id = Credit.id 
+                                        INNER JOIN Projects ON Contracts.project_id = Projects.id 
+                                        INNER JOIN Tiers ON Projects.tiers_id = Tiers.id
+                                        LEFT JOIN LoansLinkSavingsBook ON LoansLinkSavingsBook.loan_id = Contracts.id
+                                        WHERE Credit.id = @id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pLoanId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    loan = _GetLoan(reader);
+
+                    installmentTypeId = DatabaseHelper.GetInt32("installment_type", reader);
+                    productId = DatabaseHelper.GetInt32("package_id", reader);
+                    loanOfficerId = DatabaseHelper.GetInt32("loanofficer_id", reader);
+                    fundingLineId = DatabaseHelper.GetInt32("fundingLine_id", reader);
+                }
+            }
+            
+            loan.InstallmentType = _installmentTypeManagement.SelectInstallmentType(installmentTypeId);
+            loan.InstallmentList = _installmentManagement.SelectInstallments(loan.Id, null);
+            loan.GivenTranches = SelectTranches(loan.Id, null);
+            loan.FirstInstallmentDate = loan.InstallmentList[0].ExpectedDate;
+            
+            if (pAddGeneralInformation)
+            {
+                loan.Product = _packageManager.Select(productId);
+                loan.Events = _eventManagement.SelectEvents(loan.Id);
+                
+                //foreach (Event @event in loan.Events)
+                //{
+                //    if (!(@event is LoanDisbursmentEvent)) continue;
+                    
+                //    ((LoanDisbursmentEvent) @event).Commissions = _eventManagement.GetEntryFeeEvents(@event.Id);
+                    
+                //    foreach (LoanEntryFeeEvent feeEvent in ((LoanDisbursmentEvent)@event).Commissions)
+                //    {
+                //        feeEvent.User = _userManager.SelectUser(feeEvent.User.Id, true);
+                //    }
+                //}
+
+                if (_projectManager != null)
+                    loan.Project = _projectManager.SelectProjectByContractId(loan.Id);
+
+                foreach (Installment installment in loan.InstallmentList)
+                {
+                    installment.OLB = loan.CalculateExpectedOlb(installment.Number, loan.Product.KeepExpectedInstallment);
+                }
+            }
+
+            if (pAddOptionalInformation)
+            {
+                loan.FundingLine = _fundingLineManager.SelectFundingLineById(fundingLineId, pAddOptionalEventInformation);
+                loan.LoanOfficer = _userManager.SelectUser(loanOfficerId, true);
+                loan.Guarantors = GetGuarantors(loan.Id);
+                loan.Collaterals = GetCollaterals(loan.Id);
+
+                if (loan.ClientType == OClientTypes.Group) 
+                    loan.LoanShares.AddRange(GetLoanShareAmount(pLoanId));
+            }
+
+            return loan;
+        }
+
+        private static void SetLoan(Loan pLoan, SqlCommand pInsert)
+        {
+            DatabaseHelper.InsertInt32Param("@id", pInsert, pLoan.Id);
+            DatabaseHelper.InsertInt32Param("@packageId", pInsert, pLoan.Product.Id);
+            DatabaseHelper.InsertMoneyParam("@amount", pInsert, pLoan.Amount);
+            DatabaseHelper.InsertDoubleParam("@interestRate", pInsert, pLoan.InterestRate);
+            DatabaseHelper.InsertInt32Param("@installmentType", pInsert, pLoan.InstallmentType.Id);
+            DatabaseHelper.InsertInt32Param("@nbOfInstallments", pInsert, pLoan.NbOfInstallments);
+            
+            DatabaseHelper.InsertDoubleParam("@anticipatedTotalRepaymentPenalties", pInsert, pLoan.AnticipatedTotalRepaymentPenalties);
+            DatabaseHelper.InsertDoubleParam("@anticipatedPartialRepaymentPenalties", pInsert, pLoan.AnticipatedPartialRepaymentPenalties);
+            
+            DatabaseHelper.InsertBooleanParam("@disbursed", pInsert, pLoan.Disbursed);
+            DatabaseHelper.InsertInt32Param("@loanOfficerId", pInsert, pLoan.LoanOfficer.Id);
+            DatabaseHelper.InsertBooleanParam("@entryFeesPercentage", pInsert, pLoan.EntryFeesPercentage);
+            DatabaseHelper.InsertInt32Param("@gracePeriod", pInsert, pLoan.GracePeriod);
+            DatabaseHelper.InsertBooleanParam("@writtenOff", pInsert, pLoan.WrittenOff);
+            DatabaseHelper.InsertBooleanParam("@rescheduled", pInsert, pLoan.Rescheduled);
+            DatabaseHelper.InsertBooleanParam("@synchronize", pInsert, pLoan.Synchronize);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesInitialAmount", pInsert, pLoan.NonRepaymentPenalties.InitialAmount);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOLB", pInsert, pLoan.NonRepaymentPenalties.OLB);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOverdueInterest", pInsert, pLoan.NonRepaymentPenalties.OverDueInterest);
+            DatabaseHelper.InsertDoubleParam("@nonRepaymentPenaltiesOverduePrincipal", pInsert, pLoan.NonRepaymentPenalties.OverDuePrincipal);
+            DatabaseHelper.InsertBooleanParam("@fake", pInsert, pLoan.Fake);
+            DatabaseHelper.InsertBooleanParam("@badLoan", pInsert, pLoan.BadLoan);
+            DatabaseHelper.InsertInt32Param("@grace_period_of_latefees", pInsert, pLoan.GracePeriodOfLateFees);
+            
+            DatabaseHelper.InsertInt32Param("@DrawingsNumber", pInsert, pLoan.DrawingsNumber);
+            DatabaseHelper.InsertMoneyParam("@AmountUnderLoc", pInsert, pLoan.AmountUnderLoc);
+            DatabaseHelper.InsertInt32Param("@MaturityLoc", pInsert, pLoan.MaturityLoc);
+
+            DatabaseHelper.InsertSmalIntParam("@AnticipatedTotalRepaymentPenaltiesBase", pInsert, (int)pLoan.AnticipatedTotalRepaymentPenaltiesBase);
+            DatabaseHelper.InsertSmalIntParam("@AnticipatedPartialRepaymentPenaltiesBase", pInsert, (int)pLoan.AnticipatedPartialRepaymentPenaltiesBase);
+
+            if (pLoan.FundingLine != null)
+                DatabaseHelper.InsertInt32Param("@fundingLine_id", pInsert, pLoan.FundingLine.Id);
+            else
+                DatabaseHelper.InsertNullValue("@fundingLine_id", pInsert);
+
+            DatabaseHelper.InsertMoneyParam("@amount_min", pInsert, pLoan.AmountMin);
+            DatabaseHelper.InsertMoneyParam("@amount_max", pInsert, pLoan.AmountMax);
+            DatabaseHelper.InsertDoubleParam("@ir_min", pInsert, pLoan.InterestRateMin);
+            DatabaseHelper.InsertDoubleParam("@ir_max", pInsert, pLoan.InterestRateMax);
+            DatabaseHelper.InsertInt32Param("@nmb_of_inst_min", pInsert, pLoan.NmbOfInstallmentsMin);
+            DatabaseHelper.InsertInt32Param("@nmb_of_inst_max", pInsert, pLoan.NmbOfInstallmentsMax);
+            DatabaseHelper.InsertInt32Param("@loan_cycle", pInsert, pLoan.LoanCycle);
+        }
+
+        public Dictionary<int, int> GetListOfInstallmentsOnDate(DateTime date)
+        {
+            string sqlText = @"SELECT dbo.Credit.id, dbo.Installments.number
+                               FROM dbo.Credit
+                               INNER JOIN dbo.Installments ON dbo.Credit.id = dbo.Installments.contract_id
+                               WHERE dbo.Installments.expected_date BETWEEN DATEADD(dd, -1, @date) AND DATEADD(dd, 1, @date)";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertDateTimeParam("@date", select, date);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                Dictionary<int, int> ListOfContractsInstallment = new Dictionary<int, int>();
+
+                while (reader.Read())
+                {
+                    ListOfContractsInstallment.Add(DatabaseHelper.GetInt32("id", reader), DatabaseHelper.GetInt32("number", reader));
+                }
+
+                return ListOfContractsInstallment;
+            }
+        }
+
+        private Loan _GetLoan(SqlDataReader pReader)
+        {
+            return new Loan(_user, ApplicationSettings.GetInstance(_user.Md5),
+                            NonWorkingDateSingleton.GetInstance(_user.Md5),
+                            ProvisionTable.GetInstance(_user), ChartOfAccounts.GetInstance(_user))
+                       {
+                           Id = DatabaseHelper.GetInt32("credit_id", pReader),
+                           ClientType = DatabaseHelper.GetChar("client_type_code", pReader) == 'I'
+                                            ? OClientTypes.Person
+                                            : DatabaseHelper.GetChar("client_type_code", pReader) == 'G'
+                                                  ? OClientTypes.Group
+                                                  : OClientTypes.Corporate,
+                           ContractStatus = (OContractStatus) DatabaseHelper.GetSmallInt("status", pReader),
+                           CreditCommiteeDate =
+                               DatabaseHelper.GetNullAuthorizedDateTime("credit_commitee_date", pReader),
+                           CreditCommiteeComment = DatabaseHelper.GetString("credit_commitee_comment", pReader),
+                           CreditCommitteeCode = DatabaseHelper.GetString("credit_commitee_code", pReader),
+                           Amount = DatabaseHelper.GetMoney("amount", pReader),
+                           InterestRate = DatabaseHelper.GetDouble("interest_rate", pReader),
+                           NbOfInstallments = DatabaseHelper.GetInt32("nb_of_installment", pReader),
+                           NonRepaymentPenalties = new NonRepaymentPenalties
+                                                       {
+                                                           InitialAmount =
+                                                               DatabaseHelper.GetDouble(
+                                                                   "non_repayment_penalties_based_on_initial_amount",
+                                                                   pReader),
+                                                           OLB =
+                                                               DatabaseHelper.GetDouble(
+                                                                   "non_repayment_penalties_based_on_olb", pReader),
+                                                           OverDueInterest =
+                                                               DatabaseHelper.GetDouble(
+                                                                   "non_repayment_penalties_based_on_overdue_interest",
+                                                                   pReader),
+                                                           OverDuePrincipal =
+                                                               DatabaseHelper.GetDouble(
+                                                                   "non_repayment_penalties_based_on_overdue_principal",
+                                                                   pReader)
+                                                       },
+
+                           AnticipatedTotalRepaymentPenalties =
+                               DatabaseHelper.GetDouble("anticipated_total_repayment_penalties", pReader),
+                           AnticipatedPartialRepaymentPenalties =
+                               DatabaseHelper.GetDouble("anticipated_partial_repayment_penalties", pReader),
+                           AnticipatedPartialRepaymentPenaltiesBase =
+                               (OAnticipatedRepaymentPenaltiesBases)
+                               DatabaseHelper.GetSmallInt("anticipated_partial_repayment_base", pReader),
+                           AnticipatedTotalRepaymentPenaltiesBase =
+                               (OAnticipatedRepaymentPenaltiesBases)
+                               DatabaseHelper.GetSmallInt("anticipated_total_repayment_base", pReader),
+
+                           Disbursed = DatabaseHelper.GetBoolean("disbursed", pReader),
+                           EntryFeesPercentage = DatabaseHelper.GetBoolean("entry_fees_percentage", pReader),
+                           GracePeriod = DatabaseHelper.GetNullAuthorizedInt32("grace_period", pReader),
+                           GracePeriodOfLateFees =
+                               DatabaseHelper.GetNullAuthorizedInt32("grace_period_of_latefees", pReader),
+                           WrittenOff = DatabaseHelper.GetBoolean("written_off", pReader),
+                           Rescheduled = DatabaseHelper.GetBoolean("rescheduled", pReader),
+
+                           Code = DatabaseHelper.GetString("contract_code", pReader),
+                           BranchCode = DatabaseHelper.GetString("branch_code", pReader),
+                           CreationDate = DatabaseHelper.GetDateTime("creation_date", pReader),
+                           StartDate = DatabaseHelper.GetDateTime("start_date", pReader),
+                           AlignDisbursementDate = DatabaseHelper.GetDateTime("align_disbursed_date", pReader),
+                           CloseDate = DatabaseHelper.GetDateTime("close_date", pReader),
+                           Closed = DatabaseHelper.GetBoolean("closed", pReader),
+                           Rural = DatabaseHelper.GetBoolean("rural", pReader),
+                           BadLoan = DatabaseHelper.GetBoolean("bad_loan", pReader),
+                           Fake = DatabaseHelper.GetBoolean("fake", pReader),
+                           Synchronize = DatabaseHelper.GetBoolean("synchronize", pReader),
+                           ScheduleChangedManually = DatabaseHelper.GetBoolean("schedule_changed", pReader),
+                           AmountUnderLoc = DatabaseHelper.GetNullAuthorizedMoney("amount_under_loc", pReader),
+                           CompulsorySavingsPercentage =
+                               DatabaseHelper.GetNullAuthorizedInt32("loan_percentage", pReader),
+                           LoanPurpose = DatabaseHelper.GetString("loan_purpose", pReader),
+                           Comments = DatabaseHelper.GetString("comments", pReader),
+                           AmountMin = DatabaseHelper.GetNullAuthorizedMoney("amount_min", pReader),
+                           AmountMax = DatabaseHelper.GetNullAuthorizedMoney("amount_max", pReader),
+                           InterestRateMin = DatabaseHelper.GetNullAuthorizedDouble("ir_min", pReader),
+                           InterestRateMax = DatabaseHelper.GetNullAuthorizedDouble("ir_max", pReader),
+                           NmbOfInstallmentsMin = DatabaseHelper.GetNullAuthorizedInt32("nmb_of_inst_min", pReader),
+                           NmbOfInstallmentsMax = DatabaseHelper.GetNullAuthorizedInt32("nmb_of_inst_max", pReader),
+                           LoanCycle = DatabaseHelper.GetNullAuthorizedInt32("loan_cycle", pReader)
+            };
+        }
+
+        private void _SetLoanShareAmount(Loan pLoan, SqlTransaction pSqlTransac)
+        {
+            // Get group id
+            int group_id;
+            const string query = @"SELECT p.tiers_id
+                FROM dbo.Projects AS p
+                LEFT JOIN dbo.Contracts AS c ON c.project_id = p.id
+                WHERE c.id = @contract_id";
+            using (SqlCommand cmd = new SqlCommand(query, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_id", cmd, pLoan.Id);
+                group_id = (int)cmd.ExecuteScalar();
+            }
+
+            const string sqlText = @"INSERT INTO LoanShareAmounts (person_id, group_id, contract_id, amount)
+                                     VALUES (@person_id, @group_id, @contract_id, @amount)";
+
+            using(SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@person_id", insert, 0);
+                DatabaseHelper.InsertInt32Param("@group_id", insert, 0);
+                DatabaseHelper.InsertInt32Param("@contract_id", insert, 0);
+                DatabaseHelper.InsertMoneyParam("@amount", insert, 0);
+
+                foreach (LoanShare ls in pLoan.LoanShares)
+                {
+                    insert.Parameters["@person_id"].Value = ls.PersonId;
+                    insert.Parameters["@group_id"].Value = group_id;
+                    insert.Parameters["@contract_id"].Value = pLoan.Id;
+                    insert.Parameters["@amount"].Value = ls.Amount.Value;
+
+                    insert.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private List<ContractCollateral> GetCollaterals(int pLoanId)
+        {
+            List<int> collateralIds = new List<int>();
+
+            const string sqlCollateralText = @"SELECT [id] FROM [CollateralsLinkContracts] WHERE contract_id = @contract_id ";
+
+            using (SqlCommand selectCollateral = new SqlCommand(sqlCollateralText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@contract_id", selectCollateral, pLoanId);
+                using (SqlDataReader reader = selectCollateral.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<ContractCollateral>();
+                    while (reader.Read()) collateralIds.Add(DatabaseHelper.GetInt32("id", reader));
+                }
+            }
+
+            List<ContractCollateral> contractCollaterals = new List<ContractCollateral>();
+
+            foreach (int collateralId in collateralIds)
+            {
+                ContractCollateral contractCollateral = new ContractCollateral();
+                List<CollateralPropertyValue> propertyValues = new List<CollateralPropertyValue>();
+                
+                string sqlPropertyText = @"SELECT [contract_collateral_id], [property_id], [value]
+                                           FROM [CollateralPropertyValues] 
+                                           WHERE contract_collateral_id = @contract_collateral_id ";
+
+                using (SqlCommand selectPropertyValue = new SqlCommand(sqlPropertyText, DefaultConnection))
+                {
+                    DatabaseHelper.InsertInt32Param("@contract_collateral_id", selectPropertyValue, collateralId);
+                    using (SqlDataReader reader = selectPropertyValue.ExecuteReader())
+                    {
+                        if (reader == null || !reader.HasRows) return new List<ContractCollateral>();
+
+                        while (reader.Read())
+                        {
+                            CollateralPropertyValue propertyValue = new CollateralPropertyValue { 
+                                Id = collateralId,
+                                Property = new CollateralProperty { Id = DatabaseHelper.GetInt32("property_id", reader) },
+                                //Property. = _collateralProductManager.SelectCollateralProperty(DatabaseHelper.GetInt32("property_id", reader)),
+                                Value = DatabaseHelper.GetString("value", reader)
+                            };
+                            propertyValues.Add(propertyValue);
+                        }
+                    }
+                }
+
+                foreach (CollateralPropertyValue propertyValue in propertyValues)
+                {
+                    propertyValue.Property = _collateralProductManager.SelectCollateralProperty(propertyValue.Property.Id);
+                }
+
+                contractCollateral.PropertyValues = propertyValues;
+                contractCollaterals.Add(contractCollateral);
+            }
+
+            return contractCollaterals;
+        }
+
+        public List<LoanShare> GetLoanShareAmount(int pContractId)
+        {
+            const string sqlText = @"SELECT lsa.group_id, 
+                                       lsa.person_id, 
+                                       lsa.amount, 
+                                       p.first_name + ' ' + p.last_name AS person_name
+                                     FROM LoanShareAmounts AS lsa
+                                     LEFT JOIN Persons AS p ON p.id = lsa.person_id 
+                                     WHERE contract_id = @contract_id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("contract_id", select, pContractId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<LoanShare>();
+
+                    List<LoanShare> loanShares = new List<LoanShare>();
+                    while (reader.Read())
+                    {
+                        loanShares.Add(new LoanShare { PersonId = DatabaseHelper.GetInt32("person_id", reader),
+                            PersonName = DatabaseHelper.GetString("person_name", reader),
+                            Amount = DatabaseHelper.GetMoney("amount", reader)
+                        });
+                    }
+                    return loanShares;
+                }
+            }
+        }
+
+
+        private static TrancheEvent _GetTransh(SqlDataReader pReader)
+        {
+            return new TrancheEvent
+            {
+                Number = DatabaseHelper.GetInt32("Number", pReader),
+                StartDate = DatabaseHelper.GetDateTime("start_date", pReader),
+                Amount = DatabaseHelper.GetMoney("amount", pReader),
+                Maturity = DatabaseHelper.GetInt32("countOfInstallments", pReader),
+                ApplyNewInterest = DatabaseHelper.GetBoolean("ApplyNewInterest", pReader),
+                InterestRate = (decimal)DatabaseHelper.GetDouble("interest_rate", pReader),
+                StartedFrom = DatabaseHelper.GetInt32("started_from_installment", pReader),
+                Deleted = DatabaseHelper.GetBoolean("is_deleted", pReader),
+                Id = DatabaseHelper.GetInt32("event_id", pReader)
+            };
+        }
+        public List<TrancheEvent> SelectTranches(int pLoanId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @" SELECT  con.id AS contract_id,
+                                        start_date,
+                                        amount,
+                                        COUNT(ISNULL(h.id, nb_of_installment)) AS countOfInstallments,
+                                        interest_rate,
+                                        CONVERT(BIT, 0) AS ApplyNewInterest,
+                                        0 AS started_from_installment,
+                                        0 AS Number,
+                                        ce.is_deleted,
+                                        0 AS event_id
+                                FROM    Credit cred
+                                        INNER JOIN Contracts con ON cred.id = con.id
+                                        INNER JOIN ContractEvents AS ce ON con.id = ce.contract_id
+                                        LEFT JOIN dbo.InstallmentHistory h ON con.id = h.contract_id
+                                          AND ce.id = h.event_id
+                                WHERE   con.id = @id
+                                        AND ce.is_deleted = 0
+                                        AND ce.event_date <= (SELECT MIN(event_date)
+                                                             FROM   dbo.ContractEvents
+                                                             WHERE  contract_id = @id)
+                                GROUP BY con.id,
+                                        start_date,
+                                        amount,
+                                        interest_rate,
+                                        ce.is_deleted
+                                UNION ALL
+                                SELECT  contract_id,
+                                        start_date,
+                                        amount,
+                                        maturity AS countOfInstallments,
+                                        interest_rate,
+                                        CONVERT(BIT, applied_new_interest) AS ApplyNewInterest,
+                                        ISNULL(started_from_installment, 0),
+                                        CONVERT(INT, ROW_NUMBER() OVER (ORDER BY start_date DESC)) + 1 AS Number,
+                                        ce.is_deleted,
+                                        ce.id AS event_id
+                                FROM    TrancheEvents te
+                                        INNER JOIN ContractEvents ce ON te.id = ce.id
+                                WHERE   contract_id = @id";
+
+            using (SqlCommand selectInstallments = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectInstallments, pLoanId);
+                using (SqlDataReader reader = selectInstallments.ExecuteReader())
+                {
+                    List<TrancheEvent> TrancheList = new List<TrancheEvent>();
+
+                    if (reader == null || !reader.HasRows)
+                        return TrancheList;
+
+                    while (reader.Read())
+                    {
+                        TrancheList.Add(_GetTransh(reader));
+                    }
+                    return TrancheList;
+                }
+            }
+        }
+
+        public List<Alert_v2> SelectAllAlerts(DateTime date, int userId)
+        {
+            List<Alert_v2> alerts = new List<Alert_v2>();
+
+            string q = "SELECT * FROM dbo.Alerts(@date, @user_id, @branch_id)";
+            OctopusCommand c = new OctopusCommand(q, SecondaryConnection);
+            c.AddParam("@date", date);
+            c.AddParam("@user_id", userId);
+            c.AddParam("@branch_id", TechnicalSettings.BranchId);
+
+            using (OctopusReader r = c.ExecuteReader())
+            {
+                if (r.Empty) return alerts;
+
+                while (r.Read())
+                {
+                    Alert_v2 alert = new Alert_v2
+                    {
+                        Address = r.GetString("address")
+                        , Amount = r.GetMoney("amount")
+                        , City = r.GetString("city")
+                        , ClientName = r.GetString("client_name")
+                        , ContractCode = r.GetString("contract_code")
+                        , Date = r.GetDateTime("date")
+                        , Id = r.GetInt("id")
+                        , LateDays = r.GetInt("late_days")
+                        , LoanOfficer = new User {Id = r.GetInt("loan_officer_id")}
+                        , Phone = r.GetString("phone")
+                        , Status = (OContractStatus)r.GetInt("status")
+                        , UseCents = r.GetBool("use_cents")
+                        , Kind = (AlertKind)r.GetInt("kind")
+                    };
+                    alerts.Add(alert);
+                }
+            }
+
+            return alerts;
+        }
+    }
+}

@@ -1,0 +1,339 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Data.SqlClient;
+using System.Collections.Generic;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Products.Collaterals;
+using Octopus.Enums;
+
+namespace Octopus.Manager.Collaterals
+{
+    /// <summary>
+    /// This class provides all the methods required to manages Package datas in database
+    /// </summary>
+    public class CollateralProductManager : Manager
+    {
+
+        public CollateralProductManager(User pUser) : base(pUser)
+        {
+        }
+
+        public CollateralProductManager(string testDB) : base(testDB)
+        {
+        }
+
+        /// <summary>
+        /// Method to add a package into database. We use the NullableTypes to make the correspondance between
+        /// nullable int, decimal and double types in database and our own objects
+        /// </summary>
+        /// <param name="colProduct">Package Object</param>
+        /// <returns>The id of the package which has been added</returns>
+        public int AddCollateralProduct(CollateralProduct colProduct)
+        {
+            string sqlText = @"INSERT INTO [CollateralProducts] ([name], [desc], [deleted]) 
+                                     VALUES (@name, @desc, @deleted) 
+                                     SELECT CONVERT(int, SCOPE_IDENTITY())";
+
+            using (SqlCommand insertProduct = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", insertProduct, colProduct.Name);
+                DatabaseHelper.InsertStringNVarCharParam("@desc", insertProduct, colProduct.Description);
+                DatabaseHelper.InsertBooleanParam("@deleted", insertProduct, colProduct.Delete);
+                colProduct.Id = int.Parse(insertProduct.ExecuteScalar().ToString());
+            }
+
+            foreach (CollateralProperty collateralProperty in colProduct.Properties)
+                AddCollateralProperty(colProduct.Id, collateralProperty);
+
+            return colProduct.Id;
+        }
+
+        public int AddCollateralProperty(int collateralProductId, CollateralProperty collateralProperty)
+        {
+            string sqlText = @"INSERT INTO [CollateralProperties] ([product_id], [type_id], [name], [desc]) 
+                               VALUES (@product_id, @type_id, @prop_name, @prop_desc)
+                               SELECT CONVERT(int, SCOPE_IDENTITY())";
+
+            using (SqlCommand insertProperty = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@product_id", insertProperty, collateralProductId);
+                DatabaseHelper.InsertStringNVarCharParam("@prop_name", insertProperty, collateralProperty.Name);
+                DatabaseHelper.InsertStringNVarCharParam("@prop_desc", insertProperty, collateralProperty.Description);
+                DatabaseHelper.InsertInt32Param("@type_id", insertProperty, (int)Enum.Parse(typeof(OCollateralPropertyTypes), collateralProperty.Type.ToString()));
+                collateralProperty.Id = int.Parse(insertProperty.ExecuteScalar().ToString());
+
+                if (collateralProperty.Type == OCollateralPropertyTypes.Collection)
+                    foreach (string colItem in collateralProperty.Collection)
+                        AddCollateralPropertyCollectionItem(collateralProperty.Id, colItem);
+            }
+
+            return collateralProperty.Id;
+        }
+
+        public void AddCollateralPropertyCollectionItem(int collateralPropertyId, string colItem)
+        {
+            string sqlListText = @"INSERT INTO [CollateralPropertyCollections] ([property_id], [value]) 
+                                               VALUES (@property_id, @col_item)";
+
+            using (SqlCommand insertList = new SqlCommand(sqlListText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@property_id", insertList, collateralPropertyId);
+                DatabaseHelper.InsertStringNVarCharParam("@col_item", insertList, colItem);
+                insertList.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Select all packages in database
+        /// </summary>
+        /// <param name="pShowAlsoDeleted"></param>
+        /// <returns>a list contains all packages</returns>
+        public List<CollateralProduct> SelectAllCollateralProducts(bool pShowAlsoDeleted)
+        {
+            List<CollateralProduct> packagesList = new List<CollateralProduct>();
+            string sqlText = "SELECT id FROM CollateralProducts WHERE 1 = 1";
+
+            if (!pShowAlsoDeleted)
+                sqlText += " AND deleted = 0";
+
+            using (SqlCommand selectPackages = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = selectPackages.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<CollateralProduct>();
+                    while (reader.Read())
+                    {
+                        CollateralProduct pack = new CollateralProduct { Id = DatabaseHelper.GetInt32("id", reader) };
+                        packagesList.Add(pack);
+                    }
+                }
+            }
+            for (int i = 0; i < packagesList.Count; i++)
+            {
+                packagesList[i] = SelectCollateralProduct(packagesList[i].Id);
+            }
+            return packagesList;
+        }
+
+        /// <summary>
+        /// This method allows us to select a package from database.  We use the NullableTypes to make the correspondance between
+        /// nullable int, decimal and double types in database and our own objects
+        /// </summary>
+        /// <param name="colProductId">id's of package searched</param>
+        /// <returns>A package Object if id matches with datas in database, null if not</returns>
+        public CollateralProduct SelectCollateralProduct(int colProductId)
+        {
+            const string sqlText = @"SELECT [name], [desc], [deleted]
+                                    FROM CollateralProducts 
+                                    WHERE id = @id";
+
+            using(SqlCommand selectProduct = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectProduct, colProductId);
+                using (SqlDataReader reader = selectProduct.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+
+                    CollateralProduct colProduct = new CollateralProduct();
+                    colProduct.Id = colProductId;
+                    colProduct.Name = DatabaseHelper.GetString("name", reader);
+                    colProduct.Description = DatabaseHelper.GetString("desc", reader);
+                    colProduct.Delete = DatabaseHelper.GetBoolean("deleted", reader);
+                    reader.Dispose();
+
+                    List<CollateralProperty> properties = new List<CollateralProperty>();
+                    const string sqlPropertyText = @"SELECT id, type_id, [name], [desc]
+                                                     FROM CollateralProperties 
+                                                     WHERE product_id = @product_id";
+
+                    using (SqlCommand selectProperty = new SqlCommand(sqlPropertyText, DefaultConnection))
+                    {
+                        DatabaseHelper.InsertInt32Param("@product_id", selectProperty, colProduct.Id);
+                        using (SqlDataReader propertyReader = selectProperty.ExecuteReader())
+                        {
+                            if (propertyReader == null || !propertyReader.HasRows) return null;
+
+                            while (propertyReader.Read())
+                            {
+                                CollateralProperty collateralProperty = new CollateralProperty();
+                                collateralProperty.Id = DatabaseHelper.GetInt32("id", propertyReader);
+                                collateralProperty.Type = (OCollateralPropertyTypes)Enum.ToObject(typeof(OCollateralPropertyTypes), 
+                                    DatabaseHelper.GetInt32("type_id", propertyReader));
+                                collateralProperty.Name = DatabaseHelper.GetString("name", propertyReader);
+                                collateralProperty.Description = DatabaseHelper.GetString("desc", propertyReader);
+
+                                if (collateralProperty.Type == OCollateralPropertyTypes.Collection)
+                                {
+                                    List<string> propertyList = new List<string>();
+                                    const string sqlListText = @"SELECT [value] FROM CollateralPropertyCollections 
+                                                                 WHERE property_id = @property_id";
+
+                                    using (SqlCommand selectList = new SqlCommand(sqlListText, SecondaryConnection))
+                                    {
+                                        DatabaseHelper.InsertInt32Param("@property_id", selectList, collateralProperty.Id);
+                                        using (SqlDataReader listReader = selectList.ExecuteReader())
+                                        {
+                                            if (listReader == null || !listReader.HasRows) return null;
+
+                                            while (listReader.Read())
+                                            {
+                                                propertyList.Add(DatabaseHelper.GetString("value", listReader));
+                                            }
+
+                                            collateralProperty.Collection = propertyList;
+                                        }
+                                    }
+                                }
+
+                                properties.Add(collateralProperty);
+                            }
+
+                            colProduct.Properties = properties;
+                        }
+                    }
+
+                    return colProduct;
+                }
+            }
+        }
+
+        public CollateralProduct SelectCollateralProductByPropertyId(int propertyId)
+        {
+            int productId;
+            const string sqlProductIdText = @"SELECT product_id FROM [CollateralProperties] WHERE id = @id ";
+
+            using (SqlCommand selectProductId = new SqlCommand(sqlProductIdText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectProductId, propertyId);
+                using (SqlDataReader reader = selectProductId.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null; // nothing is coming... (c)
+                    reader.Read();
+                    productId = DatabaseHelper.GetInt32("product_id", reader);
+                }
+            }
+            
+            const string sqlText = @"SELECT [name], [desc], [deleted] FROM CollateralProducts WHERE id = @id";
+
+            using (SqlCommand selectProduct = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectProduct, productId);
+                using (SqlDataReader reader = selectProduct.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+
+                    CollateralProduct colProduct = new CollateralProduct
+                        {
+                            Id = productId,
+                            Name = DatabaseHelper.GetString("name", reader),
+                            Description = DatabaseHelper.GetString("desc", reader),
+                            Delete = DatabaseHelper.GetBoolean("deleted", reader)
+                        };
+
+                    return colProduct;
+                }
+            }
+        }
+
+        public CollateralProperty SelectCollateralProperty(int propertyId)
+        {
+            const string sqlPropertyText = @"SELECT [type_id], [name], [desc]
+                                             FROM CollateralProperties 
+                                             WHERE id = @id";
+
+            CollateralProperty collateralProperty = new CollateralProperty();
+
+            using (SqlCommand selectProperty = new SqlCommand(sqlPropertyText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectProperty, propertyId);
+                using (SqlDataReader propertyReader = selectProperty.ExecuteReader())
+                {
+                    if (propertyReader == null || !propertyReader.HasRows) return null; // nothing is coming! (c)
+                    propertyReader.Read();
+
+                    collateralProperty.Id = propertyId;
+                    collateralProperty.Type = (OCollateralPropertyTypes)Enum.ToObject(typeof(OCollateralPropertyTypes),
+                        DatabaseHelper.GetInt32("type_id", propertyReader));
+                    collateralProperty.Name = DatabaseHelper.GetString("name", propertyReader);
+                    collateralProperty.Description = DatabaseHelper.GetString("desc", propertyReader);
+
+                    if (collateralProperty.Type == OCollateralPropertyTypes.Collection)
+                    {
+                        List<string> propertyList = new List<string>();
+                        const string sqlListText = @"SELECT [value] FROM CollateralPropertyCollections 
+                                                     WHERE property_id = @property_id";
+
+                        using (SqlCommand selectList = new SqlCommand(sqlListText, SecondaryConnection))
+                        {
+                            DatabaseHelper.InsertInt32Param("@property_id", selectList, collateralProperty.Id);
+                            using (SqlDataReader listReader = selectList.ExecuteReader())
+                            {
+                                if (listReader == null || !listReader.HasRows) return null;
+
+                                while (listReader.Read())
+                                {
+                                    propertyList.Add(DatabaseHelper.GetString("value", listReader));
+                                }
+
+                                collateralProperty.Collection = propertyList;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return collateralProperty;
+        }
+
+        public void DeleteCollateralProduct(int colProductId)
+        {
+            const string sqlText = "UPDATE CollateralProducts SET deleted = 1 WHERE [id] = @id";
+
+            using (SqlCommand command = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", command, colProductId);
+                command.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateCollateralProduct(int productId, string name, string description)
+        {
+            const string sqlText = @"UPDATE [CollateralProducts] 
+                                     SET [name] = @name, [desc] = @desc WHERE id = @product_id";
+
+            using (SqlCommand updateProduct = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@product_id", updateProduct, productId);
+                DatabaseHelper.InsertStringNVarCharParam("@name", updateProduct, name);
+                DatabaseHelper.InsertStringNVarCharParam("@desc", updateProduct, description);
+                updateProduct.ExecuteNonQuery();
+            }
+        }
+
+    }
+}

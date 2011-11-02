@@ -1,0 +1,360 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.Enums;
+using Octopus.CoreDomain.Accounting;
+
+namespace Octopus.Manager.Accounting
+{
+	/// <summary>
+	/// AccountManagement contains all methods relative to selecting, inserting, updating
+	/// and deleting account objects to and from our database.
+	/// </summary>
+	public class AccountManager : Manager
+	{
+        public AccountManager(User pUser) : base(pUser){}
+		public AccountManager(string testDB) : base(testDB){}
+
+        public Account Select(int pAccountId)
+		{
+            return Select(pAccountId, null);	
+		}
+
+        private Account Select(int pAccountId, SqlTransaction pSqlTransac)
+		{
+            const string sqlText = @"SELECT 
+                                       id,
+                                       account_number,
+                                       local_account_number,
+                                       label,
+                                       debit_plus, 
+                                       type_code,
+                                       account_category_id,
+                                       type,
+                                       parent_account_id
+                                     FROM [ChartOfAccounts] 
+                                     WHERE id = @id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pAccountId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    return GetAccount(reader);
+                }
+            }
+		}
+
+        public Account SelectChartAccount(int pAccountId, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"SELECT id, 
+                                       account_number,
+                                       local_account_number,
+                                       label,
+                                       debit_plus, 
+                                       type_code,                                                    
+                                       account_category_id, 
+                                       type,  
+                                       parent_account_id 
+                                     FROM ChartOfAccounts 
+                                     WHERE id = @id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pAccountId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    return GetAccount(reader);
+                }
+            }
+        }
+
+        public List<Account> SelectAccountByCategory(AccountCategory accountCategory, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"SELECT id, 
+                                       account_number,
+                                       local_account_number,
+                                       label,
+                                       debit_plus, 
+                                       type_code,                                                    
+                                       account_category_id, 
+                                       type,  
+                                       parent_account_id 
+                                     FROM ChartOfAccounts 
+                                     WHERE account_category_id = @account_category_id";
+            List<Account> accounts = new List<Account>();
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@account_category_id", select, accountCategory.Id);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    while (reader.Read())
+                    {
+                        accounts.Add(GetAccount(reader));
+                    }
+                    return accounts;
+                }
+            }
+        }
+
+        public List<Account> SelectAllAccounts()
+        {
+            List<Account> list = new List<Account>();
+
+            const string sqlText = @"SELECT id, 
+                                       account_number,
+                                       local_account_number,
+                                       label,
+                                       debit_plus, 
+                                       type_code,                                                    
+                                       account_category_id, 
+                                       type,  
+                                       parent_account_id 
+                                     FROM ChartOfAccounts
+                                     ORDER BY account_number, local_account_number";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return list;
+                    while (reader.Read())
+                    {
+                        list.Add(GetAccount(reader));
+                    }
+                }
+                return list;
+            }
+        }
+
+        public DataSet GetAccountsDataset()
+        {
+            const string sqlText = @"SELECT 
+                                       id,
+                                       account_number,
+                                       local_account_number,
+                                       label,
+                                       type_code,                                                    
+                                       account_category_id,
+                                       ISNULL(parent_account_id, 0) AS parent_account_id                                        
+                                     FROM ChartOfAccounts";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataAdapter adapter = new SqlDataAdapter(select))
+                {
+                    DataSet dataSet = new DataSet();
+                    adapter.Fill(dataSet);
+                    return dataSet;
+                }
+            }
+        }
+
+        public List<AccountCategory> SelectAccountCategories()
+        {
+            List<AccountCategory> list = new List<AccountCategory>();
+
+            const string sqlText = @"SELECT id, name FROM AccountsCategory";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return list;
+                    while (reader.Read())
+                    {
+                        list.Add(new AccountCategory
+                                     {
+                                         Id = DatabaseHelper.GetSmallInt("id", reader),
+                                         Name = DatabaseHelper.GetString("name", reader),
+                                     }
+                            );
+                    }
+                    return list;
+                }
+            }
+        }
+
+        public AccountCategory SelectAccountCategoriesById(int id)
+        {
+            const string sqlText = @"SELECT id, name 
+                                     FROM AccountsCategory
+                                     WHERE id = @id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, id);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+                    return new AccountCategory
+                               {
+                                   Id = DatabaseHelper.GetSmallInt("id", reader),
+                                   Name = DatabaseHelper.GetString("name", reader),
+                               };
+                    
+                }
+            }
+        }
+
+        public int InsertAccountCategory(AccountCategory accountCategory, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO AccountsCategory (name) VALUES (@name) SELECT SCOPE_IDENTITY()";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", insert, accountCategory.Name);
+
+                return int.Parse(insert.ExecuteScalar().ToString());
+            }
+        }
+
+        public void DeleteAccountCategory(AccountCategory accountCategory, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"DELETE FROM AccountsCategory WHERE id = @id";
+
+            using (SqlCommand delete = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", delete, accountCategory.Id);
+                delete.ExecuteNonQuery();
+            }
+        }
+
+	    private static Account GetAccount(SqlDataReader pReader)
+        {
+            return new Account
+            {
+                Id = DatabaseHelper.GetInt32("id", pReader),
+                Number = DatabaseHelper.GetString("account_number", pReader),
+                LocalNumber = DatabaseHelper.GetString("local_account_number", pReader),
+                Label = DatabaseHelper.GetString("label", pReader),
+                DebitPlus = DatabaseHelper.GetBoolean("debit_plus", pReader),
+                TypeCode = DatabaseHelper.GetString("type_code", pReader),
+                AccountCategory = ((OAccountCategories)DatabaseHelper.GetSmallInt("account_category_id", pReader)),
+                Type = DatabaseHelper.GetBoolean("type", pReader),
+                ParentAccountId = DatabaseHelper.GetNullAuthorizedInt32("parent_account_id", pReader)
+            };
+        }
+
+		public void Update(Account pAccount, SqlTransaction pSqlTransac)
+		{
+            const string sqlText = @"UPDATE [ChartOFAccounts] 
+                                    SET [account_number] = @number,  
+                                        [local_account_number] = @localNumber, 
+                                        [label] = @label, 
+                                        [debit_plus] = @debitPlus, 
+                                        [type_code] = @typeCode, 
+                                        [account_category_id] = @account_category_id, 
+                                        [parent_account_id] = @parentAccountId
+                                     WHERE id = @id";
+
+            using(SqlCommand update = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pAccount.Id);
+                _SetAccount(update, pAccount);
+
+                update.ExecuteNonQuery();
+            }
+		}
+
+        public void Insert(Account pAccount, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO ChartOFAccounts (account_number, local_account_number, label, debit_plus, type_code, account_category_id, type, parent_account_id)
+                                    VALUES (@number, @localNumber, @label, @debitPlus, @typeCode, @account_category_id, @type, @parentAccountId)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                _SetAccount(insert, pAccount);
+
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void InsertAccount(Account pAccount, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"SET IDENTITY_INSERT [ChartOFAccounts] ON
+                                    INSERT INTO ChartOFAccounts (id, account_number, local_account_number, label, debit_plus, type_code, account_category_id, type, parent_account_id)
+                                    VALUES (@id, @number, @localNumber, @label, @debitPlus, @typeCode, @account_category_id, @type, @parentAccountId)
+                                    SET IDENTITY_INSERT [ChartOFAccounts] OFF";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                _SetAccount(insert, pAccount);
+                DatabaseHelper.InsertInt32Param("@id", insert, pAccount.Id);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public void DeleteAccount(Account pAccount, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"DELETE FROM ChartOfAccounts 
+                                     WHERE account_number = @number 
+                                       AND local_account_number = @localNumber";
+
+            using (SqlCommand delete = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@number", delete, pAccount.Number);
+                DatabaseHelper.InsertStringNVarCharParam("@localNumber", delete, pAccount.LocalNumber);
+                delete.ExecuteNonQuery();
+            }
+        }
+
+        public void Delete(SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"DELETE FROM ChartOfAccounts";
+
+            using (SqlCommand delete = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                delete.ExecuteNonQuery();
+            }
+        }
+
+        private static void _SetAccount(SqlCommand pSqlCommand, Account pAccount)
+        {
+            DatabaseHelper.InsertStringNVarCharParam("@number", pSqlCommand, pAccount.Number);
+            DatabaseHelper.InsertStringNVarCharParam("@localNumber", pSqlCommand, pAccount.LocalNumber);
+            DatabaseHelper.InsertStringNVarCharParam("@label", pSqlCommand, pAccount.Label);
+            DatabaseHelper.InsertBooleanParam("@debitPlus", pSqlCommand, pAccount.DebitPlus);
+            DatabaseHelper.InsertBooleanParam("@type", pSqlCommand, pAccount.Type);
+            DatabaseHelper.InsertStringVarCharParam("@typeCode", pSqlCommand, pAccount.TypeCode);
+            DatabaseHelper.InsertSmalIntParam("@account_category_id", pSqlCommand, (int)pAccount.AccountCategory);
+            DatabaseHelper.InsertInt32Param("@parentAccountId", pSqlCommand, pAccount.ParentAccountId);
+        }
+    }
+}

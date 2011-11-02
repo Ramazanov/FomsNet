@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" xmlns:dm1="http://schemas.microsoft.com/dsltools/Kernel" xmlns:dm2="http://schemas.microsoft.com/dsltools/Component" xmlns:dm3="http://schemas.microsoft.com/dsltools/Activity" xmlns:dm4="http://schemas.microsoft.com/dsltools/Interaction" xmlns:dm5="http://schemas.microsoft.com/dsltools/UseCase" xmlns:dm6="http://schemas.microsoft.com/dsltools/UmlModelLibrary" xmlns:dm7="http://schemas.microsoft.com/dsltools/UmlDiagrams" xmlns:dm8="http://schemas.microsoft.com/VisualStudio/TeamArchitect/ComponentDesigner" xmlns:dm9="http://schemas.microsoft.com/dsltools/LogicalClassDesigner"
+  dslVersion="1.0.0.0"
+  Id="59a13b71-8d2a-4381-bf04-8d74d4569b5a"
+  name="Foms.DatabaseConnection" xmlns="http://schemas.microsoft.com/dsltools/ModelStore">
+  <suppliersInternal>
+    <dependency
+      Id="33ca837b-fdff-413b-8522-9cd59a306481">
+      <packageMoniker
+        Id="7c2c7197-f48e-4ecd-b7db-f9d750ecd8ec"
+        LastKnownName="Foms.Shared"
+        LastKnownLocation="Package_1438.uml" />
+    </dependency>
+    <dependency
+      Id="768a2d3e-2a48-4599-b0cc-776bbb7733cb">
+      <packageMoniker
+        Id="60943c12-bf60-4d58-8c0b-ee79cdaab2b6"
+        LastKnownName="Enums"
+        LastKnownLocation="Package_1430.uml" />
+    </dependency>
+  </suppliersInternal>
+  <packagedElements>
+    <packageHasNamedElement>
+      <class
+        Id="165b1c0b-3701-4983-b607-b8f6c62605ab"
+        name="ConnectionManager.cs"
+        isAbstract="false"
+        isLeaf="false"
+        isActiveClass="false">
+        <ownedAttributesInternal>
+          <property
+            Id="ca8ed020-2f2f-41b4-954d-42ef36fc02a7"
+            name="SqlConnection"
+            isLeaf="false"
+            isStatic="false"
+            isReadOnly="false"
+            isUnique="false"
+            isDerived="false"
+            isDerivedUnion="false"
+            aggregation="None"
+            isComposite="false" />
+          <property
+            Id="03ac1d6a-ccff-457e-b1cc-df0de466b35c"
+            name="ConnectionInitSuceeded"
+            isLeaf="false"
+            isStatic="false"
+            isReadOnly="false"
+            isUnique="false"
+            isDerived="false"
+            isDerivedUnion="false"
+            aggregation="None"
+            isComposite="false" />
+        </ownedAttributesInternal>
+        <ownedOperationsInternal>
+          <operation
+            Id="570938da-fe60-4cd2-a6cb-aabfaf16c1dd"
+            name="GetInstance"
+            isLeaf="false"
+            isStatic="false"
+            isAbstract="false"
+            concurrency="Sequential"
+            isQuery="false" />
+          <operation
+            Id="e9e5653e-ede8-4312-aa4c-c2df23aa899f"
+            name="CheckSQLServerConnection"
+            isLeaf="false"
+            isStatic="false"
+            isAbstract="false"
+            concurrency="Sequential"
+            isQuery="false" />
+        </ownedOperationsInternal>
+      </class>
+    </packageHasNamedElement>
+  </packagedElements>
+</package>

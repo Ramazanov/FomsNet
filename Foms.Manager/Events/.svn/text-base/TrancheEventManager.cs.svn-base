@@ -1,0 +1,68 @@
+﻿using Octopus.CoreDomain.Events;
+using System.Data.SqlClient;
+
+namespace Octopus.Manager.Events
+{
+    public class TrancheEventManager : Manager
+    {
+        public TrancheEventManager(string testDB) : base(testDB)
+        {
+            
+        }
+
+        private static void SetTrancheEvent(SqlCommand pSqlCommand, TrancheEvent trancheEvent)
+        {
+            DatabaseHelper.InsertInt32Param("@Id", pSqlCommand, trancheEvent.Id);
+            DatabaseHelper.InsertMoneyParam("@InterestRate", pSqlCommand, trancheEvent.InterestRate);
+            DatabaseHelper.InsertMoneyParam("@Amount", pSqlCommand, trancheEvent.Amount);
+            DatabaseHelper.InsertInt32Param("@Maturity", pSqlCommand, trancheEvent.Maturity);
+            DatabaseHelper.InsertDateTimeParam("@StartDate", pSqlCommand, trancheEvent.StartDate);
+            DatabaseHelper.InsertDateTimeParam("@applied_new_interest", pSqlCommand, trancheEvent.StartDate);
+        }
+
+        /// <summary>
+        /// Method to add a TrancheEvent into database. We use the NullableTypes to make the correspondance between
+        /// nullable int, decimal and double types in database and our own objects
+        /// </summary>
+        /// <param name="trancheEvent">TrancheEvent Object</param>
+        /// <returns>The id of the Tranche Event which has been added</returns>
+        public int Add(TrancheEvent trancheEvent)
+        {
+            const string sqlText = @"INSERT INTO [TrancheEvents]
+               ([id]
+                ,[interest_rate]
+                ,[amount]
+                ,[maturity]
+                ,[start_date]
+                ,[applied_new_interest]
+                VALUES
+                (@Id,@InterestRate,@Amount,@Maturity,@StartDate, @applied_new_interest) 
+                SELECT SCOPE_IDENTITY()";
+
+            using (var insertTrancheEvent = new SqlCommand(sqlText, DefaultConnection))
+            {
+                SetTrancheEvent(insertTrancheEvent, trancheEvent);
+                return int.Parse(insertTrancheEvent.ExecuteScalar().ToString());
+            }
+        }
+
+        public void Update(TrancheEvent trancheEvent)
+        {
+            string sqlText = @"UPDATE [TrancheEvents] SET 
+                            [interest_rate] = @InterestRate,
+                            [amount] = @Amount,
+                            [maturity] = @Maturity,
+                            [start_date] = @StartDate,
+                            [applied_new_interest] = @applied_new_interest
+                            WHERE id = @Id";
+
+            using (var updateTrancheEvent = new SqlCommand(sqlText, DefaultConnection))
+            {
+                SetTrancheEvent(updateTrancheEvent, trancheEvent);
+                updateTrancheEvent.ExecuteNonQuery();
+            }
+
+        }
+
+    }
+}

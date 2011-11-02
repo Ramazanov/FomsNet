@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" xmlns:dm1="http://schemas.microsoft.com/dsltools/Kernel" xmlns:dm2="http://schemas.microsoft.com/dsltools/Component" xmlns:dm3="http://schemas.microsoft.com/dsltools/Activity" xmlns:dm4="http://schemas.microsoft.com/dsltools/Interaction" xmlns:dm5="http://schemas.microsoft.com/dsltools/UseCase" xmlns:dm6="http://schemas.microsoft.com/dsltools/UmlModelLibrary" xmlns:dm7="http://schemas.microsoft.com/dsltools/UmlDiagrams" xmlns:dm8="http://schemas.microsoft.com/VisualStudio/TeamArchitect/ComponentDesigner" xmlns:dm9="http://schemas.microsoft.com/dsltools/LogicalClassDesigner"
+  dslVersion="1.0.0.0"
+  Id="a357af27-6e58-4fa8-a863-3cdcc90b1042"
+  name="Octopus.Services" xmlns="http://schemas.microsoft.com/dsltools/ModelStore">
+  <ownedCommentsInternal>
+    <comment
+      Id="64c55560-4373-43b8-a185-3b3a84fd7320">
+      <body>Обеспечивают работу разных сервисов, доступность справочников (что уже загружены) и прочее. </body>
+    </comment>
+  </ownedCommentsInternal>
+  <suppliersInternal>
+    <dependency
+      Id="10d3fff6-08d0-4dca-a261-0f40748c4c9c">
+      <packageMoniker
+        Id="ebeb2939-13cb-46fc-9393-7d707102f2c9"
+        LastKnownName="Foms.Managers"
+        LastKnownLocation="Package_1715.uml" />
+    </dependency>
+  </suppliersInternal>
+</package>

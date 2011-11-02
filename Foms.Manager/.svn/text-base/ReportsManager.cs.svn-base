@@ -1,0 +1,339 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using Octopus.CoreDomain;
+using Octopus.Shared.Settings;
+using Reports=Octopus.Enums.OReports;
+using System;
+
+namespace Octopus.Manager
+{
+    public class ReportsManager : Manager
+    {
+
+        public ReportsManager(User user) : base(user)
+        {
+        }
+
+        private SqlConnection _GetConnection()
+        {
+            return SecondaryConnection;
+        }
+
+        private bool _HasDatasource(string pName)
+        {
+            const string sql = @"SELECT COUNT(*) AS has_datasource FROM sys.objects WHERE [name] = @name";
+            SqlCommand cmd = new SqlCommand(sql, _GetConnection());
+            DatabaseHelper.InsertStringNVarCharParam("@name", cmd, pName);
+            bool retval = false;
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader != null && reader.HasRows)
+                {
+                    reader.Read();
+                    retval = 1 == DatabaseHelper.GetInt32("has_datasource", reader) ? true : false;
+                }
+            }
+            return retval;
+        }
+
+        private string GetObjectCreateScript(string name)
+        {
+            const string query = "sp_helptext";
+            var cmd = new SqlCommand(query, _GetConnection());
+            cmd.Parameters.AddWithValue("@objname", name);
+            cmd.CommandType = CommandType.StoredProcedure;
+            var buffer = new StringBuilder(2048);
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (null == reader) return string.Empty;
+                while (reader.Read())
+                {
+                    buffer.Append(DatabaseHelper.GetString("Text", reader));
+                }
+            }
+            return buffer.ToString();
+        }
+
+        private string _GetHelperType(string name)
+        {
+            const string query = @"SELECT [type] FROM sys.objects WHERE [name] = @name";
+            SqlCommand cmd = new SqlCommand(query, _GetConnection());
+            DatabaseHelper.InsertStringNVarCharParam("@name", cmd, name);
+            object r = cmd.ExecuteScalar();
+            return r != null ? r.ToString().Trim() : string.Empty;
+        }
+
+        private void _AddDatasource(string pAddScript)
+        {
+            SqlCommand cmd = new SqlCommand(pAddScript, _GetConnection());
+            cmd.ExecuteNonQuery();
+        }
+
+        private void _DeleteDatasource(string name)
+        {
+            SqlCommand cmd = new SqlCommand("DROP PROCEDURE dbo." + name, _GetConnection());
+            cmd.ExecuteNonQuery();
+        }
+
+        private void _AddHelper(string script)
+        {
+            _AddDatasource(script);
+        }
+
+        private void _DeleteHelper(string name, string type)
+        {
+            string what;
+            switch (type)
+            {
+                case "IF":
+                case "FN":
+                    what = "FUNCTION";
+                    break;
+
+                case "P":
+                    what = "PROCEDURE";
+                    break;
+
+                case "V":
+                    what = "VIEW";
+                    break;
+
+                default:
+                    what = string.Empty;
+                    break;
+            }
+            if (!string.IsNullOrEmpty(what))
+            {
+                string query = string.Format("DROP {0} dbo.{1}", what, name);
+                SqlCommand cmd = new SqlCommand(query, _GetConnection());
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private List<string> _GetDatasourceParams(string pName)
+        {
+            List<string> retval = new List<string>();
+            const string sql = @"EXEC sys.sp_procedure_params_rowset @procedure_name";
+            SqlCommand cmd = new SqlCommand(sql, _GetConnection());
+            DatabaseHelper.InsertStringNVarCharParam("@procedure_name", cmd, pName);
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader != null)
+                {
+                    while (reader.Read())
+                    {
+                        string paramName = DatabaseHelper.GetString("PARAMETER_NAME", reader);
+                        if (paramName != "@RETURN_VALUE")
+                        {
+                            retval.Add(paramName);
+                        }
+                    }
+                }
+            }
+            return retval;
+        }
+
+        public void LoadHelpers(Report report)
+        {
+            foreach (string h in report.Helpers)
+            {
+                string ht = _GetHelperType(h);
+                if (!string.IsNullOrEmpty(ht))
+                {
+                    _DeleteHelper(h, ht);
+                }
+                StreamReader r = new StreamReader(report.GetDatasourceStream(h));
+                _AddHelper(r.ReadToEnd());
+            }
+        }
+
+        public DataTable GetDatasource(string pName, Report pReport, string pScript)
+        {
+            try
+            {
+                bool create = true;
+                if (_HasDatasource(pName))
+                {
+                    string currentScript = GetObjectCreateScript(pName);
+                    if (pScript != currentScript)
+                    {
+                        _DeleteDatasource(pName);
+                    }
+                    else
+                    {
+                        create = false;
+                    }
+                }
+                if (create) _AddDatasource(pScript);
+
+                List<string> dsParams = _GetDatasourceParams(pName);
+
+                SqlCommand cmd = new SqlCommand(pName, _GetConnection())
+                {
+                    CommandTimeout = 300,
+                    CommandType = CommandType.StoredProcedure
+                };
+
+                foreach (string paramName in dsParams)
+                {
+                    object value;
+                    switch (paramName)
+                    {
+                        case "@LANGUAGE":
+                        case "LANGUAGE":
+                            value = UserSettings.Language;
+                            break;
+
+                        case "@BRANCH_NAME":
+                        case "BRANCH_NAME":
+                            value = ApplicationSettings.GetInstance(_md5).BranchName;
+                            break;
+
+                        case "@USER_NAME":
+                        case "USER_NAME":
+                            value = User.CurrentUser.FirstName + " " + User.CurrentUser.LastName;
+                            break;
+
+                        case "@BRANCH_ID":
+                        case "BRANCH_ID":
+                        case "@branch_id":
+                        case "branch_id":
+                            value = TechnicalSettings.BranchId;
+                            break;
+
+                        default:
+                            value = pReport.GetParamValueByName(paramName);
+                            break;
+                    }
+                    if (value != null)
+                        DatabaseHelper.InsertObjectParam(paramName, cmd, value);
+                    else
+                        DatabaseHelper.InsertNullValue(paramName, cmd);
+                }
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+                DataSet retval = new DataSet();
+                da.Fill(retval, pName);   
+                return retval.Tables[0];
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+                throw;
+            }
+        }
+
+        public DataTable GetDatasource(string pName, Report pReport)
+        {
+            StreamReader reader = new StreamReader(pReport.GetDatasourceStream(pName));
+            return GetDatasource(pName, pReport, reader.ReadToEnd());
+        }
+
+        public List<KeyValuePair<object, object>> GetQueryResult(string query)
+        {
+            SqlCommand cmd = new SqlCommand(query, _GetConnection());
+            List<KeyValuePair<object, object>> retval = new List<KeyValuePair<object, object>>();
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (null == reader) return null;
+                while (reader.Read())
+                {
+                    object key = reader.GetValue(0);
+                    object value = reader.GetValue(1);
+                    retval.Add(new KeyValuePair<object, object>(key, value));
+                }
+            }
+            return retval;
+        }
+
+        public List<string> GetUnstarredBulk()
+        {
+            // Return a list of report names not marked with a star
+            const string query = @"SELECT name FROM dbo.Reports
+            WHERE starred = 0";
+            List<string> starred = new List<string>();
+            using (SqlCommand cmd = new SqlCommand(query, _GetConnection()))
+            {
+                SqlDataReader reader = cmd.ExecuteReader();
+                Debug.Assert(reader != null, "Reader is null");
+
+                while (reader.Read())
+                {
+                    starred.Add(DatabaseHelper.GetString("name", reader));
+                }
+
+                reader.Close();
+            }
+            return starred;
+        }
+
+        public void SetStarred(string name, bool starred)
+        {
+            string query = @"SELECT COUNT(*) FROM dbo.Reports
+            WHERE name = @name";
+            int num;
+            using (SqlCommand cmd = new SqlCommand(query, _GetConnection()))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", cmd, name);
+                num = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+
+            if (0 == num)
+            {
+                query = @"INSERT INTO dbo.Reports (name, starred)
+                VALUES (@name, @starred)";
+            }
+            else
+            {
+                query = @"UPDATE dbo.Reports SET starred = @starred
+                WHERE name = @name";
+            }
+
+            using (SqlCommand cmd = new SqlCommand(query, _GetConnection()))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", cmd, name);
+                DatabaseHelper.InsertBooleanParam("@starred", cmd, starred);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public bool GetUseCents(int currencyId)
+        {
+            const string query = @"SELECT use_cents 
+            FROM Currencies WHERE id = @id";
+            using (SqlCommand cmd = new SqlCommand(query, _GetConnection()))
+            {
+                DatabaseHelper.InsertInt32Param("@id", cmd, currencyId);
+                return Convert.ToBoolean(cmd.ExecuteScalar());
+            }
+        }
+    }
+}

@@ -1,0 +1,3 @@
+D:\Visual Studio\Projects\Foms.NET\ModelingProject1\bin\Debug\Foms.ExceptionsHandler.dll
+D:\Visual Studio\Projects\Foms.NET\ModelingProject1\bin\Debug\Foms.ExceptionsHandler.pdb
+D:\Visual Studio\Projects\Foms.NET\ModelingProject1\obj\Debug\ResolveAssemblyReference.cache

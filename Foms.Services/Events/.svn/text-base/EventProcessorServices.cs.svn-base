@@ -1,0 +1,357 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Clients;
+using Octopus.CoreDomain.Contracts.Loans;
+using Octopus.CoreDomain.Events;
+using Octopus.CoreDomain.Events.Saving;
+using Octopus.CoreDomain.FundingLines;
+using Octopus.Manager.Accounting;
+using System.Data.SqlClient;
+using Octopus.Manager.Clients;
+using Octopus.Manager.Contracts;
+using Octopus.Manager.Events;
+using Octopus.Manager.Products;
+using Octopus.Shared;
+using Octopus.CoreDomain.Contracts.Savings;
+
+namespace Octopus.Services.Events
+{
+    [Serializable]
+	public class EventProcessorServices
+	{
+        private readonly User _user = new User();
+		private readonly EventManager _eventManagement;
+        private readonly SavingEventManager _savingEventManagement;
+        private readonly AccountingTransactionManager _movementSetManagement;
+        private readonly LoanManager _loanManager;
+        private readonly Accounting.AccountingServices _accountingServices;
+        private readonly LoanProductManager _packageManager;
+        private readonly ClientManager _clientManagement;
+        private IEventProcessor _eP;
+
+        public EventProcessorServices(User pUser,string testDB)
+        {
+            _user = pUser;
+
+            _eventManagement = new EventManager(testDB);
+            _savingEventManagement = new SavingEventManager(testDB);
+            _movementSetManagement = new AccountingTransactionManager(testDB);
+            _loanManager = new LoanManager(testDB);
+            _packageManager = new LoanProductManager(testDB);
+            _clientManagement = new ClientManager(testDB);
+            _accountingServices = new Accounting.AccountingServices(testDB);
+
+            _InitializeEventProcessor();
+        }
+
+        public EventProcessorServices(User pUser)
+        {
+            _user = pUser;
+
+            _eventManagement = new EventManager(_user);
+            _savingEventManagement = new SavingEventManager(_user);
+            _movementSetManagement = new AccountingTransactionManager(_user);
+            _loanManager = new LoanManager(_user);
+            _packageManager = new LoanProductManager(_user);
+            _accountingServices = new Accounting.AccountingServices(_user);
+            _clientManagement = new ClientManager(_user, false, false);
+            _InitializeEventProcessor();
+        }
+
+		public EventProcessorServices(EventManager eventManagement) 
+		{
+			_eventManagement = eventManagement;
+            _InitializeEventProcessor();
+		}
+
+        public EventProcessorServices(SavingEventManager pSavingEventManagement, AccountingTransactionManager pMovementSetManagement, AccountManager pAccountManager)
+        {
+            _savingEventManagement = pSavingEventManagement;
+            _movementSetManagement = pMovementSetManagement;
+            _accountingServices = new Accounting.AccountingServices(pAccountManager);
+            _InitializeEventProcessor();
+        }
+		
+		public EventProcessorServices(EventManager eventManagement,AccountingTransactionManager movementSetManagement,LoanManager loanManager,
+            AccountManager accountManagement)
+		{
+			_eventManagement = eventManagement;
+			_movementSetManagement = movementSetManagement;
+			_loanManager = loanManager;
+			_accountingServices = new Accounting.AccountingServices(accountManagement);
+
+            _InitializeEventProcessor();
+		}
+        private void _InitializeEventProcessor()
+        {
+            //if (ApplicationSettings.GetInstance(_user.Md5).AccountingProcesses == OAccountingProcesses.Cash)
+            //    _eP = new CoreDomain.Events.Cash.EventProcessor(_user, ChartOfAccounts.GetInstance(_user));
+            //else
+            //    _eP = new CoreDomain.Events.Accrual.EventProcessor(_user, ChartOfAccounts.GetInstance(_user));     
+        }
+
+        
+        public void FireEvent(Event e, Loan pContract, SqlTransaction pSqlTransac)
+		{
+            e.IsFired = true;
+
+			if(e is LoanDisbursmentEvent)
+			{
+                LoanDisbursmentOrigination((LoanDisbursmentEvent)e, pContract, pSqlTransac);
+			}
+            else if (e is TrancheEvent)
+            {
+                TrancheEventOrigination((TrancheEvent)e, pContract, pSqlTransac);
+            }
+			else if (e is RescheduleLoanEvent)
+			{
+                ReschedulingOfALoanOrigination((RescheduleLoanEvent)e, pContract, pSqlTransac);
+			}
+            else if (e is RepaymentEvent)
+            {
+                LoanRepaymentOrigination((RepaymentEvent)e, pContract, pSqlTransac);
+            }
+            else if (e is OverdueEvent)
+            {
+                OverdueEventOrigination((OverdueEvent)e, pContract, pSqlTransac);
+            }
+            else if (e is ProvisionEvent)
+            {
+                ProvisionEventOrigination((ProvisionEvent)e, pContract, pSqlTransac);
+            }
+            else if (e is WriteOffEvent)
+            {
+                WriteOffOrigination((WriteOffEvent)e, pContract, pSqlTransac);
+            }
+            else if (e is AccruedInterestEvent)
+            {
+                LoanInterestAccruingOrigination((AccruedInterestEvent)e, pContract, pSqlTransac);
+            }
+            else if (e is LoanValidationEvent)
+            {
+                LoanValidationOrigination((LoanValidationEvent)e, pContract, pSqlTransac);
+            }
+		}
+
+        private void LoanValidationOrigination(LoanValidationEvent pLoanValidationEvent, Loan pContract, SqlTransaction sqlTransac)
+        {
+            _eventManagement.AddLoanEvent(pLoanValidationEvent, pContract.Id, sqlTransac);
+        }
+        public void FireEvent(SavingEvent e, ISavingsContract pSaving, SqlTransaction pSqlTransac)
+        {
+            e.IsFired = true;
+            SavingEventOrigination(e, pSaving, pSqlTransac);
+        }
+
+        private void SavingEventOrigination(SavingEvent pSavingEvent, ISavingsContract pSaving, SqlTransaction pSqlTransac)
+        {
+            _savingEventManagement.Add(pSavingEvent, pSaving.Id, pSqlTransac);
+        }
+
+        private void LoanInterestAccruingOrigination(AccruedInterestEvent loanInterestAccruingEvent, Loan pContract, SqlTransaction pSqlTransac)
+        {
+            _eventManagement.AddLoanEvent(loanInterestAccruingEvent, pContract.Id, pSqlTransac);
+        }
+
+        public void FireEvent(StatisticalProvisionningEvent e,SqlTransaction sqlTransac)
+        {
+            _StatisticalOLBEventOrigination(e,sqlTransac);
+        }
+
+		public void CancelFireEvent(Event e, SqlTransaction sqlTransac, Loan pContract, int pCurrencyId)
+		{
+             CancelEventOrigination(e, sqlTransac);
+		}
+
+        public void CancelFireEvent(SavingEvent pSavingEvent, SqlTransaction sqlTransac, int pCurrencyId)
+        {
+            _savingEventManagement.DeleteEventInDatabase(pSavingEvent, sqlTransac);
+        }
+
+        private void LoanRepaymentOrigination(RepaymentEvent repaymentEvent, Loan pContract, SqlTransaction sqlTransac)
+		{
+            repaymentEvent.Id = _eventManagement.AddLoanEventHead(repaymentEvent, pContract.Id, sqlTransac);
+            foreach (RepaymentEvent loanEvent in pContract.Events.GetLoanRepaymentEvents())
+            {
+                if(!loanEvent.IsFired)
+                {
+                    loanEvent.Id = repaymentEvent.Id;
+                    loanEvent.User = repaymentEvent.User;
+                    loanEvent.IsFired = true;
+                    _eventManagement.AddLoanEvent(loanEvent, pContract.Id, sqlTransac);
+                }
+            } 
+		}
+
+        private void LoanDisbursmentOrigination(LoanDisbursmentEvent loanDisbursmentEvent, Loan pContract, SqlTransaction sqlTransac)
+		{
+           
+            int eventId = _eventManagement.AddLoanEvent(loanDisbursmentEvent, pContract.Id, sqlTransac);
+           
+            if (loanDisbursmentEvent.Commissions == null) return;
+
+           foreach (LoanEntryFeeEvent entryFeeEvent in loanDisbursmentEvent.Commissions)
+           {
+               if (entryFeeEvent.Fee==0) continue;
+               entryFeeEvent.DisbursementEventId = eventId;
+               entryFeeEvent.User = loanDisbursmentEvent.User;
+               int feeEventId =  _eventManagement.AddLoanEventHead(entryFeeEvent, pContract.Id, sqlTransac);
+               entryFeeEvent.Id = feeEventId;
+               if (entryFeeEvent.Fee!=0) _eventManagement.AddLoanEntryFeesEvent(entryFeeEvent, sqlTransac);
+           }
+		}
+
+        private void CancelEventOrigination(Event e, SqlTransaction sqlTransac)
+		{
+			_eventManagement.DeleteLoanEvent(e, sqlTransac);
+		}
+
+        private void TrancheEventOrigination(TrancheEvent trancheEvent, Loan pContract, SqlTransaction sqlTransac)
+        {
+            _eventManagement.AddLoanEvent(trancheEvent, pContract.Id, sqlTransac);
+        }
+
+        private void ReschedulingOfALoanOrigination(RescheduleLoanEvent rescheduleLoanEvent, Loan pContract, SqlTransaction sqlTransac)
+		{
+            _eventManagement.AddLoanEvent(rescheduleLoanEvent, pContract.Id, sqlTransac);
+		}
+
+        private void ProvisionEventOrigination(ProvisionEvent provisionEvent, Loan pContract, SqlTransaction sqlTransac)
+        {
+            _eventManagement.AddLoanEvent(provisionEvent, pContract.Id, sqlTransac);
+        }
+        
+        private void OverdueEventOrigination(OverdueEvent overdueEvent, Loan pContract, SqlTransaction sqlTransac)
+        {
+            _eventManagement.AddLoanEvent(overdueEvent, pContract.Id, sqlTransac);
+        }
+
+        private void WriteOffOrigination(WriteOffEvent writeOffEvent, Loan pContract, SqlTransaction sqlTransac)
+		{
+            _eventManagement.AddLoanEvent(writeOffEvent, pContract.Id, sqlTransac);
+		}
+
+        private void _StatisticalOLBEventOrigination(StatisticalProvisionningEvent e, SqlTransaction sqlTransac)
+        {
+            ////AccountingTransaction mS = _eP.FireEvent(e );
+            //mS.User = e.User;
+            //mS.Id = _movementSetManagement.AddTransaction(mS, sqlTransac);
+
+            //e.Id = _eventManagement.AddEvent(e, mS.Id, sqlTransac);
+            //_accountingServices.Book(mS,sqlTransac);
+        }
+        
+        public void FireFundingLineEvent(Event e, FundingLine pFundingLine, SqlTransaction pSqlTransac)
+        {
+            e.IsFired = true;
+            FundingLineEvent fL = e as FundingLineEvent;
+            //_movementSetManagement.AddTransaction(mS, pSqlTransac);
+        }
+
+        public EventStock SelectEvents(string pEventType, int pUserId, DateTime pBeginDate, DateTime pEndDate)
+        {
+            return _eventManagement.SelectEvents(pEventType, pUserId, pBeginDate, pEndDate);
+        }
+
+        public void LogUser(string eventCode, string eventDescription, int userId)
+        {
+            _eventManagement.WriteLog(eventCode, eventDescription, userId);
+        }
+
+        public List<EventType> SelectEventTypes()
+        {
+            return _eventManagement.SelectEventTypes();
+        }
+
+        public List<EventType> SelectEventTypesForAccounting()
+        {
+            return _eventManagement.SelectEventTypesForAccounting();
+        }
+
+        public EventStock SelectEventsForClosure()
+        {
+            EventStock eventStock = _eventManagement.SelectEventsForClosure();
+            //foreach (Event evet in eventStock)
+            //{
+            //    evet.LoanProduct = _packageManager.SelectByContractId(evet.ContracId);
+            //    IClient client = _clientManagement.SelectClientByContractId(evet.ContracId);
+            //    evet.ClientType = client.Type;
+            //    EconomicActivity economicActivity = new EconomicActivity();
+            //    switch (client.Type)
+            //    {
+            //        case OClientTypes.Person:
+            //            {
+            //                Person p = (Person)client;
+            //                economicActivity = p.Activity;
+            //            }
+            //            break;
+            //        case OClientTypes.Group:
+            //            {
+            //                Group g = (Group)client;
+            //                economicActivity = g.Activity;
+            //            }
+            //            break;
+            //        case OClientTypes.Corporate:
+            //            {
+            //                Corporate c = (Corporate)client;
+            //                economicActivity = c.Activity;
+            //            }
+            //            break;
+            //    }
+            //    evet.EconomicActivity = economicActivity;
+            //}
+            return eventStock;
+        }
+
+        public List<EventAttribute> SelectEventAttributes(string eventType)
+        {
+            return _eventManagement.SelectEventAttributes(eventType);
+        }
+
+        public List<AuditTrailEvent> SelectAuditTrailEvents(AuditTrailFilter filter)
+        {
+            return _eventManagement.SelectAuditTrailEvents(filter);
+        }
+
+        public void ExportEvent(int eventId)
+        {
+            _eventManagement.ExportEvent(eventId, null);
+        }
+
+        public void LogClientSaveUpdateEvent(IClient client, bool save)
+        {
+            _eventManagement.LogClientSaveUpdateEvent(client.ToString(), save, User.CurrentUser.Id);
+        }
+
+        public void UpdateCommentForLoanEvent(Event pEvent, SqlTransaction pSqlTransac)
+        {
+            _eventManagement.UpdateCommentForLoanEvent(pEvent, pSqlTransac);
+        }
+
+	}
+}

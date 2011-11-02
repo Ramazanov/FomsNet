@@ -1,0 +1,43 @@
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Test.exe.config
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Log4net.xml
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Test.exe
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Test.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.DatabaseConnection.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.CoreDomain.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Shared.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Extensions.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Enums.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\System.ComponentModel.Composition.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.DatabaseConnection.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.CoreDomain.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Shared.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Extensions.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Enums.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\obj\x86\Debug\Foms.Test.exe
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\obj\x86\Debug\Foms.Test.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Test\bin\Debug\log4net.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Test.exe.config
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\obj\x86\Debug\Foms.Test.exe
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\obj\x86\Debug\Foms.Test.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Test.exe
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Test.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.DatabaseConnection.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.CoreDomain.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Shared.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Extensions.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Enums.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\ICSharpCode.SharpZipLib.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\System.ComponentModel.Composition.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.DatabaseConnection.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.CoreDomain.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Shared.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Extensions.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Foms.Enums.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\obj\x86\Debug\ResolveAssemblyReference.cache
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Interop.SQLXMLBULKLOADLib.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\obj\x86\Debug\Interop.SQLXMLBULKLOADLib.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\obj\x86\Debug\Foms.Test.csproj.ResolveComReference.cache
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\Log4net.xml
+D:\Visual Studio\Projects\Foms.NET\Foms.Test\bin\Debug\RemoteServerSettings.xml

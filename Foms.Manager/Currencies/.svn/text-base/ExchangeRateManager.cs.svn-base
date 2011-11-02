@@ -1,0 +1,168 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.Shared;
+using Octopus.CoreDomain.Accounting;
+
+namespace Octopus.Manager.Currencies
+{
+    public class ExchangeRateManager : Manager
+    {
+        public ExchangeRateManager(User pUser) : base(pUser){}
+        public ExchangeRateManager(string pTestDb) : base(pTestDb){}
+
+
+        public void Add(DateTime pDate, double pRate, Currency pCurrency)
+        {
+            const string sqlText = "INSERT INTO [ExchangeRates] ([exchange_date], [exchange_rate],[currency_id]) VALUES(@date,@rate,@currency)";
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection))
+            {
+                _SetExchangeRate(insert, pDate, pRate,pCurrency);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        private static void _SetExchangeRate(SqlCommand pSqlCommand, DateTime pDate, double pRate, Currency pCurrency)
+        {
+            DatabaseHelper.InsertDateTimeParam("@date", pSqlCommand, pDate);
+            DatabaseHelper.InsertDoubleParam("@rate", pSqlCommand, pRate);
+            DatabaseHelper.InsertInt32Param("@currency",pSqlCommand,pCurrency.Id);
+        }
+
+        public void Update(DateTime pDate, double pRate, Currency pCurrency)
+        {
+            const string sqlText = "UPDATE [ExchangeRates] SET [exchange_rate] = @rate WHERE exchange_date = @date AND currency_id = @currency";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection))
+            {
+                _SetExchangeRate(update, pDate, pRate, pCurrency);
+                update.ExecuteNonQuery();
+            }
+        }
+        public List<ExchangeRate> SelectExchangeRateForAllCurrencies(DateTime pDate)
+        {
+            const string sqlText =
+                @"SELECT * FROM ExchangeRates INNER JOIN Currencies on ExchangeRates.currency_id = Currencies.id WHERE exchange_date = @date";
+            List<ExchangeRate> _rates = null;
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@date", select, pDate);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    _rates = new List<ExchangeRate>();
+                    while (reader.Read())
+                    {
+                        ExchangeRate newRate = new ExchangeRate
+                                                   {
+                                                       Date = pDate,
+                                                       Rate = DatabaseHelper.GetDouble("exchange_rate", reader),
+                                                       Currency = new Currency
+                                                                      {
+                                                                          Id =
+                                                                              DatabaseHelper.GetInt32("currency_id",
+                                                                                                      reader),
+                                                                          IsPivot =
+                                                                              DatabaseHelper.GetBoolean("is_pivot",
+                                                                                                        reader),
+                                                                          IsSwapped =
+                                                                              DatabaseHelper.GetBoolean("is_swapped",
+                                                                                                        reader),
+                                                                          Name =
+                                                                              DatabaseHelper.GetString("name", reader),
+                                                                          Code =
+                                                                              DatabaseHelper.GetString("code", reader)
+                                                                      }
+                                                   };
+                        _rates.Add(newRate);
+                    }
+                }
+            }
+            return _rates;
+        }
+
+        public ExchangeRate Select(DateTime pDate, Currency pCurrency)
+        {
+            const string sqlText = @"SELECT exchange_date, exchange_rate, currency_id
+                                     FROM ExchangeRates 
+                                     WHERE DATEADD(dd, 0, DATEDIFF(dd, 0, exchange_date)) = @date 
+                                       AND currency_id = @currency";
+            
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@date", select, pDate);
+                DatabaseHelper.InsertInt32Param("@currency",select, pCurrency.Id);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+                    reader.Read();
+
+                    return new ExchangeRate
+                               {
+                                   Date = pDate,
+                                   Rate = DatabaseHelper.GetDouble("exchange_rate", reader),
+                                   Currency = pCurrency
+                               };
+                }
+            }
+        }
+
+
+        public double GetMostRecentlyRate(DateTime pDate, Currency pCurrency)
+        {
+            const string sqlText = @"SELECT TOP 1 exchange_rate 
+                                    FROM ExchangeRates 
+                                    WHERE exchange_date <= @date AND currency_id = @currency 
+                                    ORDER BY exchange_date DESC";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@currency",select,pCurrency.Id);
+                DatabaseHelper.InsertDateTimeParam("@date", select, pDate);
+                return Convert.ToDouble(select.ExecuteScalar());
+            }
+        }
+
+        public double GetNearestRate(DateTime pDate, Currency pCurrency)
+        {
+            const string sqlText = @"SELECT TOP 1 exchange_rate 
+                                    FROM ExchangeRates 
+                                    WHERE exchange_date <= @date AND currency_id = @currency 
+                                    ORDER BY exchange_date DESC";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@currency", select, pCurrency.Id);
+                DatabaseHelper.InsertDateTimeParam("@date", select, pDate);
+                return Convert.ToDouble(select.ExecuteScalar());
+            }
+        }
+    }
+}

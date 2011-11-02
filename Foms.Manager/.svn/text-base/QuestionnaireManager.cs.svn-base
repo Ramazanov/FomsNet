@@ -1,0 +1,90 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Data;
+using Octopus.CoreDomain;
+using System.Data.SqlClient;
+
+namespace Octopus.Manager
+{
+    public class QuestionnaireManager : Manager
+    {
+        public QuestionnaireManager(User pUser): base(pUser){}
+        public QuestionnaireManager(string pDbConnectionString): base(pDbConnectionString){}
+
+        public void SaveQuestionnaire(string mfiName, string country, string email, string numberOfClients, string grossPortfolio, string position, 
+            /*string BeContacted, int FirstTime, string DailyActivity, string MainPriorities, string MainAdvantages, */
+            string personName, string phone, string skype, string purposeOfUsage,
+            string OtherMessages, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO 
+                                     Questionnaire(Name, Country, Email, NumberOfClients, GrossPortfolio, PositionInCompony,
+                                     -- BeContacted, FirstTime, DailyActivity, MainPriorities, MainAdvantages,
+                                     PersonName, Phone, Skype, PurposeOfUsage, OtherMessages) 
+                                     VALUES (@Name, @Country, @Email, @NumberOfClients, @GrossPortfolio, @PositionInCompony,
+                                     -- @BeContacted, @FirstTime, @DailyActivity, @MainPriorities, @MainAdvantages,
+                                     @PersonName, @Phone, @Skype, @PurposeOfUsage, @OtherMessages)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@Name", insert, mfiName);
+                DatabaseHelper.InsertStringNVarCharParam("@Country", insert, country);
+                DatabaseHelper.InsertStringNVarCharParam("@NumberOfClients", insert, numberOfClients);
+                DatabaseHelper.InsertStringNVarCharParam("@GrossPortfolio", insert, grossPortfolio);
+
+                DatabaseHelper.InsertStringNVarCharParam("@PersonName", insert, personName);
+                DatabaseHelper.InsertStringNVarCharParam("@PositionInCompony", insert, position);
+                DatabaseHelper.InsertStringNVarCharParam("@Phone", insert, phone);
+                DatabaseHelper.InsertStringNVarCharParam("@Email", insert, email);
+                DatabaseHelper.InsertStringNVarCharParam("@Skype", insert, skype);
+                DatabaseHelper.InsertStringNVarCharParam("@PurposeOfUsage", insert, purposeOfUsage);
+
+                //DatabaseHelper.InsertStringNVarCharParam("@BeContacted", insert, BeContacted);
+                //DatabaseHelper.InsertInt32Param("@FirstTime", insert, FirstTime);
+                //DatabaseHelper.InsertStringNVarCharParam("@DailyActivity", insert, DailyActivity);
+                //DatabaseHelper.InsertStringNVarCharParam("@MainPriorities", insert, MainPriorities);
+                //DatabaseHelper.InsertStringNVarCharParam("@MainAdvantages", insert, MainAdvantages);
+                DatabaseHelper.InsertStringNVarCharParam("@OtherMessages", insert, OtherMessages);
+
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        public DataSet GetQuestionnaire()
+        {
+            const string sqlText = @"SELECT Name, Country, Email, NumberOfClients, GrossPortfolio, PositionInCompony, 
+                                     -- BeContacted, FirstTime, DailyActivity, MainPriorities, MainAdvantages, 
+                                     PersonName, Phone, Skype, PurposeOfUsage, OtherMessages FROM Questionnaire";
+
+            DataSet ds = new DataSet();
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                SqlDataAdapter da = new SqlDataAdapter(sqlCommand);
+                da.Fill(ds);
+            }
+            return ds;
+        }
+    }
+}

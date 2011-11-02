@@ -1,0 +1,14 @@
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Extensions\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Extensions\bin\Debug\Foms.Extensions.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Extensions\bin\Debug\Foms.Extensions.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Extensions\bin\Debug\Foms.Enums.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Extensions\bin\Debug\Foms.Enums.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Extensions\obj\Debug\Foms.Extensions.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.Extensions\obj\Debug\Foms.Extensions.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Extensions\bin\Debug\Foms.Extensions.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Extensions\bin\Debug\Foms.Extensions.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Extensions\bin\Debug\Foms.Enums.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Extensions\bin\Debug\Foms.Enums.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.Extensions\obj\Debug\ResolveAssemblyReference.cache
+D:\Visual Studio\Projects\Foms.NET\Foms.Extensions\obj\Debug\Foms.Extensions.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.Extensions\obj\Debug\Foms.Extensions.pdb

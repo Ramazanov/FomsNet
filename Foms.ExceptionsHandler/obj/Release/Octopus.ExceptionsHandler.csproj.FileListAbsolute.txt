@@ -1,0 +1,5 @@
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\BuildRelease\Log4net.xml
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\BuildRelease\RemoteServerSettings.xml
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\BuildRelease\Octopus.ExceptionsHandler.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.ExceptionsHandler\obj\Release\ResolveAssemblyReference.cache
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\OCTOPUS_2\Src\Octopus.ExceptionsHandler\obj\Release\Octopus.ExceptionsHandler.dll

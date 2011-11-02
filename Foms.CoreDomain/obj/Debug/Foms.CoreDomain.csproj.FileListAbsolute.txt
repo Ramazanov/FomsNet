@@ -1,0 +1,35 @@
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Log4net.xml
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\RemoteServerSettings.xml
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.CoreDomain.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.CoreDomain.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Enums.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.ExceptionsHandler.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Extensions.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Shared.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\log4net.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\System.ComponentModel.Composition.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Enums.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.ExceptionsHandler.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Extensions.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Shared.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\obj\Debug\Foms.CoreDomain.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.CoreDomain\obj\Debug\Foms.CoreDomain.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Log4net.xml
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\RemoteServerSettings.xml
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.CoreDomain.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.CoreDomain.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Enums.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.ExceptionsHandler.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Extensions.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Shared.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\System.ComponentModel.Composition.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Enums.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.ExceptionsHandler.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Extensions.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\Foms.Shared.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\obj\Debug\ResolveAssemblyReference.cache
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\obj\Debug\Foms.CoreDomain.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\obj\Debug\Foms.CoreDomain.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.CoreDomain\bin\Debug\ICSharpCode.SharpZipLib.dll

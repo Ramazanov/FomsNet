@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/DbAccess
+END
+IServices.cs
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/DbAccess/IServices.cs
+END
+ServicesProvider.cs
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/DbAccess/ServicesProvider.cs
+END
+Standard.cs
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/DbAccess/Standard.cs
+END
+Remoting.cs
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/DbAccess/Remoting.cs
+END
+IRemoteOperation.cs
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Services/DbAccess/IRemoteOperation.cs
+END

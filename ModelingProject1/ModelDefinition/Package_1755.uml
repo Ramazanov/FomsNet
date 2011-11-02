@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" xmlns:dm1="http://schemas.microsoft.com/dsltools/Kernel" xmlns:dm2="http://schemas.microsoft.com/dsltools/Component" xmlns:dm3="http://schemas.microsoft.com/dsltools/Activity" xmlns:dm4="http://schemas.microsoft.com/dsltools/Interaction" xmlns:dm5="http://schemas.microsoft.com/dsltools/UseCase" xmlns:dm6="http://schemas.microsoft.com/dsltools/UmlModelLibrary" xmlns:dm7="http://schemas.microsoft.com/dsltools/UmlDiagrams" xmlns:dm8="http://schemas.microsoft.com/VisualStudio/TeamArchitect/ComponentDesigner" xmlns:dm9="http://schemas.microsoft.com/dsltools/LogicalClassDesigner"
+  dslVersion="1.0.0.0"
+  Id="a292ac0b-1f5f-43ee-bc34-b9bd8616586f"
+  name="Foms.AdoDatasets" xmlns="http://schemas.microsoft.com/dsltools/ModelStore">
+  <ownedCommentsInternal>
+    <comment
+      Id="dd958791-63b5-412e-abcb-d102b3c51fef">
+      <body>А это будет датасет отдельный для АДО.</body>
+    </comment>
+    <comment
+      Id="5c252410-54a2-4517-b128-9da998045425">
+      <body>Т.К. датасет АДО использует строку подключения свою, мы просто замещаем в конструкторе строку подключения на нормальную, взятую из наших настроек.</body>
+    </comment>
+  </ownedCommentsInternal>
+  <packagedElements>
+    <packageHasNamedElement>
+      <class
+        Id="ee5f38eb-97a3-4e1b-81a6-744e56ca2acc"
+        name="Settings"
+        isAbstract="false"
+        isLeaf="false"
+        isActiveClass="false">
+        <suppliersInternal>
+          <dependency
+            Id="1a46172d-a64f-4f28-9fe9-f37c1572b714">
+            <packageMoniker
+              Id="7c2c7197-f48e-4ecd-b7db-f9d750ecd8ec"
+              LastKnownName="Foms.Shared"
+              LastKnownLocation="Package_1438.uml" />
+          </dependency>
+        </suppliersInternal>
+        <ownedOperationsInternal>
+          <operation
+            Id="2800eedd-446b-4ddb-8de0-278a9e8e4d4c"
+            name="Settings"
+            isLeaf="false"
+            isStatic="false"
+            isAbstract="false"
+            concurrency="Sequential"
+            isQuery="false" />
+        </ownedOperationsInternal>
+      </class>
+    </packageHasNamedElement>
+  </packagedElements>
+</package>

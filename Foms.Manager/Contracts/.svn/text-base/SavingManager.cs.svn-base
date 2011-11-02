@@ -1,0 +1,787 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Clients;
+using Octopus.CoreDomain.Products;
+using Octopus.Manager.Events;
+using Octopus.Manager.Products;
+using Octopus.CoreDomain.Contracts.Savings;
+using Octopus.Shared.Settings;
+using Octopus.CoreDomain.Accounting;
+using Octopus.CoreDomain.SearchResult;
+using Octopus.Manager.QueryForObject;
+using Octopus.Enums;
+using System;
+using Octopus.CoreDomain.Contracts.Loans;
+using Octopus.Manager.Clients;
+
+namespace Octopus.Manager.Contracts
+{
+    /// <summary>
+    /// CreditContractManagement contains all methods relative to selecting, inserting, updating
+    /// and deleting creditContract objects to and from our database.
+    /// </summary>
+    public class SavingManager : Manager
+    {
+        private readonly SavingProductManager _savingProductManager;
+        private readonly SavingEventManager _savingEventManager;
+        //private readonly AccountManager _accountManager;
+        private readonly LoanManager _loanManager;
+        //private readonly AccountingRuleManager _accountingRuleManager;
+        private readonly ClientManager _clientManager;
+        private User _user;
+
+        public SavingManager(User pUser) : base(pUser)
+        {
+            _savingProductManager = new SavingProductManager(pUser);
+            _savingEventManager = new SavingEventManager(pUser);
+            //_accountManager = new AccountManager(pUser);
+            _loanManager = new LoanManager(pUser);
+            //_accountingRuleManager = new AccountingRuleManager(pUser);
+            _clientManager = new ClientManager(pUser, false, false);
+            _user = pUser;
+        }
+
+        public SavingManager(string pTestDB): base(pTestDB)
+        {
+            _savingProductManager = new SavingProductManager(pTestDB);
+            _savingEventManager = new SavingEventManager(pTestDB);
+            //_accountManager = new AccountManager(pTestDB);
+            _loanManager = new LoanManager(pTestDB);
+            //_accountingRuleManager = new AccountingRuleManager(pTestDB);
+            //_clientManager = new ClientManager(pTestDB);
+            _user = new User();
+        }
+
+        public int Add(ISavingsContract pSaving, Client pClient, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [SavingContracts] 
+                ( 
+                    [product_id],
+                    [user_id],
+                    [code],
+                    [status],
+                    [tiers_id],
+                    [creation_date], 
+                    [interest_rate], 
+                    [closed_date], 
+                    savings_officer_id
+                ) 
+                VALUES 
+                (
+                    @product_id,
+                    @user_id, 
+                    @code, 
+                    @status, 
+                    @tiers_id, 
+                    @creation_date, 
+                    @interest_rate, 
+                    @closedDate, 
+                    @savings_officer_id
+                )
+				SELECT CONVERT(int, SCOPE_IDENTITY())";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@product_id", insert, pSaving.Product.Id);
+                DatabaseHelper.InsertInt32Param("@user_id", insert, pSaving.User.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@code", insert, pSaving.Code);
+                DatabaseHelper.InsertSmalIntParam("@status", insert, (int)pSaving.Status);
+                DatabaseHelper.InsertInt32Param("@tiers_id", insert, pClient.Id);
+                DatabaseHelper.InsertDateTimeParam("@creation_date", insert, pSaving.CreationDate);
+                DatabaseHelper.InsertDoubleParam("@interest_rate", insert, pSaving.InterestRate);
+                DatabaseHelper.InsertDateTimeParam("@closedDate", insert, pSaving.ClosedDate);
+                DatabaseHelper.InsertInt32Param("@savings_officer_id", insert, pSaving.SavingsOfficer.Id);
+
+                pSaving.Id = int.Parse(insert.ExecuteScalar().ToString());
+            }
+
+            if (pSaving is Saving)
+                AddBookContract((Saving)pSaving, pSqlTransac);
+            else if (pSaving is SavingDeposit)
+                AddDepositContract((SavingDeposit)pSaving, pSqlTransac);
+
+            return pSaving.Id;
+        }
+
+        public void AddBookContract(Saving pSaving, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [SavingBookContracts] 
+                                    (
+                                         [id],
+                                         [flat_withdraw_fees],
+                                         [rate_withdraw_fees], 
+                                         [flat_transfer_fees], 
+                                         [rate_transfer_fees], 
+                                         [flat_deposit_fees], 
+                                         [flat_close_fees],
+                                         [flat_management_fees], 
+                                         [flat_overdraft_fees], 
+                                         [in_overdraft], 
+                                         [rate_agio_fees],
+                                         [cheque_deposit_fees],
+                                         [flat_reopen_fees]
+                                    )
+                                    VALUES 
+                                    (
+                                        @id,
+                                        @flatWithdrawFees,
+                                        @rateWithdrawFees,
+                                        @flatTransferFees,
+                                        @rateTransferFees,
+                                        @flatDepositFees, 
+                                        @flatCloseFees,
+                                        @flatManagementFees,
+                                        @flatOverdraftFees,
+                                        @inOverdraft,
+                                        @rateAgioFees,
+                                        @chequeDepositFees,
+                                        @flatReopenFees
+                                    )";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", insert, pSaving.Id);
+                DatabaseHelper.InsertMoneyParam("@flatWithdrawFees", insert, pSaving.Product.WithdrawFeesType == OSavingsFeesType.Flat ? pSaving.FlatWithdrawFees : null);
+                DatabaseHelper.InsertDoubleParam("@rateWithdrawFees", insert, pSaving.Product.WithdrawFeesType == OSavingsFeesType.Rate ? pSaving.RateWithdrawFees : null);
+                DatabaseHelper.InsertMoneyParam("@flatTransferFees", insert, pSaving.Product.TransferFeesType == OSavingsFeesType.Flat ? pSaving.FlatTransferFees : null);
+                DatabaseHelper.InsertDoubleParam("@rateTransferFees", insert, pSaving.Product.TransferFeesType == OSavingsFeesType.Rate ? pSaving.RateTransferFees : null);
+
+                DatabaseHelper.InsertMoneyParam("@flatDepositFees", insert, pSaving.DepositFees);
+
+                DatabaseHelper.InsertMoneyParam("@flatCloseFees", insert, pSaving.CloseFees);
+                DatabaseHelper.InsertMoneyParam("@flatManagementFees", insert, pSaving.ManagementFees);
+
+                DatabaseHelper.InsertMoneyParam("@flatOverdraftFees", insert, pSaving.OverdraftFees);
+                DatabaseHelper.InsertBooleanParam("@inOverdraft", insert, pSaving.InOverdraft);
+
+                DatabaseHelper.InsertDoubleParam("@rateAgioFees", insert, pSaving.AgioFees);
+                DatabaseHelper.InsertMoneyParam("@chequeDepositFees", insert, pSaving.ChequeDepositFees);
+
+                DatabaseHelper.InsertMoneyParam("@flatReopenFees", insert, pSaving.ReopenFees);
+
+                insert.ExecuteScalar();
+            }
+        }
+
+        public void AddDepositContract(SavingDeposit pSaving, SqlTransaction pSqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [SavingDepositContracts] ([id], [number_periods], [rollover], [transfer_account], [withdrawal_fees], [next_maturity])
+                                    VALUES (@id, @numberPeriods, @rollover, @transferAccount, @withdrawalFees, @nextMaturity)";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@id", insert, pSaving.Id);
+                DatabaseHelper.InsertInt32Param("@numberPeriods", insert, pSaving.NumberPeriods);
+                DatabaseHelper.InsertSmalIntParam("@rollover", insert, (int)pSaving.Rollover);
+                DatabaseHelper.InsertStringNVarCharParam("@transferAccount", insert, pSaving.Rollover != OSavingsRollover.PrincipalAndInterests ? pSaving.TransferAccount.Code : null);
+                DatabaseHelper.InsertDoubleParam("@withdrawalFees", insert, pSaving.WithdrawalFees);
+                DatabaseHelper.InsertDateTimeParam("@nextMaturity", insert, pSaving.NextMaturity);
+
+                insert.ExecuteScalar();
+            }
+        }
+
+        public List<ISavingsContract> SelectAll(string pSavingCode)
+        {
+            List<ISavingsContract> listSaving = new List<ISavingsContract>();
+
+            const string sqlText = @"SELECT SavingContracts.*,
+                                       u2.first_name AS so_first_name, 
+                                       u2.last_name AS so_last_name,            
+	                                   SavingProducts.product_type,
+                                       Users.id AS user_id, 
+                                       Users.deleted, 
+                                       Users.user_name, 
+                                       Users.user_pass, Users.role_code, Users.first_name, Users.last_name 
+	        FROM SavingContracts 
+            INNER JOIN SavingProducts ON SavingContracts.product_id = SavingProducts.id
+            INNER JOIN Users ON SavingContracts.user_id = Users.id
+            INNER JOIN Users AS u2 ON u2.id = SavingContracts.savings_officer_id
+            WHERE SavingContracts.Code LIKE @code";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@code", select, string.Format("%{0}%", pSavingCode));
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<ISavingsContract>();
+
+                    while (reader.Read())
+                    {
+                        ISavingsContract saving = _ReadSaving(reader);
+                        listSaving.Add(saving);
+                    }
+                }
+            }
+
+            foreach (ISavingsContract saving in listSaving)
+            {
+                if (saving is Saving) SelectBook((Saving)saving);
+                else if (saving is SavingDeposit) SelectDeposit((SavingDeposit)saving);
+
+                saving.Product = _savingProductManager.SelectSavingProduct(saving.Product.Id);
+                saving.Events.AddRange(_savingEventManager.SelectEvents(saving.Id, saving.Product));
+            }
+
+            return listSaving;
+        }
+
+        public ISavingsContract Select(int pSavingId)
+        {
+            ISavingsContract saving;
+
+            const string sqlText = @"SELECT SavingContracts.*,
+                                       u2.first_name AS so_first_name, 
+                                       u2.last_name AS so_last_name,
+                                       SavingProducts.product_type,
+	                                   Users.id AS user_id, 
+                                       Users.deleted, 
+                                       Users.user_name, 
+                                       Users.user_pass, 
+                                       Users.role_code, 
+                                       Users.first_name, 
+                                       Users.last_name 
+	        FROM SavingContracts
+            INNER JOIN SavingProducts ON SavingContracts.product_id = SavingProducts.id 
+            INNER JOIN Users ON SavingContracts.user_id = Users.id
+            INNER JOIN Users AS u2 ON u2.id = SavingContracts.savings_officer_id
+	        WHERE SavingContracts.id = @id";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pSavingId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    saving = _ReadSaving(reader);
+                }
+            }
+
+            if (saving is Saving) SelectBook((Saving)saving);
+            else if (saving is SavingDeposit) SelectDeposit((SavingDeposit)saving);
+
+            saving.Product = _savingProductManager.SelectSavingProduct(saving.Product.Id);
+            saving.Events.AddRange(_savingEventManager.SelectEvents(saving.Id, saving.Product));
+            return saving;
+        }
+
+        public ISavingsContract Select(string pSavingCode)
+        {
+            ISavingsContract saving;
+
+            const string sqlText = @"SELECT SavingContracts.*,
+                                       u2.first_name AS so_first_name, 
+                                       u2.last_name AS so_last_name,
+                                       SavingProducts.product_type,
+	                                   Users.id AS user_id, 
+                                       Users.deleted, 
+                                       Users.user_name, 
+                                       Users.user_pass, 
+                                       Users.role_code, 
+                                       Users.first_name, 
+                                       Users.last_name 
+	                                 FROM SavingContracts
+                                     INNER JOIN SavingProducts ON SavingContracts.product_id = SavingProducts.id 
+                                     INNER JOIN Users ON SavingContracts.user_id = Users.id
+                                     INNER JOIN Users AS u2 ON u2.id = SavingContracts.savings_officer_id
+	                                 WHERE SavingContracts.Code = @code";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@code", select, pSavingCode);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    saving = _ReadSaving(reader);
+                }
+            }
+
+            if (saving is Saving) SelectBook((Saving)saving);
+            else if (saving is SavingDeposit) SelectDeposit((SavingDeposit)saving);
+
+            saving.Product = _savingProductManager.SelectSavingProduct(saving.Product.Id);
+            saving.Events.AddRange(_savingEventManager.SelectEvents(saving.Id, saving.Product));
+            return saving;
+        }
+
+        public Saving SelectSavingsByLoanId(int pLoanId, SqlTransaction pSqlTransac, bool loadLoans)
+        {
+            Saving saving;
+
+            const string sqlText = @"SELECT 
+                                     SavingContracts.*,
+                                     u2.first_name AS so_first_name, u2.last_name AS so_last_name,
+                                     SavingProducts.product_type,
+                                     Users.id AS [user_id], Users.deleted, Users.user_name, Users.user_pass, Users.role_code, Users.first_name, Users.last_name 
+                                     FROM SavingContracts
+                                     INNER JOIN SavingProducts ON SavingContracts.product_id = SavingProducts.id 
+                                     INNER JOIN LoansLinkSavingsBook ON LoansLinkSavingsBook.savings_id = SavingContracts.id
+                                     INNER JOIN Users ON SavingContracts.[user_id] = Users.id
+                                     INNER JOIN Users AS u2 ON u2.id = SavingContracts.savings_officer_id
+                                     WHERE LoansLinkSavingsBook.loan_id = @loanId";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@loanId", select, pLoanId);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    saving = (Saving)_ReadSaving(reader);
+                }
+            }
+
+            if (saving != null)
+            {
+                saving.Product = (SavingBookProduct)_savingProductManager.SelectSavingProduct(saving.Product.Id);
+                saving.Events.AddRange(_savingEventManager.SelectEvents(saving.Id, saving.Product));
+                if (loadLoans) saving.Loans = SelectLoansBySavingsId(saving.Id, pSqlTransac);
+            }
+
+            return saving;
+        }
+
+        public List<Loan> SelectLoansBySavingsId(int savingsId, SqlTransaction pSqlTransac)
+        {
+            List<Loan> listLoans = new List<Loan>();
+
+            const string sqlText = @"SELECT loan_id
+                                     FROM LoansLinkSavingsBook 
+                                     WHERE savings_id = @savingsId";
+
+            using (SqlCommand select = new SqlCommand(sqlText, SecondaryConnection, pSqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@savingsId", select, savingsId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listLoans.Add(_loanManager.SelectLoan(DatabaseHelper.GetInt32("loan_id", reader), true, false, false));
+                        }
+                    }
+                }
+            }
+
+            return listLoans;
+        }
+
+        public void SelectBook(Saving pSaving)
+        {
+            const string sqlText = @"SELECT 
+                                       flat_withdraw_fees, 
+                                       rate_withdraw_fees, 
+                                       flat_transfer_fees, 
+                                       rate_transfer_fees, 
+                                       [flat_deposit_fees], 
+                                       [flat_close_fees], 
+                                       [flat_management_fees], 
+                                       [flat_overdraft_fees], 
+                                       [in_overdraft],
+                                       [rate_agio_fees],
+                                       [cheque_deposit_fees],
+                                       [flat_reopen_fees]
+                                    FROM SavingBookContracts
+                                    WHERE id = @id";
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pSaving.Id);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        pSaving.FlatWithdrawFees = DatabaseHelper.GetNullAuthorizedMoney("flat_withdraw_fees", reader);
+                        pSaving.RateWithdrawFees = DatabaseHelper.GetNullAuthorizedDouble("rate_withdraw_fees", reader);
+                        pSaving.FlatTransferFees = DatabaseHelper.GetNullAuthorizedMoney("flat_transfer_fees", reader);
+                        pSaving.RateTransferFees = DatabaseHelper.GetNullAuthorizedDouble("rate_transfer_fees", reader);
+                        pSaving.DepositFees = DatabaseHelper.GetNullAuthorizedMoney("flat_deposit_fees", reader);
+                        pSaving.ChequeDepositFees = DatabaseHelper.GetNullAuthorizedMoney("cheque_deposit_fees", reader);
+                        pSaving.CloseFees = DatabaseHelper.GetNullAuthorizedMoney("flat_close_fees", reader);
+                        pSaving.ManagementFees = DatabaseHelper.GetNullAuthorizedMoney("flat_management_fees", reader);
+                        pSaving.OverdraftFees = DatabaseHelper.GetNullAuthorizedMoney("flat_overdraft_fees", reader);
+                        pSaving.InOverdraft = DatabaseHelper.GetBoolean("in_overdraft", reader);
+                        pSaving.AgioFees = DatabaseHelper.GetNullAuthorizedDouble("rate_agio_fees", reader);
+                        pSaving.ReopenFees = DatabaseHelper.GetNullAuthorizedMoney("flat_reopen_fees", reader);
+                    }
+                }
+            }
+        }
+
+        public void SelectDeposit(SavingDeposit pSaving)
+        {
+            const string sqlText = @"SELECT 
+                                       number_periods, 
+                                       rollover, 
+                                       transfer_account, 
+                                       withdrawal_fees, 
+                                       next_maturity
+                                    FROM SavingDepositContracts
+                                    WHERE id = @id";
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, pSaving.Id);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    reader.Read();
+
+                    pSaving.NumberPeriods = DatabaseHelper.GetInt32("number_periods", reader);
+                    pSaving.Rollover = (OSavingsRollover)DatabaseHelper.GetSmallInt("rollover", reader);
+                    if (pSaving.Rollover != OSavingsRollover.PrincipalAndInterests)
+                        pSaving.TransferAccount = new Saving(ApplicationSettings.GetInstance(_user.Md5), ChartOfAccounts.GetInstance(_user), _user) { Code = DatabaseHelper.GetString("transfer_account", reader) };
+                    pSaving.WithdrawalFees = DatabaseHelper.GetDouble("withdrawal_fees", reader);
+                    pSaving.NextMaturity = DatabaseHelper.GetNullAuthorizedDateTime("next_maturity", reader);
+                }
+            }
+
+            if (pSaving.Rollover != OSavingsRollover.PrincipalAndInterests)
+                pSaving.TransferAccount = Select(pSaving.TransferAccount.Code);
+        }
+
+        public List<ISavingsContract> SelectAll()
+        {
+            List<ISavingsContract> listSaving = new List<ISavingsContract>();
+
+            const string sqlText = @"SELECT SavingContracts.*,
+                                       u2.first_name AS so_first_name, 
+                                       u2.last_name AS so_last_name,
+                                       SavingProducts.product_type,
+	                                   Users.id AS user_id, Users.deleted, Users.user_name, Users.user_pass, Users.role_code, Users.first_name, Users.last_name 
+	        FROM SavingContracts
+            INNER JOIN SavingProducts ON SavingContracts.product_id = SavingProducts.id 
+            INNER JOIN Users AS u2 ON u2.id = SavingContracts.savings_officer_id
+            INNER JOIN Users ON SavingContracts.user_id = Users.id";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            listSaving.Add(_ReadSaving(reader));
+                        }
+                    }
+                }
+            }
+
+            //var accountingRules = _accountingRuleManager.SelectAll(); 
+
+            foreach (ISavingsContract saving in listSaving)
+            {
+                if (saving is Saving)
+                    SelectBook((Saving)saving);
+                else if (saving is SavingDeposit)
+                {
+                    SelectDeposit((SavingDeposit)saving);
+                    if (((SavingDeposit)saving).Rollover != OSavingsRollover.PrincipalAndInterests)
+                    {
+                        ((SavingDeposit)saving).TransferAccount = listSaving.Find(item => item.Code == ((SavingDeposit)saving).TransferAccount.Code);
+                    }
+                }
+
+                saving.Product = _savingProductManager.SelectSavingProduct(saving.Product.Id);
+                saving.Events.AddRange(_savingEventManager.SelectEvents(saving.Id, saving.Product));
+                if (_clientManager != null)
+                    saving.Client = _clientManager.SelectClientBySavingsId(saving.Id);
+            }
+
+            return listSaving;
+        }
+
+        public int GetNumberSavingContract(string pQuery)
+        {
+            string SELECT_FROM_SAVING = @"SELECT TOP 100 percent 
+                                            SavingContracts.id, 
+                                            SavingContracts.code AS contract_code, 
+                                            SavingContracts.creation_date as start_date, 
+		                                    Persons.identification_data as identification_data, Tiers.client_type_code, 
+		                                    ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name) AS user_name, 
+		                                    ISNULL(Persons.first_name + SPACE(1) + Persons.last_name, ISNULL(Groups.name, Corporates.name)) AS client_name,
+                                            ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name) AS loanofficer_name
+                                        FROM SavingContracts 
+                                        INNER JOIN Users ON SavingContracts.user_id = Users.id
+                                        INNER JOIN Tiers ON SavingContracts.tiers_id = Tiers.id
+                                        LEFT OUTER JOIN Persons ON Tiers.id = Persons.id 
+                                        LEFT OUTER JOIN Groups ON Tiers.id = Groups.id 
+                                        LEFT OUTER JOIN Corporates ON Tiers.id = Corporates.id
+                                        WHERE Tiers.branch_id = @branch_id) maTable";
+
+            const string closeWhere = @" WHERE (contract_code LIKE @contractCode 
+                                           OR client_name LIKE @clientName 
+                                           OR user_name LIKE @userName 
+                                           OR identification_data LIKE @numberPassport 
+                                           OR loanofficer_name LIKE @loanofficerName )) maTable";
+
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_SAVING, closeWhere);
+            string sqlText = q.ConstructSQLEntityNumberProxy();
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                foreach (var item in q.DynamiqParameters())
+                {
+                    DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+                }
+                DatabaseHelper.InsertInt32Param("@branch_id", select, TechnicalSettings.BranchId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return 0;
+
+                    reader.Read();
+                    return reader.GetInt32(0);
+                }
+            }
+        }
+
+        public List<SavingSearchResult> SearchSavingContractByCritere(int pPageNumber, string pQuery)
+        {
+            List<SavingSearchResult> list = new List<SavingSearchResult>();
+
+            string SELECT_FROM_SAVING = @"SELECT TOP 100 percent 
+                                            SavingContracts.id, 
+                                            SavingContracts.code AS contract_code, 
+                                            SavingContracts.status AS contract_status,
+                                            SavingContracts.creation_date as start_date, 
+                                            SavingContracts.closed_date as end_date, 
+                                            SavingProducts.product_type as product_type,
+		                                    Persons.identification_data as identification_data, 
+                                            Tiers.client_type_code, 
+                                            Tiers.id AS client_id,
+		                                    ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name) AS user_name, 
+		                                    ISNULL(Persons.first_name + SPACE(1) + Persons.last_name, ISNULL(Groups.name, Corporates.name)) AS client_name,
+                                            ISNULL(Users.first_name + SPACE(1) + Users.last_name, Users.user_name) AS loanofficer_name,
+                                            SavingContracts.user_id AS loan_officer_id
+                                        FROM SavingContracts 
+                                        INNER JOIN SavingProducts ON SavingContracts.product_id = SavingProducts.id 
+                                        INNER JOIN Users ON SavingContracts.user_id = Users.id
+                                        INNER JOIN Tiers ON SavingContracts.tiers_id = Tiers.id
+                                        LEFT OUTER JOIN Persons ON Tiers.id = Persons.id 
+                                        LEFT OUTER JOIN Groups ON Tiers.id = Groups.id 
+                                        LEFT OUTER JOIN Corporates ON Tiers.id = Corporates.id
+                                        WHERE Tiers.branch_id = @branch_id
+                                        ) maTable";
+
+            string CloseWhere = @" WHERE ( contract_code LIKE @contractCode 
+                                     OR client_name LIKE @clientName 
+                                     OR user_name LIKE @UserName 
+                                     OR identification_data LIKE @numberPassport 
+                                     OR loanofficer_name LIKE @loanofficerName )) maTable";
+
+            QueryEntity q = new QueryEntity(pQuery, SELECT_FROM_SAVING, CloseWhere);
+            string pSqlText = q.ConstructSQLEntityByCriteresProxy(20, (pPageNumber - 1) * 20);
+
+            SqlCommand select = new SqlCommand(pSqlText, DefaultConnection);
+
+            foreach (var item in q.DynamiqParameters())
+            {
+                DatabaseHelper.InsertStringNVarCharParam(item.Key, select, string.Format("%{0}%", item.Value));
+            }
+            DatabaseHelper.InsertInt32Param("@branch_id", select, TechnicalSettings.BranchId);
+
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        SavingSearchResult result = new SavingSearchResult();
+                        result.Id = DatabaseHelper.GetInt32("id", reader);
+                        result.ClientId = DatabaseHelper.GetInt32("client_id", reader);
+                        result.ContractCode = DatabaseHelper.GetString("contract_code", reader);
+                        result.Status = (OSavingsStatus)DatabaseHelper.GetSmallInt("contract_status", reader);
+                        result.ClientTypeCode = DatabaseHelper.GetString("client_type_code", reader);
+                        switch (result.ClientTypeCode)
+                        {
+                            case "I": result.ClientType = OClientTypes.Person; break;
+                            case "G": result.ClientType = OClientTypes.Group; break;
+                            case "V": result.ClientType = OClientTypes.Village; break;
+                            case "C": result.ClientType = OClientTypes.Corporate; break;
+                            default: result.ClientType = OClientTypes.Person; break;
+                        }
+                        result.ClientName = DatabaseHelper.GetString("client_name", reader);
+                        result.ContractStartDate = DatabaseHelper.GetDateTime("start_date", reader);
+                        result.ContractEndDate = DatabaseHelper.GetNullAuthorizedDateTime("end_date", reader);
+                        result.ContractType = DatabaseHelper.GetString("product_type", reader);
+                        result.LoanOfficer = new User {Id = DatabaseHelper.GetInt32("loan_officer_id", reader)};
+
+                        list.Add(result);
+                    }
+                }
+            }
+
+            return list;
+        }
+
+        public List<ISavingsContract> SelectSavings(int pClientId)
+        {
+            const string sqlText = @"SELECT SavingContracts.*,
+                                       u2.first_name AS so_first_name, 
+                                       u2.last_name AS so_last_name,
+                                       SavingProducts.product_type,
+	                                   Users.id AS user_id, 
+                                       Users.deleted, 
+                                       Users.user_name, 
+                                       Users.user_pass, 
+                                       Users.role_code, 
+                                       Users.first_name, 
+                                       Users.last_name 
+	                                FROM SavingContracts
+                                    INNER JOIN SavingProducts ON SavingContracts.product_id = SavingProducts.id 
+                                    INNER JOIN Users ON SavingContracts.user_id = Users.id
+                                    INNER JOIN Users AS u2 ON u2.id = SavingContracts.savings_officer_id
+	                                WHERE SavingContracts.tiers_id = @tiers_id";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                List<ISavingsContract> savings = new List<ISavingsContract>();
+                DatabaseHelper.InsertInt32Param("@tiers_id", select, pClientId);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return new List<ISavingsContract>();
+
+                    while (reader.Read())
+                    {
+                        savings.Add(_ReadSaving(reader));
+                    }
+                }
+                foreach (ISavingsContract saving in savings)
+                {
+                    if (saving is Saving)
+                        SelectBook((Saving)saving);
+                    else if (saving is SavingDeposit)
+                    {
+                        SelectDeposit((SavingDeposit)saving);
+                        if (((SavingDeposit)saving).Rollover != OSavingsRollover.PrincipalAndInterests)
+                        {
+                            ((SavingDeposit)saving).TransferAccount = savings.Find(item => item.Code == ((SavingDeposit)saving).TransferAccount.Code);
+                        }
+                    }
+
+                    saving.Product = _savingProductManager.SelectSavingProduct(saving.Product.Id);
+                    saving.Events.AddRange(_savingEventManager.SelectEvents(saving.Id, saving.Product));
+                    //saving.ChartOfAccounts = _SelectAccountBalance(saving.Id, saving.Product.Currency.Id);
+                    //saving.ChartOfAccounts.AccountingRuleCollection = _accountingRuleManager.SelectAll();
+                    if (saving is Saving) ((Saving)saving).Loans = SelectLoansBySavingsId(saving.Id, null);
+                }
+                return savings;
+            }
+        }
+
+        public int GetNumberOfSavings(int pClientId)
+        {
+            const string sqlText = @"SELECT COUNT(id) FROM SavingContracts WHERE SavingContracts.tiers_id = @tiers_id";
+
+            using(SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@tiers_id", select, pClientId);
+                return (int)select.ExecuteScalar();
+            }
+        }
+
+        public void UpdateNextMaturity(int pSavingId, DateTime? nextMaturity)
+        {
+            const string sqlText = @"UPDATE SavingDepositContracts SET next_maturity = @nextMaturity WHERE id = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertDateTimeParam("@nextMaturity", update, nextMaturity);
+                DatabaseHelper.InsertInt32Param("@id", update, pSavingId);
+
+                update.ExecuteNonQuery();
+            } 
+        }
+
+        public void UpdateStatus(int pSavingId, OSavingsStatus pStatus, DateTime? pClosedDate)
+        {
+            const string sqlText = @"UPDATE SavingContracts SET status = @status, closed_date = @closedDate WHERE id = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertSmalIntParam("@status", update, (int)pStatus);
+                DatabaseHelper.InsertDateTimeParam("@closedDate", update, pClosedDate);
+                DatabaseHelper.InsertInt32Param("@id", update, pSavingId);
+                update.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateOverdraftStatus(int pSavingId, bool inOverdraft)
+        {
+            const string sqlText = @"UPDATE SavingBookContracts SET in_overdraft = @inOverdraft WHERE id = @id";
+
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", update, pSavingId);
+                DatabaseHelper.InsertBooleanParam("@inOverdraft", update, inOverdraft);
+
+                update.ExecuteNonQuery();
+            }
+        }
+
+        private ISavingsContract _ReadSaving(SqlDataReader pReader)
+        {
+            ISavingsContract savingContract;
+
+            switch (DatabaseHelper.GetChar("product_type", pReader))
+            {
+                case 'B' :
+                    savingContract = new Saving(ApplicationSettings.GetInstance(_user.Md5), ChartOfAccounts.GetInstance(_user), _user);
+                    savingContract.Product = new SavingBookProduct { Id = DatabaseHelper.GetInt32("product_id", pReader) };
+                    break;
+                case 'T' :
+                    savingContract = new SavingDeposit(ApplicationSettings.GetInstance(_user.Md5), ChartOfAccounts.GetInstance(_user), _user);
+                    savingContract.Product = new TermDepositProduct { Id = DatabaseHelper.GetInt32("product_id", pReader) };
+                    break;
+                default : savingContract = null; break;
+            }
+
+            savingContract.Id = DatabaseHelper.GetInt32("id", pReader);
+            savingContract.Code = DatabaseHelper.GetString("code", pReader);
+            savingContract.Status = (OSavingsStatus)DatabaseHelper.GetSmallInt("status", pReader);
+            savingContract.CreationDate = DatabaseHelper.GetDateTime("creation_date", pReader);
+            savingContract.ClosedDate = DatabaseHelper.GetNullAuthorizedDateTime("closed_date", pReader);
+            savingContract.InterestRate = DatabaseHelper.GetDouble("interest_rate", pReader);
+            savingContract.SavingsOfficer = new User
+            {
+                Id = DatabaseHelper.GetInt32("savings_officer_id", pReader)
+                , FirstName = DatabaseHelper.GetString("so_first_name", pReader)
+                , LastName = DatabaseHelper.GetString("so_last_name", pReader)
+            };
+
+            return savingContract;
+        }
+    }
+}

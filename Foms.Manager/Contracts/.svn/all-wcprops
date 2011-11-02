@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Contracts
+END
+SavingManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Contracts/SavingManager.cs
+END
+GuaranteeContractManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Contracts/GuaranteeContractManager.cs
+END
+LoanManager.cs
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/Contracts/LoanManager.cs
+END

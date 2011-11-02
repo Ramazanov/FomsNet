@@ -1,0 +1,97 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+
+namespace Octopus.Manager
+{
+    public class BranchManager : Manager
+    {
+        public BranchManager(User user) : base(user)
+        {
+        }
+
+        public BranchManager(string pTestDb): base(pTestDb)
+        {
+            
+        }
+        public List<Branch> SelectAll()
+        {
+            List<Branch> branches = new List<Branch>();
+            const string q = @"SELECT id, name, deleted
+            FROM dbo.Branches";
+            OctopusCommand c = new OctopusCommand(q, DefaultConnection);
+            using (OctopusReader r = c.ExecuteReader())
+            {
+                if (r.Empty) return branches;
+
+                while (r.Read())
+                {
+                    Branch b = new Branch
+                    {
+                        Id = r.GetInt("id")
+                        , Name = r.GetString("name")
+                        , Deleted = r.GetBool("deleted")
+                    };
+                    branches.Add(b);
+                }
+            }
+            return branches;
+        }
+
+        public Branch Add(Branch branch, SqlTransaction t)
+        {
+            const string q = @"INSERT INTO dbo.Branches (name)
+            VALUES (@name) SELECT SCOPE_IDENTITY()";
+            OctopusCommand c = new OctopusCommand(q, DefaultConnection);
+            c.AddParam("@name", branch.Name);
+            c.Transaction = t;
+            branch.Id = Convert.ToInt32(c.ExecuteScalar());
+            return branch;
+        }
+
+        public void Update(Branch branch, SqlTransaction t)
+        {
+            OctopusCommand c = new OctopusCommand();
+            c.Transaction = t;
+            c.CommandText = @"UPDATE dbo.Branches
+            SET name = @name WHERE id = @id";
+            c.Connection = DefaultConnection;
+            c.AddParam("@id", branch.Id);
+            c.AddParam("@name", branch.Name);
+            c.ExecuteNonQuery();
+        }
+
+        public void Delete(int id)
+        {
+            const string q = @"UPDATE dbo.Branches
+            SET deleted = 1 WHERE id = @id";
+            OctopusCommand c = new OctopusCommand(q, DefaultConnection);
+            c.AddParam("@id", id);
+            c.ExecuteNonQuery();
+        }
+    }
+}

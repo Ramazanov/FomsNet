@@ -1,0 +1,190 @@
+﻿using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+
+namespace Octopus.Manager.Currencies
+{
+    public class CurrencyManager : Manager
+    {
+        public CurrencyManager(string pDatabaseConnectionString) : base(pDatabaseConnectionString){}
+        public CurrencyManager(User pUser) : base(pUser){}
+
+        public int Add(Currency pCurrency, SqlTransaction sqlTransac)
+        {
+            const string sqlText = @"INSERT INTO [Currencies] ([name], [code], [is_pivot], [is_swapped],use_cents)
+                                    VALUES(@name, @code, @is_pivot, @is_swapped,@use_cents) SELECT SCOPE_IDENTITY()";
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection,sqlTransac))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", insert, pCurrency.Name);
+                DatabaseHelper.InsertStringNVarCharParam("@code", insert, pCurrency.Code);
+                DatabaseHelper.InsertBooleanParam("@is_pivot", insert, pCurrency.IsPivot);
+                DatabaseHelper.InsertBooleanParam("@is_swapped", insert, pCurrency.IsSwapped);
+                DatabaseHelper.InsertBooleanParam("@use_cents", insert, pCurrency.UseCents);
+                return int.Parse(insert.ExecuteScalar().ToString());
+
+            }
+        }
+
+        public void Update(Currency pCurrency, SqlTransaction sqlTransac)
+        {
+            const string sqlText = @"UPDATE [Currencies] set [name] = @name, [code] = @code, 
+                                            [is_pivot] = @is_pivot, [is_swapped] = @is_swapped, use_cents = @use_cents
+                                    WHERE [id] = @currencyID";
+            using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection, sqlTransac))
+            {
+                DatabaseHelper.InsertInt32Param("@currencyID", update, pCurrency.Id);
+                DatabaseHelper.InsertStringNVarCharParam("@name", update, pCurrency.Name);
+                DatabaseHelper.InsertStringNVarCharParam("@code", update, pCurrency.Code);
+                DatabaseHelper.InsertBooleanParam("@is_pivot", update, pCurrency.IsPivot);
+                DatabaseHelper.InsertBooleanParam("@is_swapped", update, pCurrency.IsSwapped);
+                DatabaseHelper.InsertBooleanParam("@use_cents", update, pCurrency.UseCents);
+                update.ExecuteNonQuery();
+            }
+        }
+        public List<Currency> SelectAllCurrencies(SqlTransaction pSqlTransac)
+        {
+            List<Currency> currencies = new List<Currency>();
+            const string sqlText = @"SELECT * FROM Currencies ORDER BY is_pivot DESC";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection, pSqlTransac))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return currencies;
+                    while (reader.Read())
+                    {
+                        currencies.Add(new Currency
+                        {
+                            Id = DatabaseHelper.GetInt32("id", reader),
+                            Name = DatabaseHelper.GetString("name", reader),
+                            Code = DatabaseHelper.GetString("code", reader),
+                            IsPivot = DatabaseHelper.GetBoolean("is_pivot", reader),
+                            IsSwapped = DatabaseHelper.GetBoolean("is_swapped", reader),
+                            UseCents = DatabaseHelper.GetBoolean("use_cents", reader)
+                        });
+                    }
+                }
+            }
+            
+            return currencies;
+        }
+        public Currency GetPivot()
+        {
+            Currency pivot=null;
+            const string sqlText = "SELECT * FROM Currencies where is_pivot = 1";
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return pivot;
+                    while (reader.Read())
+                    {
+                       pivot = new Currency
+                        {
+                            Id = DatabaseHelper.GetInt32("id", reader),
+                            Name = DatabaseHelper.GetString("name", reader),
+                            Code = DatabaseHelper.GetString("code", reader),
+                            IsPivot = DatabaseHelper.GetBoolean("is_pivot", reader),
+                            IsSwapped = DatabaseHelper.GetBoolean("is_swapped", reader),
+                            UseCents = DatabaseHelper.GetBoolean("use_cents", reader)
+                        };
+                    }
+                    return pivot;
+                }
+            }
+        }
+
+
+        public Currency SelectCurrencyById(int id)
+        {
+            const string sqlText = @"SELECT name, code, is_pivot, is_swapped, use_cents FROM [Currencies] where id = @id";
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", select, id);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    return new Currency
+                    {
+                        Id = id,
+                        Code = DatabaseHelper.GetString("code", reader),
+                        Name = DatabaseHelper.GetString("name", reader),
+                        IsPivot = DatabaseHelper.GetBoolean("is_pivot", reader),
+                        IsSwapped = DatabaseHelper.GetBoolean("is_swapped", reader),
+                        UseCents = DatabaseHelper.GetBoolean("use_cents", reader)
+                    };
+                }
+            }
+        }
+
+        public Currency SelectCurrencyByName(string name)
+        {
+            const string sqlText = @"SELECT id, code, is_pivot, is_swapped FROM [Currencies] WHERE name = @name";
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", select, name);
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return null;
+
+                    reader.Read();
+                    return new Currency
+                    {
+                        Id = DatabaseHelper.GetInt32("id", reader),
+                        Code = DatabaseHelper.GetString("code", reader),
+                        Name = name,
+                        IsPivot = DatabaseHelper.GetBoolean("is_pivot", reader),
+                        IsSwapped = DatabaseHelper.GetBoolean("is_swapped", reader),
+                        UseCents = DatabaseHelper.GetBoolean("use_cents", reader)
+                    };
+                }
+            }
+        }
+
+        //public Currency SelectCurrencyByName(string pName)
+        //{
+        //    const string sqlText = @"SELECT id, name, code, is_pivot, is_swapped FROM [Currencies] where name = @name";
+        //    using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+        //    {
+        //        DatabaseHelper.InsertStringNVarCharParam("@name", select, pName);
+        //        using (SqlDataReader reader = select.ExecuteReader())
+        //        {
+        //            if (reader == null || !reader.HasRows) return null;
+
+        //            reader.Read();
+        //            return new Currency
+        //            {
+        //                Id = DatabaseHelper.GetInt32("id", reader),
+        //                Code = DatabaseHelper.GetString("code", reader),
+        //                Name = DatabaseHelper.GetString("name", reader),
+        //                IsPivot = DatabaseHelper.GetBoolean("is_pivot", reader),
+        //                IsSwapped = DatabaseHelper.GetBoolean("is_swapped", reader)
+        //            };
+
+
+        //        }
+        //    }
+        //}
+
+        public bool IsThisCurrencyAlreadyExist(string pCode,string pName)
+        {
+            const string sqlText = @"SELECT * FROM [Currencies] where name = @name AND code = @code";
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@code",select,pCode);
+                DatabaseHelper.InsertStringNVarCharParam("@name", select, pName);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return false;
+
+                    return true;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,148 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+
+namespace Octopus.Manager.Accounting
+{
+    public class StandardBookingManager : Manager
+    {
+        private readonly ChartOfAccounts _chartOfAccounts;
+
+        private readonly User _user = new User();
+
+        public StandardBookingManager(User pUser): base(pUser)
+        {
+            _user = pUser;
+            AccountManager _accountManagement =  new AccountManager(pUser);
+            _chartOfAccounts = new ChartOfAccounts();
+            _chartOfAccounts.Accounts = _accountManagement.SelectAllAccounts();
+        }
+
+        public StandardBookingManager(string testDB) : base(testDB) { }
+
+        public void CreateStandardBooking(Booking booking)
+        {
+            const string sqlText = @"INSERT INTO StandardBookings([Name], debit_account_id, credit_account_id) 
+                                     VALUES (@name, @debit_account_id, @credit_account_id)";
+
+            using (SqlCommand insertIntoTable = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", insertIntoTable, booking.Name);
+                DatabaseHelper.InsertInt32Param("@debit_account_id", insertIntoTable, booking.DebitAccount.Id);
+                DatabaseHelper.InsertInt32Param("@credit_account_id", insertIntoTable, booking.CreditAccount.Id);
+                insertIntoTable.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateStandardBooking(Booking booking)
+        {
+            const string sqlText = @"UPDATE StandardBookings
+                                       SET [Name] = @name, 
+                                           debit_account_id = @debit_account_id, 
+                                           credit_account_id = @credit_account_id
+                                    WHERE Id = @Id";
+
+            using (SqlCommand insertIntoTable = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", insertIntoTable, booking.Name);
+                DatabaseHelper.InsertInt32Param("@debit_account_id", insertIntoTable, booking.DebitAccount.Id);
+                DatabaseHelper.InsertInt32Param("@credit_account_id", insertIntoTable, booking.CreditAccount.Id);
+                DatabaseHelper.InsertInt32Param("@Id", insertIntoTable, booking.Id);
+                insertIntoTable.ExecuteNonQuery();
+            }
+        }
+
+        public Booking SelectStandardBookingById(int Id)
+        {
+            const string sqlText = @"SELECT Id, [Name], debit_account_id, credit_account_id 
+                                    FROM StandardBookings
+                                    WHERE Id = @Id";
+            Booking standardBooking = new Booking();
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@Id", select, Id);
+
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        standardBooking.Id = DatabaseHelper.GetInt32("Id", reader);
+                        standardBooking.Name = DatabaseHelper.GetString("Name", reader);
+
+                        Account account = _chartOfAccounts.GetAccountById(DatabaseHelper.GetInt32("debit_account_id", reader));
+                        standardBooking.DebitAccount = account;
+
+                        account = _chartOfAccounts.GetAccountById(DatabaseHelper.GetInt32("credit_account_id", reader));
+                        standardBooking.CreditAccount = account;
+                        
+                    }
+                }
+            }
+            return standardBooking;
+        }
+
+        public void DeleteStandardBooking(int Id)
+        {
+            const string sqlText = @"DELETE FROM StandardBookings WHERE Id = @Id";
+
+            using (SqlCommand insertIntoTable = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@Id", insertIntoTable, Id);
+                insertIntoTable.ExecuteNonQuery();
+            }
+        }
+
+        public List<Booking> SelectAllStandardBookings()
+        {
+            const string sqlText = @"SELECT Id, [Name], debit_account_id, credit_account_id FROM StandardBookings";
+            List<Booking> list = new List<Booking>();
+
+            using (SqlCommand select = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = select.ExecuteReader())
+                {
+                    if (reader == null || !reader.HasRows) return list;
+                    while (reader.Read())
+                    {
+                        Booking standardBooking = new Booking();
+                        standardBooking.Id = DatabaseHelper.GetInt32("Id", reader);
+                        standardBooking.Name = DatabaseHelper.GetString("Name", reader);
+
+                        Account account = _chartOfAccounts.GetAccountById(DatabaseHelper.GetInt32("debit_account_id", reader));
+                        standardBooking.DebitAccount = account;
+
+                        account = _chartOfAccounts.GetAccountById(DatabaseHelper.GetInt32("credit_account_id", reader));
+                        standardBooking.CreditAccount = account;
+
+                        list.Add(standardBooking);
+                    }
+                }
+                return list;
+            }
+        }
+    }
+}

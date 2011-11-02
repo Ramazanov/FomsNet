@@ -1,0 +1,232 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System.Collections.Generic;
+using Octopus.CoreDomain;
+using System.Data.SqlClient;
+using Octopus.CoreDomain.EconomicActivities;
+
+namespace Octopus.Manager
+{
+	/// <summary>
+    /// Summary description for EconomicActivityManager.
+	/// </summary>
+	public class EconomicActivityManager : Manager
+	{
+		public EconomicActivityManager(string testDB) : base(testDB) {}
+
+        public EconomicActivityManager(User pUser) : base(pUser) {}
+
+		/// <summary>
+		/// Add an economic activity in database
+		/// </summary>
+        /// <param name="pEconomicActivity">the economic activity object to add</param>
+        /// <returns>the id of the economic activity added</returns>
+        public int AddEconomicActivity(EconomicActivity pEconomicActivity)
+		{
+            const string sqlText = @"INSERT INTO DomainOfApplications ([name] , [parent_id] , [deleted]) 
+                        VALUES (@name,@parentId,@deleted) SELECT SCOPE_IDENTITY()";
+
+            using (SqlCommand insert = new SqlCommand(sqlText, DefaultConnection))
+		    {
+		        DatabaseHelper.InsertStringNVarCharParam("@name", insert, pEconomicActivity.Name);
+                DatabaseHelper.InsertBooleanParam("@deleted", insert, pEconomicActivity.Deleted);
+		        if (pEconomicActivity.Parent != null)
+                    DatabaseHelper.InsertInt32Param("@parentId", insert, pEconomicActivity.Parent.Id);
+                else
+                    DatabaseHelper.InsertInt32Param("@parentId", insert, null);
+            
+                return int.Parse(insert.ExecuteScalar().ToString());
+            }
+		}
+		
+		/// <summary>
+		/// This methods allows us to find all domains of application
+		/// </summary>
+		/// <returns>hierarchic collection of DomainOfApplication
+		/// </returns>
+		public List<EconomicActivity> SelectAllEconomicActivities()
+		{
+		    List<EconomicActivity> doaList = new List<EconomicActivity>();
+
+            const string sqlText = "SELECT id FROM DomainOfApplications WHERE parent_id IS NULL AND deleted = 0";
+
+            using (SqlCommand selectAll = new SqlCommand(sqlText, DefaultConnection))
+            {
+                using (SqlDataReader reader = selectAll.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        while (reader.Read())
+                        {
+                            EconomicActivity domain = new EconomicActivity
+                                                             {Id = DatabaseHelper.GetInt32("id", reader)};
+                            doaList.Add(domain);
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < doaList.Count; i++)
+                doaList[i] = SelectEconomicActivity(doaList[i].Id);
+
+            return doaList;
+		}
+
+		/// <summary>
+		/// Update domain of application name and delete
+		/// </summary>
+		/// <param name="doa">DomainOfApplication object</param>
+        public void UpdateEconomicActivity(EconomicActivity pEconomicActivity)
+		{
+		    const string sqlText = "UPDATE DomainOfApplications SET name = @name,deleted = @wasDeleted WHERE id = @id";
+
+		    using (SqlCommand update = new SqlCommand(sqlText, DefaultConnection))
+		    {
+		        DatabaseHelper.InsertInt32Param("@id", update, pEconomicActivity.Id);
+		        DatabaseHelper.InsertStringNVarCharParam("@name", update, pEconomicActivity.Name);
+		        DatabaseHelper.InsertBooleanParam("@wasDeleted", update, pEconomicActivity.Deleted);
+
+		        update.ExecuteNonQuery();
+		    }
+		}
+
+	    private List<EconomicActivity> SelectChildren(int pParentId)
+		{
+            List<EconomicActivity> doaList = new List<EconomicActivity>();
+
+            const string sqlText = "SELECT id, name, deleted FROM DomainOfApplications WHERE parent_id = @id AND deleted = 0";
+
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", sqlCommand, pParentId);
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        while (reader.Read())
+                        {
+                            EconomicActivity domain = new EconomicActivity
+                                                          {
+                                                              Id = DatabaseHelper.GetInt32("id", reader),
+                                                              Name = DatabaseHelper.GetString("name", reader),
+                                                              Deleted = DatabaseHelper.GetBoolean("deleted", reader)
+                                                          };
+                            doaList.Add(domain);
+                        }
+                    }
+                }
+            }
+	        for (int i = 0; i < doaList.Count; i++)
+                doaList[i].Childrens = SelectChildren(doaList[i].Id);
+
+			return doaList;
+		}
+
+        public bool ThisActivityAlreadyExist(string pName, int pParentId)
+        {
+            int id = 0;
+            const string sqlText = @"SELECT id, name, deleted FROM DomainOfApplications WHERE parent_id = @id 
+                    AND name = @name AND deleted = 0";
+            using (SqlCommand sqlCommand = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", sqlCommand, pName);
+                DatabaseHelper.InsertInt32Param("@id", sqlCommand, pParentId);
+
+                using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                {
+                    if (reader != null)
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            id = DatabaseHelper.GetInt32("id", reader);
+                        }
+                    }
+                }
+            }
+            return id == 0 ? false : true;
+        }
+
+        /// <summary>
+        /// This methods allows us to find a economic activity.
+        /// We use recursive method to find parent
+        /// </summary>
+        /// <param name="id">the id searched</param>
+        /// <returns>DomainOfApplication object</returns>
+        public EconomicActivity SelectEconomicActivity(int pId)
+        {
+            EconomicActivity doa;
+
+            const string sqlText = @"SELECT [id], [name], [deleted] 
+                                     FROM DomainOfApplications 
+                                     WHERE id = @id";
+            using (SqlCommand selectById = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertInt32Param("@id", selectById, pId);
+                using (SqlDataReader reader = selectById.ExecuteReader())
+                {
+                    doa = _GetEconomicActivity(reader);
+                }
+            }
+
+            doa.Childrens = SelectChildren(doa.Id);
+            return doa;
+        }
+
+        private static EconomicActivity _GetEconomicActivity(SqlDataReader pReader)
+        {
+            EconomicActivity doa = new EconomicActivity();
+            if (pReader != null)
+            {
+                if (pReader.HasRows)
+                {
+                    pReader.Read();
+                    doa.Id = DatabaseHelper.GetInt32("id", pReader);
+                    doa.Name = DatabaseHelper.GetString("name", pReader);
+                    doa.Deleted = DatabaseHelper.GetBoolean("deleted", pReader);
+                }
+            }
+            return doa;
+        }
+
+	    public EconomicActivity SelectEconomicActivity(string pName)
+	    {
+            EconomicActivity doa = new EconomicActivity();
+
+            const string sqlText = "SELECT id, name, deleted FROM DomainOfApplications WHERE name = @name";
+            using (SqlCommand selectById = new SqlCommand(sqlText, DefaultConnection))
+            {
+                DatabaseHelper.InsertStringNVarCharParam("@name", selectById, pName);
+                using (SqlDataReader reader = selectById.ExecuteReader())
+                {
+                    doa = _GetEconomicActivity(reader);
+                }
+            }
+
+            doa.Childrens = SelectChildren(doa.Id);
+            return doa;
+	    }
+	}
+}

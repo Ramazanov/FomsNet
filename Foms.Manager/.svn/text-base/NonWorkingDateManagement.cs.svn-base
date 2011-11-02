@@ -1,0 +1,114 @@
+//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Collections;
+using Octopus.CoreDomain;
+using Octopus.Shared;
+using Octopus.Shared.Settings;
+
+namespace Octopus.Manager
+{
+    /// <summary>
+    /// Summary description for NonWorkingDateManager.
+    /// </summary>
+    public class NonWorkingDateManagement : Manager
+    {
+        private NonWorkingDateSingleton nonWorkingDateHelper;
+        private ApplicationSettings dbParam;
+        private User _user;
+
+        public NonWorkingDateManagement(User pUser) : base(pUser)
+        {
+            _user = pUser;
+            dbParam = ApplicationSettings.GetInstance(pUser.Md5);
+            nonWorkingDateHelper = NonWorkingDateSingleton.GetInstance(_user.Md5);
+        }
+
+        public NonWorkingDateManagement(string testDB) : base(testDB)
+        {
+            dbParam = ApplicationSettings.GetInstance("");
+            nonWorkingDateHelper = NonWorkingDateSingleton.GetInstance("");
+        }
+
+        private void SelectAllPublicHolidays()
+        {
+            string sqlText = "SELECT name, date FROM PublicHolidays ORDER BY date";
+
+            SqlCommand select = new SqlCommand(sqlText, DefaultConnection);
+            
+            using (SqlDataReader reader = select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    nonWorkingDateHelper.PublicHolidays.Add(DatabaseHelper.GetDateTime("date", reader), DatabaseHelper.GetString("name", reader));
+                }
+            }
+        }
+
+        public NonWorkingDateSingleton FillNonWorkingDateHelper()
+        {
+            nonWorkingDateHelper.PublicHolidays = new Dictionary<DateTime, string>();
+            SelectAllPublicHolidays();
+            nonWorkingDateHelper.WeekEndDay1 = dbParam.WeekEndDay1;
+            nonWorkingDateHelper.WeekEndDay2 = dbParam.WeekEndDay2;
+            return nonWorkingDateHelper;
+        }
+
+        public  void DeleteAllPublicHolidays()
+        {
+            SqlCommand delete = new SqlCommand("DELETE PublicHolidays", DefaultConnection);
+            delete.ExecuteNonQuery();
+        }
+
+
+        public void AddPublicHoliday(DictionaryEntry entry)
+        {
+            string sqlText = "INSERT INTO [PublicHolidays]([date], [name]) VALUES(@date,@name)";
+            SqlCommand insert = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertDateTimeParam("@date", insert, (DateTime)entry.Key);
+            DatabaseHelper.InsertStringNVarCharParam("@name", insert, entry.Value.ToString());
+            insert.ExecuteNonQuery();
+        }
+
+        public void DeletePublicHoliday(DictionaryEntry entry)
+        {
+            string sqlText = "DELETE FROM [PublicHolidays] WHERE [date] = @date";
+            SqlCommand delete = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertDateTimeParam("@date", delete, (DateTime)entry.Key);
+            delete.ExecuteNonQuery();
+        }
+
+        public void UpdatePublicHoliday(DictionaryEntry entry)
+        {
+            string sqlText = "UPDATE [PublicHolidays] SET [name] = @name WHERE [date]= @date";
+            SqlCommand update = new SqlCommand(sqlText, DefaultConnection);
+            DatabaseHelper.InsertDateTimeParam("@date", update, (DateTime)entry.Key);
+            DatabaseHelper.InsertStringNVarCharParam("@name", update, entry.Value.ToString());
+            update.ExecuteNonQuery();
+        }
+    }
+}

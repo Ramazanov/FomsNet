@@ -1,0 +1,124 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting.Sage;
+using Octopus.Manager.Accounting.Sage;
+using Octopus.Enums;
+
+namespace Octopus.Services.Accounting.Sage
+{
+    public class SageServices : MarshalByRefObject
+    {
+        private SageManager _sageManager;
+        private User _user;
+        private const string SEPARATOR = @";";
+
+        public SageServices(User pUser)
+        {
+            _user = pUser;
+            _sageManager = new SageManager(pUser);
+        }
+
+        public SageServices(string pTestDb)
+        {
+            _sageManager = new SageManager(pTestDb);
+        }
+
+        public List<SageAccountTiers> SelectDisbursedLoans(DateTime pStartDate, DateTime pEndDate)
+        {
+            List<SageAccountTiers> listAccountTiers = _sageManager.SelectDisbursedContracts(pStartDate, pEndDate);
+            foreach (SageAccountTiers accountTiers in listAccountTiers)
+            {
+                accountTiers.Name = accountTiers.ContractCode.Replace("/", "");
+                string pClientLastName = accountTiers.ContractCode.Split('/').ElementAtOrDefault(1);
+                if (pClientLastName != null && accountTiers.ClientName.Trim().Replace(" ", "").ToUpper().Contains(pClientLastName))
+                    accountTiers.Title = accountTiers.Name.Replace(pClientLastName, " " + accountTiers.ClientName.ToUpper() + " ");
+                else
+                    accountTiers.Title = accountTiers.Name;
+            }
+
+            return listAccountTiers;
+        }
+
+        public List<SageBooking> SelectBookings(DateTime pStartDate, DateTime pEndDate, bool pSelectExported)
+        {
+            List<SageBooking> sageBookings = _sageManager.SelectSageBooking(pStartDate, pEndDate, pSelectExported);
+            List<SageBooking> groupedSageBookings = new List<SageBooking>();
+
+            foreach (SageBooking booking in sageBookings)
+            {
+                var existingBooking = groupedSageBookings.FirstOrDefault(item => item.MovementSetId == booking.MovementSetId && item.Account.Id == booking.Account.Id);
+                if (existingBooking != null)
+                {
+                    if (existingBooking.Direction != booking.Direction)
+                    {
+                        if (existingBooking.Amount > booking.Amount)
+                        {
+                            existingBooking.Amount -= booking.Amount;
+                        }
+                        else
+                        {
+                            existingBooking.Amount = booking.Amount - existingBooking.Amount;
+                            existingBooking.Direction = booking.Direction;
+                        }
+                    }
+                    else
+                        existingBooking.Amount += booking.Amount;
+                }
+                else
+                {
+                    //booking.Reference = sageBookings.Where(item => item.MovementSetId == booking.MovementSetId && item.Direction == OBookingDirections.Credit).
+                    //    Sum(item => item.Amount.Value).ToString();
+                    groupedSageBookings.Add(booking);
+                }
+            }
+
+            return groupedSageBookings;
+        }
+
+        public string ExportAccountTiers(List<SageAccountTiers> pListAccounts)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (SageAccountTiers accountTiers in pListAccounts)
+            {
+                sb.AppendLine(string.Format("{0}{1}{2}{3}",
+                    accountTiers.Name.PadRight(17, ' ').Substring(0, 17),
+                    accountTiers.Title.PadRight(35, ' ').Substring(0, 35), 
+                    "0",
+                    accountTiers.CollectiveAccount.LocalNumber.PadRight(13, ' ').Substring(0, 13)));
+            }
+
+            return sb.ToString();
+        }
+
+        public string ExportBookings(List<SageBooking> pListBookings)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (SageBooking booking in pListBookings)
+            {
+                sb.AppendLine(string.Format("{0}{1}{2}{3}{4}{5}{6}{7}{8}{9}",
+                    booking.JournalCode.PadRight(6, ' ').Substring(0, 6), 
+                    booking.Date.ToString("ddMMyy"),
+                    booking.Account.LocalNumber.PadRight(13, ' ').Substring(0, 13), 
+                    booking.Title.PadRight(35, ' ').Substring(0, 35),
+                    booking.PartNumber.PadRight(13, ' ').Substring(0, 13),
+                    booking.Reference.PadRight(17, ' ').Substring(0, 17),
+                    booking.AccountTiers.PadRight(17, ' ').Substring(0, 17),
+                    booking.Title.PadRight(35, ' ').Substring(0, 35),
+                    Math.Round(booking.Amount.Value, 2, MidpointRounding.AwayFromZero).ToString().PadRight(14, ' ').Substring(0, 14), 
+                    booking.Direction == OBookingDirections.Credit ? "C" : "D"));
+            }
+
+            return sb.ToString();
+        }
+
+        public void SetBookingsExported(List<SageBooking> pListBookings)
+        {
+            _sageManager.SetBookingsExported(pListBookings.Select(item => item.MovementSetId).Distinct().ToList());
+        }
+    }
+}

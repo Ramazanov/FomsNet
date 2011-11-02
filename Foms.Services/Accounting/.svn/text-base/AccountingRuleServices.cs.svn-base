@@ -1,0 +1,298 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using Octopus.CoreDomain.Contracts.Loans;
+using Octopus.CoreDomain.Events;
+using Octopus.CoreDomain.Events.Saving;
+using Octopus.Manager.Accounting;
+using Octopus.CoreDomain;
+using Octopus.CoreDomain.Accounting;
+using Octopus.ExceptionsHandler.Exceptions.AccountExceptions;
+using Octopus.Enums;
+using Octopus.Shared;
+using System.Linq;
+
+namespace Octopus.Services.Accounting
+{
+    public class AccountingRuleServices : MarshalByRefObject
+    {
+        private AccountingRuleManager _accountingRuleManager;
+        private User _user;
+        public string ClosureStatus { get; set; }
+        private List<Loan> _listLoan;
+
+        public AccountingRuleServices(User pUser)
+        {
+            _user = pUser;
+            _accountingRuleManager = new AccountingRuleManager(_user);
+        }
+
+        public AccountingRuleServices(string pTestDb)
+        {
+            _accountingRuleManager = new AccountingRuleManager(pTestDb);
+        }
+
+        public AccountingRuleServices(AccountingRuleManager pAccountingRuleManager)
+        {
+            _accountingRuleManager = pAccountingRuleManager;
+        }
+
+        public int SaveAccountingRule(IAccountingRule pRule)
+        {
+            ValidateAccountingRule(pRule);
+            return _accountingRuleManager.AddAccountingRule(pRule, null);
+        }
+
+        public void UpdateAccountingRule(IAccountingRule pRule)
+        {
+            ValidateAccountingRule(pRule);
+            _accountingRuleManager.UpdateAccountingRule(pRule, null);
+        }
+
+        public void DeleteAccountingRule(IAccountingRule pRule)
+        {
+            _accountingRuleManager.DeleteAccountingRule(pRule);
+        }
+
+        public void DeleteAllAccountingRules()
+        {
+            _accountingRuleManager.DeleteAllAccountingRules();
+        }
+        
+        public IAccountingRule Select(int pId)
+        {
+            return _accountingRuleManager.Select(pId);
+        }
+
+        public AccountingRuleCollection SelectAll()
+        {
+            return _accountingRuleManager.SelectAll();
+        }
+
+        public DataSet GetRuleCollectionDataset()
+        {
+            return _accountingRuleManager.GetRuleCollectionDataset();
+        }
+
+        public AccountingRuleCollection SelectAllByEventType(string eventType)
+        {
+            return _accountingRuleManager.SelectAllByEventType(eventType);
+        }
+
+        private void ValidateAccountingRule(IAccountingRule pRule)
+        {
+            if (!_validateAccount(pRule.DebitAccount))
+                throw new OctopusAccountingRuleException(OctopusAccountingRuleExceptionEnum.GenericAccountIsInvalid);
+
+            if (!_validateAccount(pRule.CreditAccount))
+                throw new OctopusAccountingRuleException(OctopusAccountingRuleExceptionEnum.SpecificAccountIsInvalid);
+
+            if (pRule.DebitAccount.Id == pRule.CreditAccount.Id)
+                throw new OctopusAccountingRuleException(OctopusAccountingRuleExceptionEnum.GenericAndSpecificAccountsAreIdentical);
+
+            if (pRule is ContractAccountingRule)
+                ValidateContractAccountingRule(pRule as ContractAccountingRule);
+            else
+                _validateFundingLineAccountRule(pRule as FundingLineAccountingRule);
+        }
+
+        private void ValidateContractAccountingRule(ContractAccountingRule pRule)
+        {
+            if (!Enum.IsDefined(typeof(OProductTypes), pRule.ProductType.ToString()))
+                throw new OctopusAccountingRuleException(OctopusAccountingRuleExceptionEnum.ProductTypeIsInvalid);
+
+            if (!Enum.IsDefined(typeof(OClientTypes), pRule.ClientType.ToString()))
+                throw new OctopusAccountingRuleException(OctopusAccountingRuleExceptionEnum.ClientTypeIsInvalid);
+        }
+
+        private bool _validateFundingLineAccountRule(FundingLineAccountingRule pRule)
+        {
+            return true;
+        }
+
+        private bool _validateAccount(Account pAccount)
+        {
+            if (pAccount != null)
+                return (pAccount.Id != 0 && pAccount.Number != null);
+            return false;
+        }
+
+        public void LateLoanProcessing()
+        {
+            foreach (Loan loan in _listLoan)
+            {
+                ClosureStatus = "Overdue events processing for contract ->" + loan.Code;
+                OverdueEvent overdueEvent = loan.GetOverdueEvent(TimeProvider.Now);
+
+                if (overdueEvent != null)
+                {
+                    ServicesProvider.GetInstance().GetContractServices().AddOverdueEvent(loan, overdueEvent);
+                }
+            }
+        }
+
+        public void ProvisionLoanProcessing()
+        {
+            ProvisionTable provisionTable = ProvisionTable.GetInstance(_user);
+            foreach (Loan loan in _listLoan)
+            {
+                ClosureStatus = "Provision is being processed for contract ->" + loan.Code;
+                ProvisionEvent e = loan.GetProvisionEvent(TimeProvider.Now, provisionTable);
+
+                if (e != null)
+                {
+                    ServicesProvider.GetInstance().GetContractServices().AddProvisionEvent(loan, e);
+                }
+            }
+        }
+
+        public void AccruedInterestLoanProcessing()
+        {
+            if (ServicesProvider.GetInstance().GetGeneralSettings().AccountingProcesses == OAccountingProcesses.Accrual)
+            {
+                foreach (Loan loan in _listLoan)
+                {
+                    ClosureStatus = "Accrued interest is being processed for contract ->" + loan.Code;
+                    AccruedInterestEvent e = loan.GetAccruedInterestEvent(TimeProvider.Now);
+
+                    if (e != null)
+                    {
+                        ServicesProvider.GetInstance().GetContractServices().AddAccruedInterestEvent(loan, e);
+                    }
+                }
+            }
+        }
+
+        private void SortSavingEventById(List<SavingEvent> list)
+        {
+            list.Sort((x, y) => x.Id.CompareTo(y.Id));
+        }
+
+        private void LoanClosure(EventStock eventStock, AccountingRuleCollection rules)
+        {
+            bool isExported = false;
+            foreach (Event eventItem in eventStock)
+            {
+                ClosureStatus = "Loan event processing ->" + eventItem.Code + "-" + eventItem.Id;
+                List<EventAttribute> attributes = new List<EventAttribute>();
+                //List<ContractAccountingRule> rls = rules.GetContractAccountingRules();
+                //List<ContractAccountingRule> aRules = (from rl in rls
+                //                                       where rl.EventType.EventCode == eventItem.Code
+                //                                             &&
+                //                                             (rl.ClientType == OClientTypes.Both)
+                //                                             //(rl.LoanProduct.Id == eventItem.LoanProduct.Id ||
+                //                                             // rl.LoanProduct == null)
+                //                                             //&&
+                //                                             //(rl.EconomicActivity.Id == eventItem.EconomicActivity.Id ||
+                //                                             // rl.EconomicActivity == null)
+                //                                       select rl).ToList();
+
+                foreach (ContractAccountingRule rule in rules.GetContractAccountingRules())
+                {
+                    List<EventAttribute> evtAttributes = (from eventAtt in attributes
+                                                          where eventAtt.Name == rule.EventAttribute.Name
+                                                          select eventAtt).ToList();
+
+
+                    if (rule.EventType.EventCode == eventItem.Code && evtAttributes.Count == 0)
+                    {
+                        if (ServicesProvider.GetInstance().GetAccountingServices().DoLoanMovement(rule, eventItem.Id))
+                        {
+                            isExported = true;
+                            attributes.Add(rule.EventAttribute);
+                        }
+                    }
+                }
+                //set as exported after applying rules
+                if (isExported)
+                    ServicesProvider.GetInstance().GetEventProcessorServices().ExportEvent(eventItem.Id);
+                
+                isExported = false;
+            }
+        }
+
+        public void DoClosure(bool doOverdue, bool doProvision, bool doAccrued, bool doLoanClosure, bool doSavingClosure)
+        {
+            if (doOverdue || doProvision || doAccrued || doLoanClosure)
+            {
+                ClosureStatus = "Contracts processing";
+                _listLoan = ServicesProvider.GetInstance().GetContractServices().SelectContractsForClosure();
+            }
+            //generate overdue events
+            if (doOverdue)
+            {
+                ClosureStatus = "Overdue events processing";
+                LateLoanProcessing();
+            }
+            //generate provision events
+            if (doProvision)
+            {
+                ClosureStatus = "Provision events processing";
+                ProvisionLoanProcessing();
+            }
+            //generate accrued interest events
+            if (doAccrued)
+            {
+                ClosureStatus = "Accrued interest events processing";
+                AccruedInterestLoanProcessing();
+            }
+
+            //select all rules
+            AccountingRuleCollection rules = new AccountingRuleCollection();
+            if (doLoanClosure || doSavingClosure)
+            {
+                rules = ServicesProvider.GetInstance().GetAccountingRuleServices().SelectAll();
+                rules.SortEventsByOrder();
+            }
+
+            //loan closure procesing
+            if (doLoanClosure)
+            {
+                ClosureStatus = "Loan closure processing";
+                //Select events
+                EventStock eventStock =
+                    ServicesProvider.GetInstance().GetEventProcessorServices().SelectEventsForClosure();
+                eventStock.SortEventsById();
+                LoanClosure(eventStock, rules);
+            }
+
+            if (doSavingClosure)
+            {
+                ClosureStatus = "Saving closure processing";
+                //Select events
+                List<SavingEvent> eventStock =
+                    ServicesProvider.GetInstance().GetSavingServices().SelectEventsForClosure();
+                //importent to have sorted list
+                SortSavingEventById(eventStock);
+                bool isExported = false;
+                foreach (SavingEvent eventItem in eventStock)
+                {
+                    ClosureStatus = "Saving event processing ->" + eventItem.Code + "-" + eventItem.Id;
+                    List<EventAttribute> attributes = new List<EventAttribute>();
+                    foreach (ContractAccountingRule rule in rules.GetContractAccountingRules())
+                    {
+                        List<EventAttribute> evtAttributes = (
+                                                                       from eventAtt in attributes
+                                                                       where eventAtt.Name == rule.EventAttribute.Name
+                                                                       select eventAtt).ToList();
+
+                        if (rule.EventType.EventCode == eventItem.Code && evtAttributes.Count == 0)
+                        {
+                            //applay rule
+                            if (ServicesProvider.GetInstance().GetAccountingServices().DoSavingsMovement(rule, eventItem.Id))
+                            {
+                                isExported = true;
+                                attributes.Add(rule.EventAttribute);
+                            }
+                        }
+                    }
+                    //set as exported after applying rules
+                    if (isExported)
+                        ServicesProvider.GetInstance().GetSavingServices().MakeEventExported(eventItem.Id);
+                }
+            }
+
+            ClosureStatus = "Done";
+        }
+    }
+}

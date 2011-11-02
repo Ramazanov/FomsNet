@@ -1,0 +1,45 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Foms.Shared.Settings" GeneratedClassName="TechnicalSettingsStore">
+  <Profiles />
+  <Settings>
+    <Setting Name="DATABASE_TIMEOUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">60</Value>
+    </Setting>
+    <Setting Name="VERSION" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">0.1.0</Value>
+    </Setting>
+    <Setting Name="COMPANY" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">ТФОМС Дагестан</Value>
+    </Setting>
+    <Setting Name="COPYRIGHT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">ТФОМС Дагестан</Value>
+    </Setting>
+    <Setting Name="TRADEMARK" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">ТФОМС Дагестан</Value>
+    </Setting>
+    <Setting Name="PRODUCT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">FOMS.NET</Value>
+    </Setting>
+    <Setting Name="DEBUG_MODE" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DATABASE_NAME" Type="System.String" Scope="User">
+      <Value Profile="(Default)">FomsNet</Value>
+    </Setting>
+    <Setting Name="DATABASE_SERVER_NAME" Type="System.String" Scope="User">
+      <Value Profile="(Default)">server7</Value>
+    </Setting>
+    <Setting Name="DATABASE_LOGIN_NAME" Type="System.String" Scope="User">
+      <Value Profile="(Default)">nariman</Value>
+    </Setting>
+    <Setting Name="DATABASE_PASSWORD" Type="System.String" Scope="User">
+      <Value Profile="(Default)">letsgo</Value>
+    </Setting>
+    <Setting Name="DEBUG_LEVEL" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">10</Value>
+    </Setting>
+    <Setting Name="SENT_QUESTIONNAIRE" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

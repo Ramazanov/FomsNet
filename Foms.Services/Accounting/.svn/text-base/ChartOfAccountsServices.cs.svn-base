@@ -1,0 +1,344 @@
+﻿//Octopus MFS is an integrated suite for managing a Micro Finance Institution: clients, contracts, accounting, reporting and risk
+//Copyright © 2006,2007 OCTO Technology & OXUS Development Network
+//
+//This program is free software; you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as published by
+//the Free Software Foundation; either version 2 of the License, or
+//(at your option) any later version.
+//
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License along
+//with this program; if not, write to the Free Software Foundation, Inc.,
+//51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+// Licence : http://www.octopusnetwork.org/OverviewLicence.aspx
+//
+// Website : http://www.octopusnetwork.org
+// Business contact: business(at)octopusnetwork.org
+// Technical contact email : tech(at)octopusnetwork.org 
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using Octopus.DatabaseConnection;
+using Octopus.Enums;
+using Octopus.Manager.Accounting;
+using Octopus.CoreDomain;
+using Octopus.ExceptionsHandler;
+using Octopus.Shared;
+using Octopus.CoreDomain.Accounting;
+using Octopus.Manager.Currencies;
+using System.Linq;
+
+namespace Octopus.Services.Accounting
+{
+	/// <summary>
+	/// Summary description for ChartOfAccountsServices.
+	/// </summary>
+    public class ChartOfAccountsServices : MarshalByRefObject
+	{
+        private User _user = new User();
+        private readonly AccountManager _accountManagement;
+        private readonly ProvisioningRuleManager _provisionningRuleManager;
+        private readonly LoanScaleManager _loanScaleManager;
+        private readonly CurrencyManager _currencyManager;
+        private readonly AccountingRuleManager _accountingRuleManager;
+
+        public ChartOfAccountsServices(User pUser)
+        {
+            _user = pUser;
+            _accountManagement = new AccountManager(pUser);
+            _provisionningRuleManager = new ProvisioningRuleManager(pUser);
+            _loanScaleManager = new LoanScaleManager(pUser);
+            _currencyManager = new CurrencyManager(pUser);
+            _accountingRuleManager = new AccountingRuleManager(pUser);
+        }
+
+		public ChartOfAccountsServices(string testDB)
+		{
+			_accountManagement = new AccountManager(testDB);
+            _provisionningRuleManager = new ProvisioningRuleManager(testDB);
+            _loanScaleManager = new LoanScaleManager(testDB);
+            _currencyManager = new CurrencyManager(testDB);
+            _accountingRuleManager = new AccountingRuleManager(testDB);
+            ConnectionManager.GetInstance(testDB);
+
+		}
+
+        public ChartOfAccountsServices(AccountManager pAccountManager)
+        {
+            _accountManagement = pAccountManager;
+        }
+
+		public List<Account> FindAllAccounts()
+        {
+            return _accountManagement.SelectAllAccounts();
+        }
+
+        public DataSet GetAccountsDataset()
+        {
+            return _accountManagement.GetAccountsDataset();
+        }
+
+        public List<AccountCategory> SelectAccountCategories()
+        {
+            return _accountManagement.SelectAccountCategories();
+        }
+
+        public Account SelectAccountById(int id)
+        {
+            return _accountManagement.Select(id);
+        }
+
+        public void CheckDatasAreCorrecltyFilled(Account account)
+        {
+            if (account == null)
+                throw new OctopusAccountException(OctopusAccountExceptionsEnum.AccountIsNull);
+            if (string.IsNullOrEmpty(account.Number))
+                throw new OctopusAccountException(OctopusAccountExceptionsEnum.NumberIsNull);
+            if (string.IsNullOrEmpty(account.LocalNumber))
+                throw new OctopusAccountException(OctopusAccountExceptionsEnum.LocalNumberIsNull);
+            if (string.IsNullOrEmpty(account.Label))
+                throw new OctopusAccountException(OctopusAccountExceptionsEnum.LabelIsNull);
+            if (_accountManagement.SelectAccountCategoriesById((int) account.AccountCategory) == null)
+                throw new OctopusAccountException(OctopusAccountExceptionsEnum.DescriptionIsEmpty);
+
+            if (account.ParentAccountId.HasValue && account.ParentAccountId != -1)
+            {
+                var parentAccount = _accountManagement.SelectChartAccount(account.ParentAccountId.Value, null);
+                if (parentAccount == null)
+                    throw new OctopusAccountException(OctopusAccountExceptionsEnum.ParentAccountDoesntExists);
+                if (parentAccount.AccountCategory != account.AccountCategory)
+                    throw new OctopusAccountException(OctopusAccountExceptionsEnum.ParentAccountNotSameDescription);
+                if (parentAccount.Id == account.Id)
+                    throw new OctopusAccountException(OctopusAccountExceptionsEnum.ParentAccountIsInvalid);
+            }
+        }
+
+        public void CheckAccountCategory(AccountCategory accountCategory)
+        {
+                List<Account> accounts = _accountManagement.SelectAccountByCategory(accountCategory, null);
+                if (accounts != null)
+                    throw new OctopusAccountException(OctopusAccountExceptionsEnum.AccountCannotBeDeleted);
+               
+        }
+
+        public void UpdateAccount(Account account)
+        {
+            CheckDatasAreCorrecltyFilled(account);
+            _accountManagement.Update(account, null);
+        }
+
+        public void Insert(Account account)
+        {
+            CheckDatasAreCorrecltyFilled(account);
+            SqlTransaction sqlTransac = ConnectionManager.GetInstance().GetSqlTransaction(_user.Md5);
+
+            try
+            {
+                _accountManagement.Insert(account, sqlTransac);
+                sqlTransac.Commit();
+            }
+            catch (Exception)
+            {
+                sqlTransac.Rollback();
+                throw;
+            }
+        }
+
+        public void InsertAccount(Account account)
+        {
+            CheckDatasAreCorrecltyFilled(account);
+            SqlTransaction sqlTransac = ConnectionManager.GetInstance().GetSqlTransaction(_user.Md5);
+
+            try
+            {
+                _accountManagement.InsertAccount(account, sqlTransac);
+
+                sqlTransac.Commit();
+            }
+            catch (Exception)
+            {
+                sqlTransac.Rollback();
+                throw;
+            }
+        }
+
+        public void InsertAccountCategory(AccountCategory accountCategory)
+        {
+            SqlTransaction sqlTransac = ConnectionManager.GetInstance().GetSqlTransaction(_user.Md5);
+
+            try
+            {
+               _accountManagement.InsertAccountCategory(accountCategory, sqlTransac);
+
+                sqlTransac.Commit();
+            }
+            catch (Exception)
+            {
+                sqlTransac.Rollback();
+                throw;
+            }
+        }
+                         
+	    public void DeleteAccount(Account account)
+        {
+            //if (account.Type)
+            //    throw new OctopusAccountException(OctopusAccountExceptionsEnum.AccountCannotBeDeleted);
+            CheckDatasAreCorrecltyFilled(account);
+            _accountManagement.DeleteAccount(account, null);
+        }
+
+        public void Delete()
+        {
+            //if (account.Type)
+            //    throw new OctopusAccountException(OctopusAccountExceptionsEnum.AccountCannotBeDeleted);
+            _accountManagement.Delete(null);
+        }
+
+        public void DeleteAccountCategory(AccountCategory accountCategory)
+        {
+            CheckAccountCategory(accountCategory);
+            _accountManagement.DeleteAccountCategory(accountCategory, null);
+        }
+
+		public void AddProvisioningRate(ProvisioningRate pR)
+		{
+            ProvisionTable pT = ProvisionTable.GetInstance(_user);
+		
+            pR.Number = pT.ProvisioningRates.Count + 1;
+			pT.Add(pR);
+            _provisionningRuleManager.AddProvisioningRate(pR, null);
+		}
+        public void AddLoanScale(LoanScaleRate lR)
+        {
+            LoanScaleTable lT = LoanScaleTable.GetInstance(_user);
+            if (lR.ScaleMin == 0)
+                throw new OctopusAccountException(OctopusAccountExceptionsEnum.LoanScaleTableMin);
+            if (lR.ScaleMax == 0)
+                throw new OctopusAccountException(OctopusAccountExceptionsEnum.LoanScaleTableMax);
+
+            lR.Number = lT.LoanScaleRates.Count + 1;
+        
+            lT.AddLoanScaleRate(lR);
+            _loanScaleManager.InsertLoanScale(lR, null);
+        }
+
+        public void DeleteLoanScale(LoanScaleRate ls)
+        {
+            LoanScaleTable lt = LoanScaleTable.GetInstance(_user);
+            lt.DeleteLoanScaleRate(ls);
+        }
+
+        public void UpdateLoanScaleTableInstance()
+        {
+            SqlTransaction sqlTransac = ConnectionManager.GetInstance().GetSqlTransaction(_user.Md5);
+            LoanScaleTable lT = LoanScaleTable.GetInstance(_user);
+            try
+            {
+                _loanScaleManager.Delete(sqlTransac);
+                int i = 1;
+                foreach (LoanScaleRate lR in lT.LoanScaleRates)
+                {
+                    lR.Number = i;
+                    _loanScaleManager.InsertLoanScale(lR, sqlTransac);
+                    i++;
+                }
+                sqlTransac.Commit();
+            }
+            catch (Exception ex)
+            {
+                sqlTransac.Rollback();
+                throw ex;
+            }
+        }
+
+        public void CheckGeneralSettings()
+        {
+            ProvisionTable.GetInstance(_user).ProvisioningRates = _provisionningRuleManager.SelectAllProvisioningRates();
+            LoanScaleTable.GetInstance(_user).LoanScaleRates = new ArrayList();
+            _loanScaleManager.SelectLoanScales();
+        }
+
+		public void UpdateProvisioningTableInstance()
+		{
+            SqlTransaction sqlTransac = ConnectionManager.GetInstance().GetSqlTransaction(_user.Md5);
+            ProvisionTable pT = ProvisionTable.GetInstance(_user);
+			try
+			{
+                _provisionningRuleManager.DeleteAllProvisioningRules(sqlTransac);
+				int i = 1;
+				foreach(ProvisioningRate pR in pT.ProvisioningRates)
+				{
+					pR.Number = i;
+                    _provisionningRuleManager.AddProvisioningRate(pR, sqlTransac);
+					i++;
+				}
+				sqlTransac.Commit();
+			}
+			catch(Exception ex)
+			{
+				sqlTransac.Rollback();
+				throw ex;
+			}
+		}
+
+		//will recalculate balance of each account
+        //based on exchange rate
+        //get all Currencies
+        //Find Account for each Currency
+        //get Latest Exchange Rate for Each Currency
+        //Calculate Balance
+        
+        public void ExportBalance()
+        {
+            DataSet exportBalanceFile = _GenerateExportBalanceFile();
+            ExportFile.SaveToFile(exportBalanceFile, "", ";");
+        }
+
+        public List<Account> RecalculateBalances(List<Account> pAccounts)
+        {
+            foreach (Account account in pAccounts.Where(item => item.ParentAccountId == null))
+                account.Balance += _getChildsBalance(pAccounts, account);
+
+            return pAccounts;
+        }
+
+        private OCurrency _getChildsBalance(List<Account> pAccounts, Account pAccount)
+        {
+            OCurrency balance = 0;
+            foreach (Account account in pAccounts.Where(item => item.ParentAccountId == pAccount.Id))
+            {
+                account.Balance += _getChildsBalance(pAccounts, account);
+                balance += account.Balance;
+            }
+
+            return balance;
+        }
+
+        private DataSet _GenerateExportBalanceFile()
+        {
+            DataSet dataset = new DataSet();
+            dataset.Tables.Add(new DataTable("Accounts"));
+
+            dataset.Tables[0].Columns.Add("id", System.Type.GetType("System.Int32"));
+            dataset.Tables[0].Columns.Add("Code", System.Type.GetType("System.String"));
+            dataset.Tables[0].Columns.Add("Amount", System.Type.GetType("System.String"));
+            dataset.Tables[0].Columns.Add("InterestRate", System.Type.GetType("System.String"));
+            dataset.Tables[0].Columns.Add("InstallmentType", System.Type.GetType("System.String"));
+            dataset.Tables[0].Columns.Add("Maturity", System.Type.GetType("System.String"));
+            dataset.Tables[0].Columns.Add("CreationDate", System.Type.GetType("System.String"));
+            dataset.Tables[0].Columns.Add("StartDate", System.Type.GetType("System.String"));
+            dataset.Tables[0].Columns.Add("CloseDate", System.Type.GetType("System.String"));
+
+            return dataset;
+        }
+	}
+}

@@ -1,0 +1,10 @@
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.ExceptionsHandler\obj\Debug\ResolveAssemblyReference.cache
+C:\dev_factory\Octopus\Build\Log4net.xml
+C:\dev_factory\Octopus\Build\RemoteServerSettings.xml
+C:\dev_factory\Octopus\Build\Foms.ExceptionsHandler.dll
+C:\dev_factory\Octopus\Build\Foms.ExceptionsHandler.pdb
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.ExceptionsHandler\obj\Debug\Foms.ExceptionsHandler.dll
+C:\Documents and Settings\User\Мои документы\Visual Studio 2008\Projects\Foms.NET\Foms.ExceptionsHandler\obj\Debug\Foms.ExceptionsHandler.pdb
+D:\Visual Studio\Projects\Foms.NET\Foms.ExceptionsHandler\obj\Debug\ResolveAssemblyReference.cache
+D:\Visual Studio\Projects\Foms.NET\Foms.ExceptionsHandler\obj\Debug\Foms.ExceptionsHandler.dll
+D:\Visual Studio\Projects\Foms.NET\Foms.ExceptionsHandler\obj\Debug\Foms.ExceptionsHandler.pdb

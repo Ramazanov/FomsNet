@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/QueryForObject
+END
+IterateSQL.cs
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/QueryForObject/IterateSQL.cs
+END
+QueryEntity.cs
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svnroot/omfs/!svn/ver/2825/branches/3.1.0/Src/Octopus.Manager/QueryForObject/QueryEntity.cs
+END
